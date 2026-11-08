@@ -2,8 +2,9 @@
 
 给一个知识主题，用代码做出抖音「Vibe知识大赏」风格的无旁白知识短片（1920×1080 · 双语字幕 · 合成配乐 · 一键出 MP4）。
 
-- **样片**：`projects/benford/` — 《第一位数字》本福特定律，130s（成片 `projects/benford/benford.mp4`）
+- **样片**：`projects/benford/` — 《第一位数字》本福特定律，130s（`bash engine/build.sh projects/benford` 生成成片；含版权 BGM 的成片不入公开仓库）
 - **Skill**：`.claude/skills/vibe-knowledge-video/` — 在 Claude Code 里说"做一条知识大赏视频：<主题>"即可触发
+- **BGM 库**：`bgm/` — 上传/放入 `bgm/inbox/` → `python3 engine/bgm.py ingest` 自动分析拍点、段落、高潮；做片时先选歌再卡点（见 `bgm/README.md`）
 - **调研**：`docs/research.md`
 
 ## 快速开始
@@ -21,7 +22,7 @@ bash engine/build.sh projects/entropy            # 出片 + 自检
 ## 结构
 
 ```
-engine/        vibe.js 渲染引擎 · render.mjs 并行逐帧渲染 · audio.py 配乐与音效合成 · build.sh 一键出片 · qa.py 自检
+engine/        bgm.py BGM库与节拍分析 · vibe.js 渲染引擎 · render.mjs 并行逐帧渲染 · audio.py 配乐与音效合成 · build.sh 一键出片 · qa.py 自检
 scripts/       setup_fonts.sh · new_film.sh
 projects/      每个片子一个目录：script.md（文案+分镜）· film.js（动画）· index.html
 .claude/skills/vibe-knowledge-video/   SKILL.md + 风格/叙事/API/发布 参考 + 模板

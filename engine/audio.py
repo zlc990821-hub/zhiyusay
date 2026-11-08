@@ -128,7 +128,7 @@ def reverb(x, seconds=2.6, mix=0.28, predelay=0.02):
     return out
 
 # ---------------------------------------------------------------- 音效
-def sfx(name):
+def sfx(name, dur=None):
     if name == 'whoosh':
         d = 0.7; s = noise(d, 300, 3500); t = np.arange(len(s)) / SR
         e = np.sin(np.pi * np.clip(t / d, 0, 1)) ** 2
@@ -167,6 +167,62 @@ def sfx(name):
     if name == 'stamp':
         a = sfx('thud'); b = noise(0.08, 1500, 8000) * np.exp(-np.arange(int(.08 * SR)) / SR * 50) * 0.6
         a[: len(b)] += b; return a
+    # ---- 扩展音效（动画 → 声音，见 references/sound-design.md）----
+    if name == 'flip':      # 卡片翻面：两下纸响 + 轻气流
+        a = noise(0.09, 1500, 8000) * np.exp(-np.arange(int(.09 * SR)) / SR * 45) * 0.5
+        out = np.zeros(int(0.25 * SR)); out[:len(a)] += a; j = int(0.08 * SR); out[j:j + len(a)] += a * 0.7
+        return out + np.pad(sfx('whoosh')[: len(out)] * 0.3, (0, max(0, len(out) - len(sfx('whoosh')))))[: len(out)]
+    if name == 'pen':       # 画线/描边：沙沙的笔尖摩擦，长度 = 动画时长
+        d = dur or 0.8; s_ = noise(d, 2500, 9000); t = np.arange(len(s_)) / SR
+        grain = 0.5 + 0.5 * np.abs(np.sin(2 * np.pi * 13 * t + 2 * np.sin(2 * np.pi * 3 * t)))
+        return s_ * grain * np.minimum(1, t / 0.04) * np.minimum(1, (d - t) / 0.08) * 0.22
+    if name == 'counter':   # 数字滚动：密集轻 tick，长度 = 滚动时长
+        d = dur or 1.5; out = np.zeros(int(d * SR) + int(.06 * SR)); tk = sfx('tick') * 0.6
+        tt = 0.0; step = 0.045
+        while tt < d: i = int(tt * SR); out[i:i + len(tk)] += tk[: len(out) - i] * (0.6 + 0.4 * np.random.default_rng(int(tt * 1e3)).random()); tt += step
+        return out
+    if name == 'drop':      # 小球落地：带音高的短促 thump
+        d = 0.18; t = np.arange(int(d * SR)) / SR
+        return np.sin(2 * np.pi * (180 + 300 * np.exp(-t * 60)) * t) * np.exp(-t * 30) * 0.55
+    if name == 'coin':
+        return (bell(1567.98, 0.6) + bell(2093, 0.6) * 0.6) * 0.5
+    if name == 'impact':    # 揭晓/重击：低频 + 噪声 + 混响尾
+        d = 1.2; t = np.arange(int(d * SR)) / SR
+        sub = np.sin(2 * np.pi * (48 + 60 * np.exp(-t * 15)) * t) * np.exp(-t * 3.5)
+        return (sub + noise(d, 100, 5000) * np.exp(-t * 18) * 0.7) * 0.8
+    if name == 'boom':      # 808 下坠，用在 drop 上
+        d = 1.6; t = np.arange(int(d * SR)) / SR; f = 70 * np.exp(-t * 0.9) + 30
+        return np.tanh(2 * np.sin(2 * np.pi * np.cumsum(f) / SR)) * np.exp(-t * 2.2) * 0.7
+    if name == 'reverse':   # 反向镲：渐强到 t 截止（配合 align:'end' 正好卡在 drop/切点）
+        d = dur or 1.5; t = np.arange(int(d * SR)) / SR
+        return noise(d, 3000, 12000) * (t / d) ** 3 * 0.6
+    if name == 'shutter':
+        a = noise(0.03, 1000, 8000) * 0.7; b = noise(0.05, 500, 4000) * 0.5
+        out = np.zeros(int(0.12 * SR)); out[:len(a)] += a; j = int(0.06 * SR); out[j:j + len(b)] += b; return out
+    if name == 'heartbeat':
+        out = np.zeros(int(0.7 * SR)); k = sfx('thud') * 0.6
+        out[:len(k)] += k[: len(out)]; j = int(0.22 * SR); out[j:] += k[: len(out) - j] * 0.7; return out
+    if name == 'bubble':
+        d = 0.14; t = np.arange(int(d * SR)) / SR; f = 400 + 1800 * t / d
+        return np.sin(2 * np.pi * np.cumsum(f) / SR) * np.exp(-t * 25) * 0.4
+    if name == 'ding':
+        return bell(1760, 1.0) * 0.6
+    if name == 'correct':   # ✓ 两音上行
+        out = np.zeros(int(0.6 * SR)); a = pluck(midi_hz(76), 0.4); b = pluck(midi_hz(83), 0.5)
+        out[:len(a)] += a; j = int(0.1 * SR); out[j:j + len(b)] += b[: len(out) - j]; return out * 1.2
+    if name == 'wrong':     # ✗ 低沉两下
+        out = np.zeros(int(0.5 * SR)); a = pluck(midi_hz(50), 0.25) * 1.3
+        out[:len(a)] += a; j = int(0.14 * SR); out[j:j + len(a)] += a[: len(out) - j]; return out
+    if name == 'slide':     # 元素横移
+        d = 0.35; s_ = noise(d, 800, 5000); t = np.arange(len(s_)) / SR
+        return s_ * np.sin(np.pi * t / d) ** 2 * 0.3
+    if name == 'zoom':      # 推近：上行气流
+        d = 0.6; t = np.arange(int(d * SR)) / SR
+        return (noise(d, 400, 6000) * (t / d) ** 1.5 * np.exp(-np.maximum(0, t - d * .85) * 30) * 0.5
+                + np.sin(2 * np.pi * np.cumsum(200 + 900 * t / d) / SR) * (t / d) * 0.1)
+    if name == 'snap':
+        d = 0.06; s_ = noise(d, 1500, 6000); t = np.arange(len(s_)) / SR
+        return s_ * np.exp(-t * 120) * 0.9
     raise ValueError('unknown sfx: ' + name)
 
 # ---------------------------------------------------------------- 配乐
@@ -216,24 +272,94 @@ def bgm(duration, bpm, music):
     out *= np.clip(t / 1.5, 0, 1) * np.clip((duration + 0.5 - t) / 3.0, 0, 1)
     return out
 
+def limiter(x, thr=0.6, block=128, release=0.12):
+    """前瞻峰值限幅：按块求峰值、提前一块起作用、按 release 平滑恢复"""
+    n = x.shape[1]; nb = -(-n // block)
+    a = np.pad(np.abs(x).max(axis=0), (0, nb * block - n)).reshape(nb, block).max(axis=1)
+    a = np.maximum(a, np.concatenate([a[1:], a[-1:]]))  # 前瞻一块
+    g = np.minimum(1.0, thr / (a + 1e-9))
+    k = 1 - np.exp(-block / (SR * release)); gs = np.empty_like(g); cur = 1.0
+    for i in range(nb):
+        cur = g[i] if g[i] < cur else cur + (g[i] - cur) * k
+        gs[i] = cur
+    gain = np.interp(np.arange(n), np.arange(nb) * block + block / 2, gs)
+    return x * gain
+
+def master(mix, target_rms_db=-15.0):
+    """响度先拉到目标附近，再限幅，最终 loudnorm 只需要微调"""
+    rms = np.sqrt((mix ** 2).mean()) + 1e-9
+    mix = mix * (10 ** (target_rms_db / 20) / rms)
+    mix = limiter(mix, 0.7)
+    return np.clip(mix, -0.89, 0.89)
+
+def load_bgm(b, dur, root):
+    """解码库里的曲子：从 offset 截 dur 秒，淡入淡出，RMS 归一到 -18 dBFS"""
+    import subprocess, os
+    path = os.path.join(root, b['file'])
+    if not os.path.exists(path):
+        raise SystemExit(f'✗ BGM 文件不存在: {path}\n  公开仓库不保存音频；请把这首歌重新放进 bgm/inbox/ 后运行 python3 engine/bgm.py ingest')
+    raw = subprocess.run(['ffmpeg', '-v', 'error', '-ss', str(b['offset']), '-t', str(dur + 0.5), '-i', path,
+                          '-ac', '2', '-ar', str(SR), '-f', 'f32le', '-'], capture_output=True).stdout
+    x = np.frombuffer(raw, np.float32).astype(np.float64).reshape(-1, 2).T
+    n = int(dur * SR)
+    if x.shape[1] < n: x = np.pad(x, ((0, 0), (0, n - x.shape[1])))
+    x = x[:, :n]
+    t = np.arange(n) / SR
+    fi, fo = b.get('fade_in') or 0.0, b.get('fade_out') or 4.0
+    if fi > 0: x *= np.clip(t / fi, 0, 1)
+    x *= np.clip((dur - t) / fo, 0, 1) ** 1.5
+    rms = np.sqrt((x ** 2).mean()) + 1e-9
+    return x * (10 ** (-18 / 20) / rms) * 10 ** ((b.get('gain_db') or 0) / 20)
+
+# 音效分级电平（相对音乐 RMS 的 dB）：重击 > 点缀 > 动作 > 质感。由 V.cue 的 gain 再微调。
+LEVEL_DB = {  # 由校准脚本生成：单个音效 gain=1 时，起音 0.25s 的 RMS 相对音乐的目标 dB 见 references/sound-design.md
+    'impact': 2.8, 'boom': 0.2, 'stamp': 5.5, 'thud': 3.2, 'chime': -0.9, 'ding': -2.1, 'sparkle': -0.7,
+    'correct': 0.2, 'wrong': -0.4, 'coin': -1.2, 'bubble': 0.1, 'heartbeat': -0.4, 'whoosh': 5.9, 'slide': -0.9,
+    'zoom': 10.0, 'flip': 5.2, 'paper': -1.7, 'shutter': 1.6, 'reverse': 5.0, 'rise': 1.0, 'swell': 2.0,
+    'pop': 0.1, 'snap': 2.9, 'drop': -0.0, 'pen': -3.9, 'tick': 0.8, 'click': 1.7, 'counter': -0.9,
+}
+MUSIC_RMS_DB = -18.0
+
+def norm_sfx(sig, name):
+    """按信号"响的部分"的 RMS 归一到分级电平"""
+    a = np.abs(sig); loud = a > a.max() * 0.1
+    rms = np.sqrt((sig[loud] ** 2).mean()) + 1e-9
+    return sig * (10 ** ((MUSIC_RMS_DB + LEVEL_DB.get(name, -6)) / 20) / rms)
+
+def place_cues(cfg, n):
+    fx = np.zeros((2, n))
+    for c in cfg.get('cues', []):
+        sig = norm_sfx(sfx(c['name'], c.get('dur')), c['name'])
+        t0 = c['t'] - (len(sig) / SR if c.get('align') == 'end' else 0)
+        add(fx, sig, t0, c.get('gain', 1), pan=c.get('pan', 0))
+    return reverb(fx, 1.6, 0.2)
+
 def main(cues_path, out_path):
+    import os
     cfg = json.load(open(cues_path))
     dur = cfg['duration']; bpm = cfg.get('bpm', 77)
     music = cfg.get('music') or {}
-    n = int((dur + 4) * SR)
-    m = bgm(dur, bpm, music)[:, :n]
-    fx = np.zeros((2, n))
-    for c in cfg.get('cues', []):
-        add(fx, sfx(c['name']), c['t'], 0.5 * c.get('gain', 1), pan=c.get('pan', 0))
-    fx = reverb(fx, 1.6, 0.22)
-    mix = m * music.get('gain', 1.0) + fx * music.get('sfx_gain', 0.8)
-    mix = mix[:, : int(dur * SR)]
-    peak = np.max(np.abs(mix)) or 1
-    mix = mix / peak * 0.7  # 留足余量，最终响度由 loudnorm 处理
+    root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+    n = int(dur * SR)
+    fx = place_cues(cfg, n + 4 * SR)[:, :n]
+    if cfg.get('bgm'):
+        m = load_bgm(cfg['bgm'], dur, root)
+        # 侧链压缩：音效响起时音乐让位 ~3–5 dB，保证音效听得清
+        env_ = np.abs(fx).max(axis=0)
+        k = int(0.08 * SR); env_ = np.convolve(env_, np.ones(k) / k, 'same')
+        duck = 1 - 0.45 * np.clip(env_ / (np.percentile(env_, 99.5) + 1e-9), 0, 1)
+        mix = m * duck + fx * music.get('sfx_gain', 1.0)
+        src = f'BGM「{cfg["bgm"].get("id")}」@{cfg["bgm"]["offset"]:.2f}s'
+    else:
+        m = bgm(dur, bpm, music)[:, :n]
+        m = m * (10 ** (MUSIC_RMS_DB / 20) / (np.sqrt((m ** 2).mean()) + 1e-9))
+        mix = m * music.get('gain', 1.0) + fx * music.get('sfx_gain', 0.8)
+        src = '合成配乐'
+    mix = master(mix)
     pcm = (np.clip(mix.T, -1, 1) * 32767).astype('<i2')
     with wave.open(out_path, 'wb') as w:
         w.setnchannels(2); w.setsampwidth(2); w.setframerate(SR); w.writeframes(pcm.tobytes())
-    print(f'✓ audio {dur:.1f}s, {len(cfg.get("cues", []))} cues → {out_path}')
+    print(f'✓ audio {dur:.1f}s · {src} · {len(cfg.get("cues", []))} 个音效 → {out_path}')
 
 if __name__ == '__main__':
     if len(sys.argv) < 3: print(__doc__); sys.exit(1)

@@ -23,8 +23,9 @@ V.subs_seq(0.6, [
 V.cue(0.1, 'swell', 0.8).cue(8.0, 'chime', 0.8);
 
 /* 标题卡 */
+// 标题卡起点会被 V.sync() 吸到第一个 drop（bgm.py use --hit 12.4 已让 drop 落在 12.4s 附近）
 V.titleCard(12.2, 18.4, { title: '{{TITLE}}', subtitle: '一句话副标题', en: 'English Title' });
-V.cue(12.4, 'thud', 0.9);
+V.cue(12.2, 'reverse', { dur: 1.5, align: 'end' }).cue(12.2, 'impact').cue(12.2, 'boom', 0.6);
 
 /* ② 历史锚点 18–50 */
 V.label(18.4, 50, '年份 · 地点 · 事件');
@@ -43,4 +44,6 @@ V.endCards(116, {
   credit: '@zhiyusay 出品 · 动画由代码生成',
 });
 
+// 卡点：场景起点吸附到 drop / 小节头 / 拍（必须放在最后、mount 之前）
+V.sync();
 V.mount();

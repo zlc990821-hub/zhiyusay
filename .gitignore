@@ -2,3 +2,8 @@ engine/fonts/
 projects/*/out/
 node_modules/
 __pycache__/
+# 公开仓库：不提交受版权保护的音频，只提交分析结果 bgm/library.json
+bgm/tracks/
+bgm/inbox/*
+!bgm/inbox/.gitkeep
+bgm/click_*.mp3

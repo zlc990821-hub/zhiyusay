@@ -80,13 +80,13 @@ V.note(6.9, 9.2, '直觉：各占 1/9');
 V.note(10.4, 12.3, '真实数据：第一位是 1 的，约 30.1%', { color: C.goldHi });
 V.cue(0.1, 'swell', 0.8).cue(2.9, 'sparkle', 0.6).cue(5.4, 'whoosh', 0.9);
 for (let i = 0; i < 9; i++) V.cue(6.3 + i * 0.09, 'tick', 0.5, -0.8 + i * 0.2);
-V.cue(8.8, 'rise', 0.7).cue(9.9, 'chime', 0.9);
+V.cue(8.8, 'rise', 0.6).cue(9.25, 'zoom', 0.5).cue(9.9, 'chime', 0.8);
 
 /* ================================================================
  * 2. 标题卡 12.5–18.5
  * ================================================================ */
 V.titleCard(12.3, 18.6, { title: '《第一位数字》', subtitle: '为什么世界偏爱 1', en: "The First Digit · Benford's Law" });
-V.cue(12.5, 'thud', 0.9).cue(12.9, 'chime', 0.5);
+V.cue(12.3, 'reverse', { dur: 1.6, align: 'end', gain: 0.8 }).cue(12.3, 'impact', 0.9).cue(12.3, 'boom', 0.6).cue(12.8, 'chime', 0.4);
 
 /* ================================================================
  * 3. 历史锚点 A — 1881 纽康与脏页对数表 18.5–36
@@ -133,6 +133,7 @@ V.scene(18.4, 28.6, (g, lt) => {
   }
 });
 for (let i = 0; i < 9; i++) V.cue(18.7 + i * 0.18, 'paper', 0.45, -0.8 + i * 0.2);
+V.cue(18.4, 'whoosh', 0.5).cue(22.2, 'pen', { dur: 3.7, gain: 0.5 }).cue(24.9, 'pen', { dur: 1.0, gain: 0.6 });
 
 V.scene(28.0, 36.4, (g, lt) => {
   V.push(g, lt, 0.005);
@@ -176,7 +177,7 @@ V.scene(28.0, 36.4, (g, lt) => {
     g.text('57 年', px, 662, { size: 24, weight: 500, fam: 'hand', color: C.orange, alpha: prog(lt, 5.4, 6.2) });
   }
 });
-V.cue(28.2, 'paper', 0.8).cue(29.7, 'stamp', 0.8).cue(34.3, 'pop', 0.5);
+V.cue(28.0, 'slide', 0.6).cue(28.2, 'paper', 0.8).cue(29.6, 'stamp', 0.8).cue(29.6, 'bubble', 0.4).cue(32.6, 'pop', 0.4).cue(32.8, 'pen', { dur: 1.6, gain: 0.5 }).cue(34.0, 'ding', 0.5);
 V.subs_seq(19.0, [
   [3.3, '1881年，天文学家纽康在翻对数表时发现', 'In 1881, astronomer Simon Newcomb noticed something odd.'],
   [3.1, '前面几页，总比后面的更脏、更旧', 'The first pages of his log tables were always dirtier.'],
@@ -245,7 +246,7 @@ V.scene(36.0, 52.4, (g, lt) => {
   }
 });
 for (let i = 0; i < 26; i++) V.cue(38.4 + i * 0.27, 'tick', 0.28 + 0.1 * (i % 3), Math.sin(i) * 0.6);
-V.cue(36.3, 'whoosh', 0.6).cue(46.0, 'rise', 0.5).cue(47.0, 'chime', 0.8).cue(48.2, 'pop', 0.5);
+V.cue(36.0, 'whoosh', 0.6).cue(38.0, 'counter', { dur: 7.6, gain: 0.35 }).cue(46.0, 'rise', 0.5).cue(47.0, 'chime', 0.8).cue(47.4, 'pen', { dur: 1.2, gain: 0.5 }).cue(48.0, 'flip', 0.6);
 V.subs_seq(36.6, [
   [3.3, '1938年，物理学家本福特收集了 20229 个数字', 'In 1938, physicist Frank Benford gathered 20,229 numbers.'],
   [3.4, '河流面积、城市人口、物理常数、杂志上的数……', 'River areas, populations, physical constants, magazine figures…'],
@@ -312,7 +313,7 @@ for (let d = 2; d <= 11; d++) {
   const yr = Math.log(d) / Math.log(1.1);
   V.cue(SIM_A + yr / YEARS * (SIM_B - SIM_A), d === 10 ? 'chime' : 'tick', d === 10 ? 0.7 : 0.5);
 }
-V.cue(52.3, 'pop', 0.6).cue(55.7, 'whoosh', 0.5);
+V.cue(52.0, 'whoosh', 0.6).cue(52.4, 'flip', 0.7).cue(55.6, 'slide', 0.6).cue(56.6, 'counter', { dur: 12.4, gain: 0.18 });
 V.subs_seq(52.6, [
   [3.0, '为什么偏偏是 1？看一个会长大的数', 'Why 1? Watch a number grow.'],
   [3.6, '100 元，每年涨 10%，盯住它的第一位', '100 dollars, +10% a year. Watch the first digit.'],
@@ -379,8 +380,8 @@ V.scene(76.2, 90.4, (g, lt) => {
     g.circle(px, py, 5.5, d === 0 ? C.gold : 'rgba(234,234,242,.75)', { alpha: 0.95 });
   }
 }, { fin: 0.5 });
-for (let i = 0; i < 40; i++) V.cue(76.2 + 6.6 + i * 0.15, 'click', 0.25, Math.sin(i * 2.1) * 0.7);
-V.cue(76.4, 'whoosh', 0.6).cue(83.4, 'chime', 0.7);
+DROPS.forEach((d, i) => { if (i % 3 === 0) V.cue(76.2 + d.t + 0.5, 'drop', 0.45, (d.u - 0.5) * 1.4); });
+V.cue(76.2, 'whoosh', 0.6).cue(76.5, 'slide', 0.5).cue(80.0, 'pen', { dur: 1.0, gain: 0.5 }).cue(83.4, 'pen', { dur: 1.2, gain: 0.6 }).cue(84.4, 'chime', 0.7);
 V.subs_seq(76.8, [
   [3.2, '换一把尺子：每一格不是「加多少」，而是「乘多少」', 'A ruler marked in ratios, not steps.'],
   [3.3, '1 到 2 是翻一倍，9 到 10 只多一成', '1 to 2 is a doubling. 9 to 10, barely a tenth.'],
@@ -423,7 +424,7 @@ V.scene(90.0, 104.4, (g, lt) => {
   }
   g.text('示意数据 · illustrative', W / 2 + 430 + 330, 712, { size: 18, weight: 500, color: C.dim, alpha: k2 * 0.8, align: 'right' });
 }, { fin: 0.5 });
-V.cue(90.2, 'whoosh', 0.6).cue(91.3, 'pop', 0.5).cue(94.2, 'rise', 0.5).cue(95.7, 'stamp', 1.0).cue(97.9, 'chime', 0.6);
+V.cue(90.0, 'whoosh', 0.6).cue(90.3, 'slide', 0.4).cue(91.3, 'slide', 0.4).cue(94.0, 'pen', { dur: 1.4, gain: 0.5 }).cue(95.6, 'stamp', 1.0).cue(95.6, 'wrong', 0.5).cue(97.8, 'flip', 0.6).cue(98.0, 'ding', 0.5);
 V.subs_seq(90.5, [
   [3.3, '人在编数字时，会下意识地「平均分配」', 'When people fake numbers, they spread them evenly.'],
   [3.3, '可均匀，恰恰是最不自然的', 'But evenness is exactly what nature avoids.'],
@@ -450,8 +451,11 @@ V.scene(104.0, 111.6, (g, lt) => {
   g.text('跨越数量级 · 自然增长', W / 2 - 400, 700, { size: 26, weight: 500, fam: 'hand', color: C.orange, alpha: prog(lt, 2, 2.8) });
   g.text('有上下限 · 人为编号', W / 2 + 400, 700, { size: 26, weight: 500, fam: 'hand', color: C.dim, alpha: prog(lt, 5.4, 6.2) });
 });
-YES.forEach((_, i) => V.cue(104.5 + i * 0.3, 'pop', 0.45, -0.5));
-NO.forEach((_, i) => V.cue(108.6 + i * 0.3, 'click', 0.5, 0.5));
+V.cue(104.0, 'whoosh', 0.5).cue(104.3, 'correct', 0.5, -0.4);
+YES.forEach((_, i) => V.cue(104.5 + i * 0.3, 'pop', 0.4, -0.5));
+NO.forEach((_, i) => V.cue(107.8 + i * 0.3, 'pop', 0.35, 0.5));
+NO.forEach((_, i) => V.cue(108.6 + i * 0.3, 'snap', 0.5, 0.5));
+V.cue(108.6, 'wrong', 0.4, 0.4);
 V.subs_seq(104.5, [
   [3.2, '跨越多个数量级、自然生长的数据，都爱它', 'Data that grows across orders of magnitude loves it.'],
   [3.4, '身高、电话号码、考试分数，则不归它管', 'Heights, phone numbers, test scores — not so much.'],
@@ -464,7 +468,7 @@ V.scene(111.2, 116.4, (g, lt) => {
   g.text('Things that grow naturally prefer to begin with 1.', W / 2, 570, { size: 32, fam: 'en', italic: true, weight: 400, color: C.dim, alpha: prog(lt, 2.2, 3.2) });
   g.line(W / 2 - 180 * prog(lt, 2.5, 3.5), 640, W / 2 + 180 * prog(lt, 2.5, 3.5), 640, { color: C.gold, alpha: 0.5, lw: 1.5 });
 }, { fin: 0.6, fout: 0.8 });
-V.cue(111.3, 'swell', 0.6).cue(113.2, 'chime', 0.9);
+V.cue(111.2, 'reverse', { dur: 1.2, align: 'end', gain: 0.5 }).cue(111.2, 'impact', 0.5).cue(113.2, 'sparkle', 0.7);
 
 /* ================================================================
  * 9. 声明与引用 116–130
@@ -476,6 +480,8 @@ V.endCards(116.2, {
   question: '你的工资条，第一位是几？',
   credit: '@zhiyusay 出品 · 动画由代码生成',
 });
-V.cue(122.0, 'paper', 0.5).cue(124.3, 'chime', 0.6);
+V.cue(116.2, 'whoosh', 0.4).cue(121.8, 'paper', 0.5).cue(124.0, 'ding', 0.6);
 
+// 卡点：场景起点吸附到小节头 / drop（无 BGM 时按 77 BPM 网格）
+V.sync();
 V.mount();

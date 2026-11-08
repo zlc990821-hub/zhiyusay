@@ -16,8 +16,13 @@ const { C, E, prog, env, clamp, lerp, rng } = Vibe;   // 颜色、缓动、工�
 | `V.subs_seq(start, [[dur, zh, en], ...], gap=0.25)` | 连续字幕，返回结束时间 |
 | `V.label(a, b, text)` | 顶部标签 |
 | `V.note(a, b, text, {x, y, color, size})` | 注释带（默认 y=768，手写橙色） |
-| `V.cue(t, name, gain=1, pan=0)` | 音效点 |
-| `V.music({prog, sections, gain, sfx_gain})` | 配乐：和弦进行 + 分段乐器层 |
+| `V.cue(t, name, gain=1, pan=0)` 或 `V.cue(t, name, {gain, pan, dur, align:'end', hit})` | 音效点；`dur` 给 pen/counter/reverse 定长；`align:'end'` 让音效在 t 结束 |
+| `V.B(n)` / `V.D(n)` / `V.snap(t, unit)` / `V.nextBeat(t)` | BGM 拍点网格（见 music-sync.md） |
+| `V.pulse(t, 'beat'\|'bar', decay)` / `g.pulse` | 拍点脉冲 0..1 |
+| `V.drops()` / `V.sections()` | 音乐高潮点 / 段落 |
+| `V.sync({maxBar, maxBeat, drop, skip})` | 卡点同步：场景起点吸附到 drop > 小节头 > 拍；drop 处自动硬切；mount 前调用 |
+| `V.beatGlow = false` / `V.dropFlash = false` | 关闭随拍背景光 / drop 闪光 |
+| `V.music({prog, sections, gain, sfx_gain})` | 合成配乐（没有 bgm.js 时使用）：和弦进行 + 分段乐器层 |
 | `V.titleCard(a, b, {title, subtitle, en, kicker})` | 标准标题卡 |
 | `V.endCards(a, {disclaimer[], cites[], question, credit, disclaimerDur, citeDur})` | 声明卡 + 参考文献 + 互动问题，返回结束时间 |
 | `V.push(g, lt, rate)` | 慢推镜（放在场景函数第一行） |
@@ -56,10 +61,9 @@ rng(seed)()             // 固定种子随机数，在场景外预生成数据
 
 ## 音效名
 
-`whoosh`（转场）`swell`（开场铺垫）`rise`（揭晓前上扬）`chime`（揭晓/金句）`sparkle`（高亮）
-`tick`（计数/逐个出现）`click`（粒子落下）`pop`（卡片/标签弹出）`paper`（纸张）`stamp`（盖章）`thud`（标题重音）
-
-每段 1–3 个重音（chime/thud/stamp），其余为轻音效（gain 0.25–0.5）。
+`whoosh` `slide` `zoom` `pop` `flip` `paper` `stamp` `pen` `counter` `tick` `click` `drop` `coin` `correct` `wrong` `snap`
+`ding` `bubble` `sparkle` `rise` `chime` `reverse` `impact` `boom` `thud` `shutter` `heartbeat` `swell`
+用法与电平见 `sound-design.md`。
 
 ## 配乐层
 

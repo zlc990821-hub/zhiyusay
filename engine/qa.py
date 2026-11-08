@@ -39,6 +39,31 @@ def main(path):
         I = float(I[-1]) if I else -99; P = float(P[-1]) if P else 0
         rep('响度', -16 <= I <= -12, f"{I:.1f} LUFS（目标 -14）")
         rep('峰值', P <= -0.5, f"{P:.1f} dBTP（≤ -1）")
+    # 卡点：场景切点 / 重音效 是否落在拍上（需要同目录 cues.json 且用了 BGM）
+    import os
+    cj = os.path.join(os.path.dirname(os.path.abspath(path)), 'cues.json')
+    if os.path.exists(cj):
+        cfg = json.load(open(cj)); sy = cfg.get('sync') or {}
+        beats = np.array(sy.get('beats') or []); downs = np.array(sy.get('downbeats') or [])
+        if len(beats):
+            near = lambda t, arr: float(np.min(np.abs(arr - t))) if len(arr) else 9
+            cuts = [x for x in sy.get('scenes', []) if x > 0.5 and x < dur - 0.5]
+            on = [near(x, beats) <= 0.045 for x in cuts]
+            onbar = [near(x, downs) <= 0.045 for x in cuts]
+            rep('切点卡拍', np.mean(on) >= 0.8 if on else True, f"{sum(on)}/{len(on)} 个场景切点在拍上，其中 {sum(onbar)} 个在小节头")
+            hits = [c['t'] for c in cfg.get('cues', []) if c.get('hit')]
+            hon = [near(x, beats) <= 0.06 for x in hits]
+            rep('重音卡拍', np.mean(hon) >= 0.6 if hon else True, f"{sum(hon)}/{len(hon)} 个重音效（whoosh/thud/chime/stamp…）在拍上")
+            drops = sy.get('drops') or []
+            if drops:
+                dh = [any(abs(x - d) <= 0.06 for x in cuts + hits) for d in drops]
+                rep('高潮对位', all(dh), f"{sum(dh)}/{len(dh)} 个音乐 drop 上有切点或重音（{[round(d,2) for d in drops]}）")
+        # 音效覆盖：每个场景切点 ±0.5s 内应有音效
+        ct = np.array([c['t'] for c in cfg.get('cues', [])])
+        cuts = [x for x in (sy.get('scenes') or []) if x > 0.5]
+        if len(ct) and cuts:
+            cov = [np.min(np.abs(ct - x)) <= 0.5 for x in cuts]
+            rep('音效覆盖', np.mean(cov) >= 0.8, f"{sum(cov)}/{len(cov)} 个场景切点配了音效")
     print('  结论：' + ('通过' if ok else '有未通过项，请检查'))
     return 0 if ok else 1
 

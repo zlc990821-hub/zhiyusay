@@ -16,8 +16,11 @@ else
   VID="$OUT/video.mp4"; FINAL="$OUT/final.mp4"; SS=()
 fi
 python3 "$ROOT/engine/audio.py" "$OUT/cues.json" "$OUT/audio.wav"
+# 测响度 → 线性增益到 -14 LUFS → 限幅（audio.py 已做主限幅，这里只是微调与保险）
+I=$(ffmpeg -hide_banner -nostats -i "$OUT/audio.wav" -af ebur128 -f null - 2>&1 | grep -E "^\s+I:" | tail -1 | awk '{print $2}')
+G=$(python3 -c "print(round(-14 - ($I), 2))")
 ffmpeg -y -loglevel error -i "$VID" "${SS[@]}" -i "$OUT/audio.wav" \
   -map 0:v -map 1:a -c:v copy -c:a aac -b:a 192k -ar 44100 \
-  -af "loudnorm=I=-14:TP=-1.0:LRA=11" -shortest -movflags +faststart "$FINAL"
+  -af "volume=${G}dB,alimiter=limit=0.79:attack=1:release=60:level=false" -shortest -movflags +faststart "$FINAL"
 echo "✓ $FINAL"
 python3 "$ROOT/engine/qa.py" "$FINAL" || true

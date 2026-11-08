@@ -65,8 +65,8 @@ const grab = (page, t, type = 'jpeg') => page.evaluate(([t, type, q]) => {
 const browser = await chromium.launch({ args: ['--font-render-hinting=none', '--disable-lcd-text'] });
 try {
   await mkdir(OUT, { recursive: true });
-  const meta0 = await (async () => { const p = await openPage(browser); const m = await p.evaluate(() => ({ ...window.__meta, cues: window.__cues(), music: window.__music(), subs: window.__subs() })); await p.close(); return m; })();
-  await writeFile(path.join(OUT, 'cues.json'), JSON.stringify({ duration: meta0.duration, bpm: meta0.bpm, music: meta0.music, cues: meta0.cues }, null, 1));
+  const meta0 = await (async () => { const p = await openPage(browser); const m = await p.evaluate(() => ({ ...window.__meta, cues: window.__cues(), music: window.__music(), bgm: window.__bgm(), sync: window.__syncInfo(), subs: window.__subs() })); await p.close(); return m; })();
+  await writeFile(path.join(OUT, 'cues.json'), JSON.stringify({ duration: meta0.duration, bpm: meta0.bpm, music: meta0.music, bgm: meta0.bgm, sync: meta0.sync, cues: meta0.cues }, null, 1));
   await writeFile(path.join(OUT, 'subs.json'), JSON.stringify(meta0.subs, null, 1));
   const fps = +opt('fps', meta0.fps);
 

@@ -69,14 +69,79 @@
       scenes: [], subs: [], labels: [], notes: [], cues: [], overlays: [],
       _probe: null,
     };
-    V.beat = 60 / V.bpm; V.bar = V.beat * 4;
+    // ---------- BGM 卡点数据（由 engine/bgm.py use 生成的 bgm.js 提供 window.BGM） ----------
+    V.bgm = opts.bgm !== undefined ? opts.bgm : (root.BGM || null);
+    if (V.bgm) V.bpm = V.bgm.bpm;
+    V.beat = V.bgm ? V.bgm.beat : 60 / V.bpm; V.bar = V.beat * 4;
+    const BEATS = V.bgm ? V.bgm.beats : [], DOWNS = V.bgm ? V.bgm.downbeats : [];
+    const gridAt = (arr, n, step) => arr.length ? (n < arr.length ? arr[n] : arr[arr.length - 1] + (n - arr.length + 1) * step) : n * step;
+    /** 第 n 拍 / 第 n 小节头 的视频时间（无 BGM 时按 bpm 等分） */
+    V.B = (n) => gridAt(BEATS, n, V.beat);
+    V.D = (n) => gridAt(DOWNS, n, V.bar);
+    const gridList = (unit) => {
+      if (unit === 'bar') return DOWNS.length ? DOWNS : Array.from({ length: Math.ceil(V.duration / V.bar) + 1 }, (_, i) => i * V.bar);
+      const b = BEATS.length ? BEATS : Array.from({ length: Math.ceil(V.duration / V.beat) + 1 }, (_, i) => i * V.beat);
+      if (unit === 'half') { const h = []; b.forEach((x, i) => { h.push(x); if (i < b.length - 1) h.push((x + b[i + 1]) / 2); }); return h; }
+      return b;
+    };
+    /** 吸附到最近的拍/小节头/半拍 */
+    V.snap = (t, unit = 'beat') => { let best = t, d = 1e9; for (const g of gridList(unit)) { const e = Math.abs(g - t); if (e < d) { d = e; best = g; } } return best; };
+    V.nextBeat = (t, unit = 'beat') => gridList(unit).find((g) => g >= t - 1e-6) ?? t;
+    /** 节拍脉冲：每拍/每小节头瞬间为 1，按 decay 秒指数衰减。用于随拍呼吸的光、微缩放 */
+    V.pulse = (t, unit = 'beat', decay = 0.22) => {
+      const L = gridList(unit); let last = -1e9;
+      for (let i = 0; i < L.length && L[i] <= t; i++) last = L[i];
+      return Math.exp(-(t - last) / decay);
+    };
+    V.drops = () => (V.bgm ? V.bgm.drops.map((d) => d.t) : []);
+    V.sections = () => (V.bgm ? V.bgm.sections : []);
+
+    /**
+     * 卡点同步：把每个场景的起点吸附到最近的小节头（或 drop / 拍），
+     * 该场景时间段内的字幕、标签、注释、音效整体跟着平移，场景内部动画不变形。
+     * 在所有 V.scene/V.sub/V.cue 定义完之后、V.mount() 之前调用。
+     *   opts: { maxBar: 0.6, maxBeat: 0.3, drop: 1.2, skip: [scene start times 不吸附] }
+     */
+    V.sync = (o = {}) => {
+      const maxBar = o.maxBar ?? Math.min(0.6, V.bar * 0.3), maxBeat = o.maxBeat ?? V.beat * 0.55, dropWin = o.drop ?? 1.2;
+      const starts = [...new Set(V.scenes.map((x) => x.a))].sort((a, b) => a - b);
+      const drops = V.drops();
+      const anchors = starts.map((a) => {
+        if ((o.skip || []).includes(a) || a === 0) return { a, d: 0, how: 'fixed' };
+        const dr = drops.find((x) => Math.abs(x - a) <= dropWin);
+        if (dr !== undefined) return { a, d: dr - a, how: 'drop' };
+        const sb = V.snap(a, 'bar'); if (Math.abs(sb - a) <= maxBar) return { a, d: sb - a, how: 'bar' };
+        const sbt = V.snap(a, 'beat'); if (Math.abs(sbt - a) <= maxBeat) return { a, d: sbt - a, how: 'beat' };
+        return { a, d: 0, how: 'none' };
+      });
+      const warp = (t) => { let d = 0; for (const x of anchors) { if (x.a <= t + 1e-6) d = x.d; else break; } return +(t + d).toFixed(4); };
+      for (const sc of V.scenes) { const d = anchors.find((x) => x.a === sc.a).d; sc.delta = d; sc.a = +(sc.a + d).toFixed(4); sc.b = warp(sc.b - 1e-3) + 1e-3; }
+      // drop 处做硬切：前一场景正好在 drop 上收掉，新场景 0.1s 内打进来（重拍上的"砸"感）
+      for (const x of anchors.filter((x) => x.how === 'drop')) {
+        const tD = x.a + x.d;
+        for (const sc of V.scenes) {
+          if (Math.abs(sc.a - tD) < 1e-3) { sc.fin = Math.min(sc.fin, 0.1); continue; }
+          if (sc.a < tD && sc.b > tD - 1.5 && sc.b < tD + 1.5) { sc.b = tD + 0.06; sc.fout = 0.1; }
+        }
+      }
+      for (const arr of [V.subs, V.labels, V.notes, V.overlays]) for (const it of arr) { const a0 = it.a; it.a = warp(a0); it.b = Math.max(it.a + 0.2, warp(it.b - 1e-3) + 1e-3); }
+      for (const c of V.cues) c.t = warp(c.t);
+      V._sync = anchors.map((x) => ({ from: x.a, to: +(x.a + x.d).toFixed(3), how: x.how }));
+      return V;
+    };
 
     V.scene = (a, b, fn, o = {}) => { V.scenes.push({ a, b, fn, z: o.z || 0, fin: o.fin ?? 0.6, fout: o.fout ?? 0.6 }); return V; };
     V.overlay = (a, b, fn) => { V.overlays.push({ a, b, fn }); return V; };
     V.sub = (a, b, zh, en = '') => { V.subs.push({ a, b, zh, en }); return V; };
     V.label = (a, b, text) => { V.labels.push({ a, b, text }); return V; };
     V.note = (a, b, text, o = {}) => { V.notes.push({ a, b, text, ...o }); return V; };
-    V.cue = (t, name, gain = 1, pan = 0) => { V.cues.push({ t: +t.toFixed(3), name, gain, pan }); return V; };
+    /** 音效点。V.cue(t, 'pop', 0.5, -0.3) 或 V.cue(t, 'pen', { gain, pan, dur, align: 'end', hit }) */
+    const HITS = new Set(['thud', 'stamp', 'chime', 'impact', 'boom', 'whoosh', 'flip', 'reverse']);
+    V.cue = (t, name, gain = 1, pan = 0) => {
+      const o = typeof gain === 'object' ? gain : { gain, pan };
+      V.cues.push({ t: +t.toFixed(3), name, gain: o.gain ?? 1, pan: o.pan ?? 0, dur: o.dur, align: o.align, hit: o.hit ?? HITS.has(name) });
+      return V;
+    };
     /** 配乐设定：{ prog:['Am','F','C','G'], sections:[[0,8,'pad'],...], gain, sfx_gain } */
     V.music = (m) => { V._music = m; return V; };
     /** 字幕串：按顺序排，每条自动接在上一条后面 */
@@ -93,7 +158,7 @@
 
     // ---------- 绘图助手 g ----------
     function makeG(ctx) {
-      const g = { ctx, W, H, C, FONT, E, prog, env, clamp, lerp };
+      const g = { ctx, W, H, C, FONT, E, prog, env, clamp, lerp, pulse: (t, u, d) => V.pulse(t, u, d) };
 
       g.font = (size, weight = 700, fam = 'sans', italic = false) =>
         `${italic ? 'italic ' : ''}${weight} ${size}px ${FONT[fam] || fam}`;
@@ -253,7 +318,9 @@
       const gr = ctx.createRadialGradient(W / 2, H * 0.45, 80, W / 2, H * 0.45, W * 0.75);
       gr.addColorStop(0, C.bg2); gr.addColorStop(0.55, C.bg1); gr.addColorStop(1, C.bg0);
       ctx.fillStyle = gr; ctx.fillRect(0, 0, W, H);
-      // 呼吸光晕：两团缓慢漂移的冷/暖光，保证画面永远在"呼吸"
+      // 呼吸光晕：两团缓慢漂移的冷/暖光，保证画面永远在"呼吸"；有 BGM 时随小节头轻微脉动
+      const bp = V.bgm && V.beatGlow !== false ? V.pulse(t, 'bar', 0.5) * 0.035 + V.pulse(t, 'beat', 0.18) * 0.012 : 0;
+      g.spot(W / 2, H * 0.45, 900, bp, '201,169,106');
       g.spot(W * 0.5 + Math.sin(t * 0.31) * 360, H * 0.42 + Math.cos(t * 0.23) * 120, 640, 0.07 + 0.03 * Math.sin(t * 0.9), '124,156,232');
       g.spot(W * 0.5 + Math.cos(t * 0.27) * 420, H * 0.55 + Math.sin(t * 0.19) * 140, 560, 0.05 + 0.025 * Math.cos(t * 0.8), '201,169,106');
       for (const d of dust) {
@@ -298,10 +365,15 @@
       for (const s of act) {
         ctx.save();
         ctx.globalAlpha = env(t, s.a, s.b, s.fin, s.fout);
-        s.fn(G, t - s.a, { t, dur: s.b - s.a, a: s.a, b: s.b });
+        s.fn(G, t - s.a, { t: t - (s.delta || 0), dur: s.b - s.a, a: s.a, b: s.b });
         ctx.restore();
       }
       for (const o of V.overlays) if (t >= o.a && t < o.b) { ctx.save(); o.fn(G, t - o.a, { t }); ctx.restore(); }
+      // drop 闪光：音乐高潮瞬间的一下柔光，强化卡点
+      if (V.dropFlash !== false) for (const d of V.drops()) {
+        const k = t - d; if (k < 0 || k > 0.6) continue;
+        ctx.save(); ctx.globalAlpha = 0.16 * Math.exp(-k / 0.15); ctx.fillStyle = '#F1D9A0'; ctx.fillRect(0, 0, W, H); ctx.restore();
+      }
       drawChrome(G, t);
       // 暗角
       const vg = ctx.createRadialGradient(W / 2, H / 2, H * 0.45, W / 2, H / 2, W * 0.72);
@@ -334,6 +406,8 @@
       root.__meta = { width: W, height: H, fps: FPS, duration: V.duration, bpm: V.bpm };
       root.__cues = () => V.cues.slice().sort((a, b) => a.t - b.t);
       root.__music = () => V._music || null;
+      root.__bgm = () => V.bgm ? { file: V.bgm.file, offset: V.bgm.offset, duration: V.duration, fade_in: V.bgm.fade_in, fade_out: V.bgm.fade_out, gain_db: V.bgm.gain_db, id: V.bgm.id } : null;
+      root.__syncInfo = () => ({ anchors: V._sync || [], scenes: V.scenes.map((x) => x.a), beats: BEATS, downbeats: DOWNS, drops: V.drops() });
       root.__subs = () => V.subs.slice();
       const q = new URLSearchParams(location.search);
       if (q.has('t')) V.render(+q.get('t'));
@@ -352,11 +426,15 @@
 
     V.titleCard = (a, b, o) => V.scene(a, b, (g, lt, s) => {
       push(g, lt, 0.008);
-      const k1 = prog(lt, 0.1, 1.0, E.out), k2 = prog(lt, 0.5, 1.6, E.out), k3 = prog(lt, 1.2, 2.2, E.out);
+      // slam：落在重拍/drop 上时，片名 0.3s 内砸进来（有 BGM 时默认开启）
+      const slam = o.slam ?? !!V.bgm;
+      const k1 = slam ? prog(lt, 0, 0.3, E.out) : prog(lt, 0.1, 1.0, E.out);
+      const k2 = slam ? prog(lt, 0, 0.32, E.outQuint) : prog(lt, 0.5, 1.6, E.out);
+      const k3 = slam ? prog(lt, V.beat * 2, V.beat * 2 + 0.6, E.out) : prog(lt, 1.2, 2.2, E.out);
       g.spot(W / 2, H * 0.43, 620, 0.14);
       g.text(o.kicker || 'VIBE知识大赏', W / 2, 330 - (1 - k1) * 10, { size: 30, weight: 500, color: C.gold, alpha: k1 * 0.85, ls: 14 });
       g.line(W / 2 - 220 * k2, 380, W / 2 + 220 * k2, 380, { color: C.gold, alpha: 0.45, lw: 1.5 });
-      const sc = lerp(1.06, 1, E.out(k2));
+      const sc = slam ? lerp(1.22, 1, k2) : lerp(1.06, 1, E.out(k2));
       g.ctx.save(); g.ctx.translate(W / 2, 470); g.ctx.scale(sc, sc);
       g.text(o.title, 0, 0, { size: o.size || 120, weight: 900, fam: 'serif', gradient: [C.goldHi, C.gold, '#8f7442'], alpha: k2, glow: 24, glowColor: 'rgba(201,169,106,.35)' });
       g.ctx.restore();
