@@ -386,6 +386,7 @@
       const p = ctx.createPattern(grain, 'repeat'); ctx.fillStyle = p; ctx.fillRect(0, 0, W, H); ctx.restore();
     }
     function drawBg(g, t) {
+      if (opts.bg) return opts.bg(g, t);            // 片子自定义的世界（如月夜湖面）
       if (THEME === 'paper') return drawPaperBg(g, t);
       const { ctx } = g;
       const gr = ctx.createRadialGradient(W / 2, H * 0.45, 80, W / 2, H * 0.45, W * 0.75);
@@ -424,7 +425,14 @@
       for (const s of V.subs) {
         const a = env(t, s.a, s.b, 0.28, 0.22); if (a <= 0) continue;
         const dy = (1 - a) * 8;
-        if (THEME === 'paper') {
+        if (opts.subStyle) {
+          // 自定义字幕样式：{ fam, size, weight, color, hi, glow, shadow, ls }
+          const ss = opts.subStyle;
+          const o = { size: ss.size || L.subSize, weight: ss.weight || 700, fam: ss.fam || 'serif', color: ss.color || C.text, alpha: a, ls: ss.ls ?? 2,
+            glow: ss.glow || 0, glowColor: ss.glowColor, stroke: ss.stroke || 0, strokeColor: ss.strokeColor };
+          const lines = g.wrap(s.zh, L.subMaxW, o);
+          lines.forEach((ln, i) => g.rich(ln, W / 2, L.subY + dy + (i - (lines.length - 1) / 2) * L.lineGap, o, ss.hi || C.goldHi));
+        } else if (THEME === 'paper') {
           // 纸感字幕：宋体墨色 + 米白描边光晕；{关键词} 用珊瑚色强调；过长自动折成两行
           const o = { size: L.subSize, weight: 700, fam: 'serif', color: C.ink, alpha: a, stroke: 12, strokeColor: 'rgba(251,246,238,.92)', ls: 2 };
           const lines = g.wrap(s.zh, L.subMaxW, o);
@@ -442,7 +450,7 @@
     V.render = (t) => {
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.globalAlpha = 1;
-      drawBg(G, t);
+      if (!V._probe) drawBg(G, t);
       const act = V.scenes.filter((s) => t >= s.a && t < s.b).sort((a, b) => a.z - b.z);
       for (const s of act) {
         ctx.save();
@@ -450,7 +458,7 @@
         s.fn(G, t - s.a, { t: t - (s.delta || 0), dur: s.b - s.a, a: s.a, b: s.b });
         ctx.restore();
       }
-      for (const o of V.overlays) if (t >= o.a && t < o.b) { ctx.save(); o.fn(G, t - o.a, { t }); ctx.restore(); }
+      if (!V._probe) for (const o of V.overlays) if (t >= o.a && t < o.b) { ctx.save(); o.fn(G, t - o.a, { t }); ctx.restore(); }
       // drop 闪光：音乐高潮瞬间的一下柔光，强化卡点
       if (V.dropFlash !== false) for (const d of V.drops()) {
         const k = t - d; if (k < 0 || k > 0.6) continue;
