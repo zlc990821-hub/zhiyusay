@@ -1,0 +1,4 @@
+engine/fonts/
+projects/*/out/
+node_modules/
+__pycache__/
