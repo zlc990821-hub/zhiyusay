@@ -171,9 +171,55 @@ function heroText(g, txt, x, y, k, o = {}) {
   g.text(txt, 0, 0, { size, weight: 900, fam: 'serif', gradient: ['#FFF4D6', '#F2CD86', '#C99A55'], glow: 34, glowColor: 'rgba(255,200,130,.65)', ls: lerp(30, 12, E.out(clamp(k))) });
   g.ctx.restore();
 }
-V.overlay(0, 999, () => {});   // 占位：保持 overlay 顺序（倒影 → 水面效果）
+
+/* ================================================================
+ * 光线图标：关键词不用文字，用光"描"出来的图案（k = 描绘进度）
+ * ================================================================ */
+const LC = '#F8DC9C';
+const GL = (g, pts, k, o = {}) => g.path(pts, clamp(k), { color: o.c || LC, lw: o.lw || 5, glow: 24, alpha: o.a ?? 1, dash: o.dash });
+const arcP = (cx, cy, rx, a0, a1, ry = rx, n = 48) => [...Array(n + 1)].map((_, i) => { const a = lerp(a0, a1, i / n); return [cx + Math.cos(a) * rx, cy + Math.sin(a) * ry]; });
+const heartP = (cx, cy, s, n = 80) => [...Array(n + 1)].map((_, i) => { const u = i / n * Math.PI * 2; return [cx + s * 16 * Math.pow(Math.sin(u), 3) / 16, cy - s * (13 * Math.cos(u) - 5 * Math.cos(2 * u) - 2 * Math.cos(3 * u) - Math.cos(4 * u)) / 16]; });
+const zig = (x0, y0, x1, y1, n, a) => [...Array(n + 1)].map((_, i) => [lerp(x0, x1, i / n) + (i % 2 ? a : -a) * (i > 0 && i < n ? 1 : 0) * (y1 !== y0 ? 1 : 0), lerp(y0, y1, i / n) + (i % 2 ? a : -a) * (i > 0 && i < n ? 1 : 0) * (y1 === y0 ? 1 : 0)]);
+const dotL = (g, x, y, r, a = 1) => g.circle(x, y, r, '#FFF6E0', { alpha: a, glow: 18, glowColor: 'rgba(255,214,150,1)' });
+const bubbleP = (cx, cy, w, h) => [...arcP(cx - w / 2 + h / 2, cy, h / 2, Math.PI / 2, Math.PI * 1.5), ...arcP(cx + w / 2 - h / 2, cy, h / 2, -Math.PI / 2, Math.PI / 2), [cx - w * 0.1, cy + h / 2], [cx - w * 0.28, cy + h / 2 + 30], [cx - w * 0.22, cy + h / 2]];
+const ICON = {
+  背叛: (g, k, t) => { const sp = 14 * prog(k, 0.6, 1); const h = heartP(0, 6, 70); GL(g, h.slice(0, 41).map(([x, y]) => [x - sp, y]), k * 1.6); GL(g, h.slice(40).map(([x, y]) => [x + sp, y]), k * 1.6); GL(g, zig(0, -50, 0, 70, 6, 12).map(([x, y], i) => [x - sp, y]), (k - 0.4) * 2, { lw: 3 }); GL(g, zig(0, -50, 0, 70, 6, 12).map(([x, y]) => [x + sp, y]), (k - 0.4) * 2, { lw: 3 }); },
+  争吵: (g, k, t) => { const j = Math.sin(t * 30) * 3 * prog(k, 0.8, 1); GL(g, [[-70, -60], [-20, -10], [-45, 0], [10, 60]].map(([x, y]) => [x + j, y]), k * 1.3); GL(g, [[70, -60], [20, -10], [45, 0], [-10, 60]].map(([x, y]) => [x - j, y]), k * 1.3 - 0.2); },
+  沉默失语: (g, k, t) => { GL(g, bubbleP(0, 0, 200, 110), k * 1.3); [-40, 0, 40].forEach((x, i) => dotL(g, x, 0, 6, prog(k, 0.5 + i * 0.1, 0.7 + i * 0.1) * (0.4 + 0.6 * Math.abs(Math.sin(t * 2 + i))))); GL(g, [[-120, 60], [120, -60]], (k - 0.75) * 4, { lw: 4 }); },
+  不够爱: (g, k, t) => { GL(g, heartP(0, 6, 72), k * 1.2, { dash: [10, 12] }); const f = prog(k, 0.6, 1) * 0.35; g.ctx.save(); g.ctx.beginPath(); heartP(0, 6, 72).forEach(([x, y], i) => i ? g.ctx.lineTo(x, y) : g.ctx.moveTo(x, y)); g.ctx.clip(); g.ctx.fillStyle = 'rgba(248,220,156,.5)'; g.ctx.fillRect(-80, 80 - 150 * f, 160, 150 * f); g.ctx.restore(); },
+  真实的互动: (g, k, t) => { dotL(g, -90, 0, 14, clamp(k * 3)); dotL(g, 90, 0, 14, clamp(k * 3 - 0.3)); GL(g, arcP(0, 30, 80, -Math.PI * 0.85, -Math.PI * 0.15), k * 1.5 - 0.3); GL(g, arcP(0, -30, 80, Math.PI * 0.15, Math.PI * 0.85), k * 1.5 - 0.5); const q = (t * 0.6) % 1; dotL(g, lerp(-80, 80, q), -Math.sin(q * Math.PI) * 50 - 10, 5, prog(k, 0.8, 1)); dotL(g, lerp(80, -80, q), Math.sin(q * Math.PI) * 50 + 10, 5, prog(k, 0.8, 1)); },
+  孤岛: (g, k, t) => { GL(g, arcP(0, 40, 100, Math.PI, Math.PI * 2, 46), k * 1.4); GL(g, [[-140, 40], [140, 40]], k * 1.4 - 0.2, { lw: 3 }); for (let i = 0; i < 2; i++) GL(g, [...Array(13)].map((_, j) => [-130 + j * 21.6, 66 + i * 22 + Math.sin(j * 1.3 + t * 2) * 4]), k * 1.4 - 0.4 - i * 0.1, { lw: 2.5 }); dotL(g, 0, -20, 9, prog(k, 0.6, 0.9)); },
+  读心术: (g, k, t) => { GL(g, [...arcP(0, 60, 130, -Math.PI * 0.78, -Math.PI * 0.22), ...arcP(0, -60, 130, Math.PI * 0.22, Math.PI * 0.78)], k * 1.3); GL(g, arcP(0, 0, 32, 0, 6.3), k * 1.3 - 0.3); dotL(g, 0, 0, 10, prog(k, 0.7, 0.9)); GL(g, [[-120, 70], [120, -70]], (k - 0.75) * 4, { lw: 4 }); },
+  高墙: (g, k, t) => { for (let r = 0; r < 4; r++) { const y = 60 - r * 40; GL(g, [[-90, y], [90, y]], k * 4 - r * 0.6, { lw: 3.5 }); for (let c = 0; c < 4; c++) { const x = -90 + c * 60 + (r % 2 ? 30 : 0); if (x > 90) continue; GL(g, [[x, y], [x, y - 40]], k * 4 - r * 0.6 - 0.3, { lw: 3 }); } } GL(g, [[-90, -100], [90, -100]], k * 4 - 2.6, { lw: 3.5 }); },
+  语言: (g, k, t) => { GL(g, bubbleP(-30, 0, 170, 110), k * 1.3); for (let i = 0; i < 3; i++) GL(g, arcP(70, 0, 40 + i * 28, -0.6, 0.6), prog(k, 0.5 + i * 0.12, 0.75 + i * 0.12), { lw: 4, a: 0.5 + 0.5 * Math.sin(t * 3 - i) }); },
+  自我感动: (g, k, t) => { GL(g, arcP(0, 0, 80, -Math.PI * 0.4, Math.PI * 1.45), k * 1.3); GL(g, [[22, -84], [-6, -72], [14, -54]].map(([x, y]) => [x + 14, y + 6]), (k - 0.7) * 4); dotL(g, 0, 0, 12, prog(k, 0.6, 0.9) * (0.6 + 0.4 * Math.sin(t * 2))); },
+  独自硬扛: (g, k, t) => { GL(g, arcP(0, 90, 70, Math.PI, Math.PI * 2, 50), k * 1.6); dotL(g, 0, 10, 16, prog(k, 0.3, 0.5)); const y = lerp(-140, -70, E.out(prog(k, 0.5, 0.9))); GL(g, [[-70, y - 60], [70, y - 60], [70, y], [-70, y], [-70, y - 60]], (k - 0.45) * 2, { lw: 5 }); },
+  傲慢: (g, k, t) => GL(g, [[-90, 50], [-100, -50], [-45, 0], [0, -70], [45, 0], [100, -50], [90, 50], [-90, 50]], k * 1.2),
+  隐忍克制: (g, k, t) => { GL(g, [[-70, -10], [70, -10], [70, 90], [-70, 90], [-70, -10]], k * 1.5); GL(g, arcP(0, -10, 46, Math.PI, Math.PI * 2, 66), k * 1.5 - 0.4); dotL(g, 0, 36, 8, prog(k, 0.7, 0.9)); GL(g, [[0, 44], [0, 66]], (k - 0.8) * 5, { lw: 4 }); },
+  临界点: (g, k, t) => { GL(g, arcP(0, 60, 120, Math.PI, Math.PI * 2), k * 1.4); GL(g, arcP(0, 60, 120, Math.PI * 1.78, Math.PI * 2), k * 1.4 - 0.4, { c: '#FF9A7A', lw: 8 }); const a = lerp(Math.PI * 1.1, Math.PI * 1.93, E.out(prog(k, 0.4, 1))) + (k > 0.95 ? Math.sin(t * 40) * 0.03 : 0); GL(g, [[0, 60], [Math.cos(a) * 100, 60 + Math.sin(a) * 100]], (k - 0.3) * 3, { lw: 4 }); dotL(g, 0, 60, 8, prog(k, 0.3, 0.5)); },
+  双向困境: (g, k, t) => { const o = 20 + 40 * prog(k, 0.6, 1); GL(g, [[-o, 0], [-o - 90, 0]], k * 1.6); GL(g, [[-o - 70, -18], [-o - 92, 0], [-o - 70, 18]], (k - 0.5) * 3); GL(g, [[o, 0], [o + 90, 0]], k * 1.6 - 0.1); GL(g, [[o + 70, -18], [o + 92, 0], [o + 70, 18]], (k - 0.6) * 3); dotL(g, -o - 110, 0, 8, prog(k, 0.7, 1)); dotL(g, o + 110, 0, 8, prog(k, 0.7, 1)); },
+  心有灵犀: (g, k, t) => { GL(g, heartP(-80, 10, 46), k * 1.4); GL(g, heartP(80, 10, 46), k * 1.4 - 0.2); GL(g, [...Array(21)].map((_, i) => [lerp(-34, 34, i / 20), -20 - Math.sin(i / 20 * Math.PI) * 30]), (k - 0.6) * 2.5, { lw: 2.5, dash: [4, 6] }); },
+  袒露: (g, k, t) => { GL(g, arcP(-30, 60, 60, Math.PI * 0.55, Math.PI * 1.05), k * 1.5); GL(g, arcP(30, 60, 60, -Math.PI * 0.05, Math.PI * 0.45), k * 1.5); GL(g, heartP(0, -30, 40), k * 1.5 - 0.4); for (let i = 0; i < 6; i++) { const a = -Math.PI / 2 + (i - 2.5) * 0.4; GL(g, [[Math.cos(a) * 70, -40 + Math.sin(a) * 70], [Math.cos(a) * 100, -40 + Math.sin(a) * 100]], (k - 0.7) * 4, { lw: 3, a: 0.6 + 0.4 * Math.sin(t * 3 + i) }); } },
+  表达: (g, k, t) => { dotL(g, -80, 0, 12, clamp(k * 3)); for (let i = 0; i < 4; i++) GL(g, arcP(-80, 0, 40 + i * 40, -0.7, 0.7), prog(k, 0.2 + i * 0.15, 0.5 + i * 0.15), { lw: 4, a: 0.4 + 0.6 * ((Math.sin(t * 3 - i) + 1) / 2) }); },
+  损耗: (g, k, t) => { GL(g, [[-60, -90], [60, -90], [8, 0], [60, 90], [-60, 90], [-8, 0], [-60, -90]], k * 1.2); const q = (t * 0.5) % 1; for (let i = 0; i < 4; i++) dotL(g, 0, -4 + ((q + i / 4) % 1) * 80, 2.5, prog(k, 0.7, 1)); g.ctx.save(); g.ctx.globalAlpha *= prog(k, 0.6, 1); g.ctx.fillStyle = 'rgba(248,220,156,.45)'; g.ctx.beginPath(); g.ctx.moveTo(-40, 86); g.ctx.lineTo(40, 86); g.ctx.lineTo(0, 50); g.ctx.fill(); g.ctx.restore(); },
+  自我保护: (g, k, t) => { GL(g, [[0, -100], [80, -70], [74, 20], [0, 100], [-74, 20], [-80, -70], [0, -100]], k * 1.2); dotL(g, 0, -4, 12, prog(k, 0.7, 0.9) * (0.6 + 0.4 * Math.sin(t * 2))); },
+  不用时刻强大: (g, k, t) => { GL(g, [[-70, 90], [-6, -60]], k * 1.6); GL(g, [[70, 90], [6, -60]], k * 1.6 - 0.2); dotL(g, -10, -76, 12, prog(k, 0.6, 0.8)); dotL(g, 10, -76, 12, prog(k, 0.7, 0.9)); GL(g, heartP(0, -130, 22), (k - 0.7) * 3.4, { lw: 3 }); },
+  爱需要被听见: (g, k, t) => { GL(g, heartP(0, 6, 56), k * 1.3); for (const sd of [-1, 1]) for (let i = 0; i < 3; i++) GL(g, arcP(0, 0, 90 + i * 30, sd > 0 ? -0.5 : Math.PI - 0.5, sd > 0 ? 0.5 : Math.PI + 0.5), prog(k, 0.5 + i * 0.12, 0.75 + i * 0.12), { lw: 3.5, a: 0.4 + 0.6 * ((Math.sin(t * 3 - i) + 1) / 2) }); },
+  我现在很难: (g, k, t) => { GL(g, heartP(0, 6, 66), k * 1.3); GL(g, [[4, -50], [-14, -14], [12, 10], [-6, 46]], (k - 0.6) * 3, { lw: 3.5 }); },
+  我有点害怕: (g, k, t) => { const w = Math.sin(t * 9) * 6 * prog(k, 0.6, 1); GL(g, [[0, 70], [-38, 20], [-26, -20], [w, -90], [26, -20], [38, 20], [0, 70]], k * 1.2); dotL(g, w * 0.4, 20, 9, prog(k, 0.6, 0.9)); },
+  '你走得太快，我跟不上': (g, k, t) => { const q = prog(k, 0.3, 1); dotL(g, lerp(-40, 120, q), -10, 12, clamp(k * 3)); for (let i = 0; i < 6; i++) dotL(g, lerp(-40, 120, q) - 20 - i * 18, -10, 4 - i * 0.5, clamp(k * 3) * (1 - i / 6)); dotL(g, -110, 20, 12, clamp(k * 3)); GL(g, [[-90, 20], [lerp(-40, 120, q) - 20, -10]], (k - 0.4) * 2, { lw: 2, dash: [5, 10] }); },
+  要发出你的声音: (g, k, t) => { dotL(g, 0, 40, 16, clamp(k * 3)); for (let i = 0; i < 5; i++) { const q = ((t * 0.4 + i / 5) % 1); GL(g, arcP(0, 40, 30 + q * 170, -Math.PI * 0.85, -Math.PI * 0.15), 1, { lw: 4, a: (1 - q) * prog(k, 0.2, 0.6) }); } },
+};
+function heroIcon(g, key, x, y, k, t, born) {
+  const fn = ICON[key]; if (!fn) return;
+  g.ctx.save(); g.ctx.globalAlpha *= clamp(k * 2); g.ctx.translate(x, y); const sc = 1.15; g.ctx.scale(sc, sc);
+  g.spot(0, 0, 260, 0.14 * k, '255,214,150');
+  fn(g, clamp((t - born) / 1.1), t);
+  g.ctx.restore();
+}
+
 V.scene(0, 209.1, (g, lt, s) => {
-  for (const h of HEROES) { const k = env(s.t, h.a, h.b, 0.55, 0.5); if (k > 0) heroText(g, h.w, W / 2, HERO_Y, k); }
+  for (const h of HEROES) { const k = env(s.t, h.a, h.b, 0.3, 0.5); if (k > 0) heroIcon(g, h.w, W / 2, HERO_Y - 40, k, s.t, h.a); }
 }, { z: 5, fin: 0.01, fout: 0.01 });
 
 /* 段落标签 */
@@ -183,7 +229,7 @@ const LABELS = [
   [111.7, 126.9, '拧巴的双向困境'], [126.9, 148.05, '心有灵犀，是搭建出来的'], [148.05, 156.55, '沉默的水面之下'],
   [156.55, 177.75, '允许彼此，不用时刻强大'], [177.75, 191.8, '爱，需要被听见'], [191.8, 205.1, '要发出你的声音'],
 ];
-for (const [a, b, t] of LABELS) V.label(a, b, t);
+// 顶部章节标签不再显示（尽量用图案、少用文字）
 for (const s of window.SUBS) V.sub(s.a, s.b, s.text);
 
 /* ================================================================
@@ -320,8 +366,8 @@ V.scene(58.6, 66.3, (g, lt, s) => {
   const said = prog(t, 63.7, 65.8, E.inOut);
   orb(g, 300, HZ - 70, WARM, { a: k, t });
   orb(g, 780, HZ - 66, COOL, { a: k * (0.55 + 0.45 * said), t, r: 1 + 0.25 * said });
-  [...'我想告诉你'].forEach((ch, i) => { const q = clamp(said * 1.5 - i * 0.1); if (q <= 0 || q >= 1) return;
-    g.text(ch, lerp(340, 740, q), HZ - 120 - Math.sin(q * Math.PI) * 200, { size: 42, weight: 700, fam: 'serif', color: '#FFF0D2', alpha: Math.sin(q * Math.PI), glow: 16, glowColor: 'rgba(255,200,140,.9)' }); });
+  for (let i = 0; i < 14; i++) { const q = clamp(said * 1.6 - i * 0.045); if (q <= 0 || q >= 1) continue;
+    dotL(g, lerp(340, 740, q), HZ - 120 - Math.sin(q * Math.PI) * 200 + Math.sin(q * 18 + i) * 8, 5 - i * 0.2, Math.sin(q * Math.PI)); }
 }, { z: 2, fin: 0.4 });
 V.cue(63.7, 'rise', 0.3).cue(65.4, 'chime', 0.45);
 
@@ -380,7 +426,7 @@ const UNSAID = ['没事', '算了', '不想麻烦你', '我自己可以'];
 V.scene(148.05, 156.9, (g, lt, s) => { const t = s.t, k = prog(t, 148.1, 149.0, E.out); orb(g, 470, ORB_Y, WARM, { a: k * 0.8, t }); orb(g, 610, ORB_Y + 4, COOL, { a: k * 0.8, t }); }, { z: 2, fin: 0.5 });
 water(148.05, 156.9, (g, lt, t) => {
   UNSAID.forEach((w, i) => { const q = prog(t, 150.2 + i * 1.0, 156.8, E.inOut); if (q <= 0) return;
-    g.text(w, [250, 420, 650, 830][i], HZ + 70 + q * 160 + (i % 2) * 40, { size: 32, weight: 500, fam: 'serif', color: '#B8B4D8', alpha: Math.min(1, q * 4) * (1 - q) * 0.8 }); });
+    for (let j = 0; j < 5; j++) g.circle([250, 420, 650, 830][i] + (j - 2) * 14, HZ + 70 + q * 160 + (i % 2) * 40 + Math.sin(j + t) * 6, 3.5, '#B8B4D8', { alpha: Math.min(1, q * 4) * (1 - q) * 0.7, glow: 8, glowColor: 'rgba(170,170,220,1)' }); });
   const eat = prog(t, 152.2, 156.4);
   if (eat > 0) { const gr = g.ctx.createRadialGradient(MOON.x, HZ + 260, 20, MOON.x, HZ + 260, 420); gr.addColorStop(0, `rgba(8,8,24,${0.6 * eat})`); gr.addColorStop(1, 'rgba(8,8,24,0)'); g.ctx.fillStyle = gr; g.ctx.fillRect(MOON.x - 420, HZ, 840, 700); }
 });

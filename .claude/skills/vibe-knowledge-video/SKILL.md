@@ -45,7 +45,7 @@ description: 制作抖音「Vibe知识大赏」风格的无旁白知识短片（
 3. `pip install faster-whisper` → `python3 engine/asr.py raw/voice.m4a asr.json`（逐词时间戳）。
 4. 文案存 `script.txt`，用 `{关键词}` 标强调（高亮不要跨标点）→ `python3 engine/align.py script.txt asr.json subs.js`（字幕用原文，ASR 只给时间；匹配率应 > 95%）。
 5. `Vibe.create({ width: 1080, height: 1920, theme: 'paper' })`，`for (const s of window.SUBS) V.sub(s.a, s.b, s.text)`；场景切点跟随段落（subs 里的 `para_end`），不卡拍。
-6. 情感/治愈题材的定稿风格是**月夜湖面**（`projects/voice/film.js`）：紫色夜空 + 满月 + 三层远山 + 带波纹的真实倒影；两个人 = 两团光（暖金 / 银蓝），不画小人；文案 `{关键词}` 自动成为湖面上方的发光金字（有倒影）；字幕白色宋体在水面上。用户明确否定过简笔小人/纸感插画（"太幼稚"）和看不清的纯黑底。
+6. 情感/治愈题材的定稿风格是**月夜湖面**（`projects/voice/film.js`）：紫色夜空 + 满月 + 三层远山 + 带波纹的真实倒影；两个人 = 两团光（暖金 / 银蓝），不画小人；文案 `{关键词}` 自动变成湖面上方用光线"描"出来的图标（`ICON` 表，有倒影）——**用户要求尽量用图案、不要用文字**，画面里除字幕/片名外不放字，也不要顶部章节标签；字幕白色宋体在水面上。用户明确否定过简笔小人/纸感插画（"太幼稚"）和看不清的纯黑底。
    自定义世界用 `Vibe.create({ bg: (g,t)=>..., subStyle: {...}, layout: {...} })`；倒影在 overlay 里先把水面以上拷到离屏画布再逐条翻转（不要对主画布自拷贝，极慢）。
 
 ## 铁律
