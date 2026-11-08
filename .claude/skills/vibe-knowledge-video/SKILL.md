@@ -37,6 +37,16 @@ description: 制作抖音「Vibe知识大赏」风格的无旁白知识短片（
 7. **出片**：`bash engine/build.sh projects/<slug>` → `out/final.mp4`，自动跑 `engine/qa.py`。
 8. **交付**：QA 全过 + 抽 16 帧拼图人工复查 + 按 `references/publish.md` 写发布文案。如实说明哪些地方没检查到。
 
+## 有配音的片子（用户给音频 + 文案）
+
+样片：`projects/voice/`（《隧道里的声音》，竖屏 209s，纸感治愈风）。
+1. 先确认：音频里是否已混配乐（是 → 不再叠 BGM）、竖屏/横屏、风格、字幕语言。
+2. 音频放 `projects/<slug>/raw/`（不入库），`bgm.js` 写成配音轨：`{ file, offset: 0, duck: false, beats: [] ... }`。
+3. `pip install faster-whisper` → `python3 engine/asr.py raw/voice.m4a asr.json`（逐词时间戳）。
+4. 文案存 `script.txt`，用 `{关键词}` 标强调（高亮不要跨标点）→ `python3 engine/align.py script.txt asr.json subs.js`（字幕用原文，ASR 只给时间；匹配率应 > 95%）。
+5. `Vibe.create({ width: 1080, height: 1920, theme: 'paper' })`，`for (const s of window.SUBS) V.sub(s.a, s.b, s.text)`；场景切点跟随段落（subs 里的 `para_end`），不卡拍。
+6. 明亮主题：`theme: 'paper'`（米白纸底、墨线小人、珊瑚/雾蓝两色代表两个人）。用户反馈过深色主题"太暗看不清"，情感/治愈题材优先用它。
+
 ## 铁律
 
 - **画面 = f(t)**：禁止 `Math.random()`（用 `rng(seed)`）、禁止 rAF/CSS 动画/定时器参与画面状态。

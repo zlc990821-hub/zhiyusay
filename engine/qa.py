@@ -17,16 +17,17 @@ def main(path):
     a = next((s for s in info['streams'] if s['codec_type'] == 'audio'), None)
     dur = float(info['format']['duration']); fps = eval(v['r_frame_rate'])
     print(f"QA {path}")
-    rep('规格', v['width'] == 1920 and v['height'] == 1080 and abs(fps - 30) < .01 and v['codec_name'] == 'h264',
+    rep('规格', (v['width'], v['height']) in ((1920, 1080), (1080, 1920)) and abs(fps - 30) < .01 and v['codec_name'] == 'h264',
         f"{v['width']}x{v['height']} {fps:.0f}fps {v['codec_name']} {v.get('pix_fmt')}")
     rep('音轨', a is not None and a['codec_name'] == 'aac', f"{a['codec_name'] if a else '无'} {a.get('sample_rate') if a else ''}")
-    rep('时长', 60 <= dur <= 300, f"{dur:.1f}s（建议 100–170s）")
+    rep('时长', 30 <= dur <= 300, f"{dur:.1f}s")
     # 抽帧：4fps 灰度 192x108
-    w, h = 192, 108
+    w, h = (192, 108) if v['width'] > v['height'] else (108, 192)
     raw = subprocess.run(['ffmpeg', '-v', 'error', '-i', path, '-vf', f'fps=4,scale={w}:{h},format=gray', '-f', 'rawvideo', '-'], capture_output=True).stdout
     fr = np.frombuffer(raw, np.uint8).reshape(-1, h, w).astype(np.float32)
-    dark = (fr.mean(axis=(1, 2)) < 60).mean()
-    rep('深色底', dark > 0.9, f"{dark*100:.0f}% 帧平均亮度 < 60")
+    lum = fr.mean(axis=(1, 2)); dark = (lum < 60).mean(); light = (lum > 170).mean()
+    if light > dark: rep('明亮底', light > 0.85, f"{light*100:.0f}% 帧平均亮度 > 170（纸感主题）")
+    else: rep('深色底', dark > 0.9, f"{dark*100:.0f}% 帧平均亮度 < 60")
     diff = np.abs(np.diff(fr, axis=0)).mean(axis=(1, 2))
     still = diff < 0.35
     longest = run = 0

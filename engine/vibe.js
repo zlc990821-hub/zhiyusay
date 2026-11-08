@@ -17,12 +17,27 @@
   'use strict';
 
   // ---------- 调色板（全片只从这里取色） ----------
-  const C = {
+  const C = root.Vibe_BASE_C = {
     bg0: '#050510', bg1: '#0c0c22', bg2: '#14142e',
     text: '#EAEAF2', dim: '#8A8AA0', faint: '#4a4a64',
     gold: '#C9A96A', goldHi: '#F1D9A0', cream: '#EDE4D3', paper: '#E6DCC6',
     red: '#B53A2F', orange: '#E8A87C', teal: '#7FB8B0', blue: '#7C9CE8',
     ink: '#2A2420',
+  };
+
+  // 纸感主题（明亮、治愈）：米白纸底 + 墨色 + 珊瑚/琥珀暖色
+  const PAPER = {
+    bg0: '#EADFCF', bg1: '#F4ECE0', bg2: '#FBF6EE',
+    text: '#2E2A33', dim: '#857A84', faint: '#CDBFB0',
+    gold: '#C98B4B', goldHi: '#D9893F', cream: '#FFFCF6', paper: '#FFFCF6',
+    red: '#C4553F', orange: '#E07A5F', teal: '#6E9C95', blue: '#5E7FA8',
+    ink: '#2E2A33', night: '#5A6480', mist: '#DCD6E4', peach: '#F2C6A8', rose: '#E8A6A0',
+  };
+
+  // 版式：横屏 / 竖屏（竖屏为抖音 UI 预留顶部 ~180px、底部 ~360px、右侧 ~130px）
+  const LAYOUT = {
+    h: { wm: [56, 58], label: 92, note: 768, subY: 935, subEn: 988, subSize: 46, subMaxW: 1500, lineGap: 62 },
+    v: { wm: [64, 196], label: 300, note: 1290, subY: 1440, subEn: 1530, subSize: 54, subMaxW: 860, lineGap: 76 },
   };
 
   const FONT = {
@@ -61,8 +76,11 @@
   // ---------- 引擎 ----------
   function create(opts = {}) {
     const W = opts.width || 1920, H = opts.height || 1080, FPS = opts.fps || 30;
+    const THEME = opts.theme || 'dark';
+    const C = THEME === 'paper' ? { ...root.Vibe_BASE_C, ...PAPER } : root.Vibe_BASE_C;
+    const L = { ...(H > W ? LAYOUT.v : LAYOUT.h), ...(opts.layout || {}) };
     const V = {
-      W, H, FPS, C, FONT, E, clamp, lerp, prog, env, rng, hash,
+      W, H, FPS, C, L, THEME, FONT, E, clamp, lerp, prog, env, rng, hash,
       duration: opts.duration || 120,
       watermark: opts.watermark ?? '@zhiyusay',
       bpm: opts.bpm || 77,
@@ -309,11 +327,66 @@
         gr.addColorStop(0, `rgba(${color},${alpha})`); gr.addColorStop(1, `rgba(${color},0)`);
         ctx.fillStyle = gr; ctx.fillRect(x - r, y - r, r * 2, r * 2);
       };
+      /** 富文本：{xx} 段落用 hi 颜色。居中对齐 */
+      const runs = (str) => { const out = []; let hi = false, buf = ''; for (const ch of str) { if (ch === '{' || ch === '}') { if (buf) out.push([buf, hi]); buf = ''; hi = ch === '{'; } else buf += ch; } if (buf) out.push([buf, hi]); return out; };
+      g.plain = (str) => String(str).replace(/[{}]/g, '');
+      g.rich = (str, x, y, o, hiColor) => {
+        const rs = runs(String(str)); const total = rs.reduce((w, [t]) => w + g.measure(t, o), 0);
+        let cx = x - total / 2;
+        for (const [t, hi] of rs) { const w = g.measure(t, o); g.text(t, cx, y, { ...o, align: 'left', color: hi ? hiColor : o.color }); cx += w; }
+      };
+      /** 按宽度折行（优先在标点后断开），返回行数组（保留 {} 标记） */
+      g.wrap = (str, maxW, o) => {
+        str = String(str);
+        if (g.measure(g.plain(str), o) <= maxW) return [str];
+        const chars = [...str]; const n = chars.length; let best = -1, bestScore = 1e9;
+        for (let i = 2; i < n - 2; i++) {
+          const left = g.plain(chars.slice(0, i).join('')), right = g.plain(chars.slice(i).join(''));
+          const wl = g.measure(left, o), wr = g.measure(right, o);
+          let sc = Math.abs(wl - wr) + (Math.max(wl, wr) > maxW ? 1e5 : 0);
+          if ('，、。；：！？,'.includes(chars[i - 1])) sc -= 200;
+          if (sc < bestScore) { bestScore = sc; best = i; }
+        }
+        // 保持 {} 成对：若断点落在高亮里，两行各自补齐
+        let a1 = chars.slice(0, best).join(''), a2 = chars.slice(best).join('');
+        if ((a1.match(/\{/g) || []).length > (a1.match(/\}/g) || []).length) { a1 += '}'; a2 = '{' + a2; }
+        return [a1, a2];
+      };
       return g;
     }
 
     // ---------- 固定层 ----------
+    let grain = null;
+    function makeGrain() {
+      const c = document.createElement('canvas'); c.width = c.height = 256;
+      const x = c.getContext('2d'), im = x.createImageData(256, 256), r = rng(99);
+      for (let i = 0; i < im.data.length; i += 4) { const v = 128 + (r() - 0.5) * 90; im.data[i] = im.data[i + 1] = im.data[i + 2] = v; im.data[i + 3] = 255; }
+      x.putImageData(im, 0, 0); return c;
+    }
+    function drawPaperBg(g, t) {
+      const { ctx } = g;
+      const gr = ctx.createLinearGradient(0, 0, 0, H);
+      gr.addColorStop(0, C.bg2); gr.addColorStop(0.6, C.bg1); gr.addColorStop(1, C.bg0);
+      ctx.fillStyle = gr; ctx.fillRect(0, 0, W, H);
+      // 柔和色块：蜜桃 / 薰衣草 / 暖黄，缓慢漂移
+      const R = Math.max(W, H);
+      g.spot(W * 0.25 + Math.sin(t * 0.13) * W * 0.12, H * 0.28 + Math.cos(t * 0.11) * H * 0.05, R * 0.55, 0.22, '242,198,168');
+      g.spot(W * 0.8 + Math.cos(t * 0.1) * W * 0.1, H * 0.62 + Math.sin(t * 0.09) * H * 0.06, R * 0.5, 0.2, '206,198,228');
+      g.spot(W * 0.5 + Math.sin(t * 0.07) * W * 0.15, H * 0.9, R * 0.45, 0.16, '240,214,160');
+      if (V.mood) V.mood(g, t);   // 场景可设置整体色调（如隧道段偏冷）
+      for (const d of dust) {
+        const x = (d.x + t * 5 * d.sp * d.z) % W, y = (d.y - t * 4 * d.sp * d.z + H) % H;
+        const tw = 0.5 + 0.5 * Math.sin(t * 0.8 * d.sp + d.ph);
+        g.circle(x, y, 1 + d.z * 1.8, `rgba(217,164,90,${0.05 + 0.18 * tw * d.z})`);
+      }
+    }
+    function drawGrain(ctx) {
+      if (!grain) return;
+      ctx.save(); ctx.globalAlpha = 0.07; ctx.globalCompositeOperation = 'multiply';
+      const p = ctx.createPattern(grain, 'repeat'); ctx.fillStyle = p; ctx.fillRect(0, 0, W, H); ctx.restore();
+    }
     function drawBg(g, t) {
+      if (THEME === 'paper') return drawPaperBg(g, t);
       const { ctx } = g;
       const gr = ctx.createRadialGradient(W / 2, H * 0.45, 80, W / 2, H * 0.45, W * 0.75);
       gr.addColorStop(0, C.bg2); gr.addColorStop(0.55, C.bg1); gr.addColorStop(1, C.bg0);
@@ -332,26 +405,35 @@
 
     function drawChrome(g, t) {
       // 水印（左上，全片固定）
-      if (V.watermark) g.text(V.watermark, 56, 58, { size: 26, weight: 500, align: 'left', color: C.dim, alpha: 0.55, ls: 1 });
+      if (V.watermark) g.text(V.watermark, L.wm[0], L.wm[1], { size: 26, weight: 500, align: 'left', color: C.dim, alpha: 0.55, ls: 1 });
       // 顶部标签
       for (const l of V.labels) {
         const a = env(t, l.a, l.b, 0.5, 0.4); if (a <= 0) continue;
-        g.text(l.text, W / 2, 92 - (1 - a) * 6, { size: 28, weight: 500, color: C.gold, alpha: a * 0.9, ls: 6 });
+        const ly = L.label;
+        g.text(l.text, W / 2, ly - (1 - a) * 6, { size: 28, weight: 500, color: C.gold, alpha: a * 0.9, ls: 6 });
         const w = g.measure(l.text, { size: 28, weight: 500, ls: 6 });
-        g.line(W / 2 - w / 2 - 70, 92, W / 2 - w / 2 - 24, 92, { color: C.gold, alpha: a * 0.5, lw: 1.5 });
-        g.line(W / 2 + w / 2 + 24, 92, W / 2 + w / 2 + 70, 92, { color: C.gold, alpha: a * 0.5, lw: 1.5 });
+        g.line(W / 2 - w / 2 - 70, ly, W / 2 - w / 2 - 24, ly, { color: C.gold, alpha: a * 0.5, lw: 1.5 });
+        g.line(W / 2 + w / 2 + 24, ly, W / 2 + w / 2 + 70, ly, { color: C.gold, alpha: a * 0.5, lw: 1.5 });
       }
       // 注释带 (y≈760)
       for (const n of V.notes) {
         const a = env(t, n.a, n.b, 0.4, 0.35); if (a <= 0) continue;
-        g.text(n.text, n.x ?? W / 2, (n.y ?? 768) + (1 - a) * 8, { size: n.size || 30, weight: 500, fam: n.fam || 'hand', color: n.color || C.orange, alpha: a * 0.92, stroke: 6 });
+        g.text(n.text, n.x ?? W / 2, (n.y ?? L.note) + (1 - a) * 8, { size: n.size || 30, weight: 500, fam: n.fam || 'hand', color: n.color || C.orange, alpha: a * 0.92, stroke: 6, strokeColor: THEME === 'paper' ? 'rgba(251,246,238,.9)' : undefined });
       }
       // 双语字幕 (85%–91%)
       for (const s of V.subs) {
         const a = env(t, s.a, s.b, 0.28, 0.22); if (a <= 0) continue;
         const dy = (1 - a) * 8;
-        g.text(s.zh, W / 2, 935 + dy, { size: 46, weight: 700, color: C.text, alpha: a, stroke: 8, ls: 1 });
-        if (s.en) g.text(s.en, W / 2, 988 + dy, { size: 27, weight: 400, fam: 'en', italic: true, color: C.dim, alpha: a * 0.95, stroke: 6 });
+        if (THEME === 'paper') {
+          // 纸感字幕：宋体墨色 + 米白描边光晕；{关键词} 用珊瑚色强调；过长自动折成两行
+          const o = { size: L.subSize, weight: 700, fam: 'serif', color: C.ink, alpha: a, stroke: 12, strokeColor: 'rgba(251,246,238,.92)', ls: 2 };
+          const lines = g.wrap(s.zh, L.subMaxW, o);
+          lines.forEach((ln, i) => g.rich(ln, W / 2, L.subY + dy + (i - (lines.length - 1) / 2) * L.lineGap, o, C.orange));
+          if (s.en) g.text(s.en, W / 2, L.subEn + dy, { size: 27, weight: 400, fam: 'en', italic: true, color: C.dim, alpha: a * 0.95 });
+        } else {
+          g.text(s.zh, W / 2, L.subY + dy, { size: L.subSize, weight: 700, color: C.text, alpha: a, stroke: 8, ls: 1 });
+          if (s.en) g.text(s.en, W / 2, L.subEn + dy, { size: 27, weight: 400, fam: 'en', italic: true, color: C.dim, alpha: a * 0.95, stroke: 6 });
+        }
       }
     }
 
@@ -375,16 +457,22 @@
         ctx.save(); ctx.globalAlpha = 0.16 * Math.exp(-k / 0.15); ctx.fillStyle = '#F1D9A0'; ctx.fillRect(0, 0, W, H); ctx.restore();
       }
       drawChrome(G, t);
-      // 暗角
-      const vg = ctx.createRadialGradient(W / 2, H / 2, H * 0.45, W / 2, H / 2, W * 0.72);
-      vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,.45)');
+      // 暗角（纸感主题用暖棕、很轻）+ 纸纹
+      if (THEME === 'paper') drawGrain(ctx);
+      const R = Math.max(W, H);
+      const vg = ctx.createRadialGradient(W / 2, H / 2, R * 0.3, W / 2, H / 2, R * 0.72);
+      vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, THEME === 'paper' ? 'rgba(120,80,40,.16)' : 'rgba(0,0,0,.45)');
       ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
     };
 
     /** 收集全片用到的字形，按需加载 unicode-range 子集字体 */
     async function preloadFonts() {
       V._probe = {};
-      for (let t = 0; t < V.duration; t += 0.2) { try { V.render(t); } catch (e) { console.error(e); } }
+      let n = 0;
+      for (let t = 0; t < V.duration; t += 0.25) {
+        try { V.render(t); } catch (e) { console.error(e); }
+        if (++n % 40 === 0) await new Promise((r) => setTimeout(r, 0));   // 让出主线程，避免阻塞页面 load
+      }
       const jobs = [];
       for (const [f, set] of Object.entries(V._probe)) {
         const text = [...new Set([...set].join(''))].join('') + '0123456789';
@@ -400,13 +488,14 @@
       Object.assign(canvas.style, { width: '100vw', height: 'auto', display: 'block', background: '#000' });
       (el || document.body).appendChild(canvas);
       ctx = canvas.getContext('2d'); G = makeG(ctx);
+      if (THEME === 'paper') grain = makeGrain();
       await preloadFonts();
       root.__canvas = canvas;
       root.__render = (t) => V.render(t);
       root.__meta = { width: W, height: H, fps: FPS, duration: V.duration, bpm: V.bpm };
       root.__cues = () => V.cues.slice().sort((a, b) => a.t - b.t);
       root.__music = () => V._music || null;
-      root.__bgm = () => V.bgm ? { file: V.bgm.file, offset: V.bgm.offset, duration: V.duration, fade_in: V.bgm.fade_in, fade_out: V.bgm.fade_out, gain_db: V.bgm.gain_db, id: V.bgm.id } : null;
+      root.__bgm = () => V.bgm ? { file: V.bgm.file, offset: V.bgm.offset, duration: V.duration, fade_in: V.bgm.fade_in, fade_out: V.bgm.fade_out, gain_db: V.bgm.gain_db, id: V.bgm.id, duck: V.bgm.duck ?? true } : null;
       root.__syncInfo = () => ({ anchors: V._sync || [], scenes: V.scenes.map((x) => x.a), beats: BEATS, downbeats: DOWNS, drops: V.drops() });
       root.__subs = () => V.subs.slice();
       const q = new URLSearchParams(location.search);

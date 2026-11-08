@@ -52,8 +52,8 @@ async function openPage(browser) {
   const errs = [];
   page.on('pageerror', (e) => errs.push(String(e)));
   page.on('console', (m) => { if (m.type() === 'error') errs.push(m.text()); });
-  await page.goto(url);
-  await page.waitForFunction(() => window.__ready === true, null, { timeout: 120000 });
+  await page.goto(url, { timeout: 180000 });
+  await page.waitForFunction(() => window.__ready === true, null, { timeout: 300000 });
   if (errs.length) console.warn('⚠ page errors:\n  ' + errs.join('\n  '));
   return page;
 }

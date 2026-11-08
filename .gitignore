@@ -7,3 +7,4 @@ bgm/tracks/
 bgm/inbox/*
 !bgm/inbox/.gitkeep
 bgm/click_*.mp3
+projects/*/raw/

@@ -348,8 +348,9 @@ def main(cues_path, out_path):
         env_ = np.abs(fx).max(axis=0)
         k = int(0.08 * SR); env_ = np.convolve(env_, np.ones(k) / k, 'same')
         duck = 1 - 0.45 * np.clip(env_ / (np.percentile(env_, 99.5) + 1e-9), 0, 1)
+        if cfg['bgm'].get('duck') is False: duck = 1.0   # 配音轨：不让人声给音效让位
         mix = m * duck + fx * music.get('sfx_gain', 1.0)
-        src = f'BGM「{cfg["bgm"].get("id")}」@{cfg["bgm"]["offset"]:.2f}s'
+        src = f'音轨「{cfg["bgm"].get("id")}」@{cfg["bgm"]["offset"]:.2f}s'
     else:
         m = bgm(dur, bpm, music)[:, :n]
         m = m * (10 ** (MUSIC_RMS_DB / 20) / (np.sqrt((m ** 2).mean()) + 1e-9))
