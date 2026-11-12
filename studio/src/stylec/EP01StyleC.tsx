@@ -3,11 +3,11 @@
 import React from "react";
 import { AbsoluteFill, Audio, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
 import { ThreeCanvas } from "@remotion/three";
-import { clamp, easeOut, fade, keyNum, rng } from "../components/anim";
+import { clamp, easeInOut, easeOut, fade, keyNum, rng } from "../components/anim";
 import { COLORS, FONT_SANS, FONT_SERIF, loadFonts } from "../components/theme";
 import { Subtitles, Sub } from "../components/Subtitles";
 import { LayerTags } from "../components/LayerTag";
-import { Key, N, paint, solid, Stage, StateDef, useStates } from "./Stage";
+import { Cam, Key, N, paint, solid, Stage, StateDef, useStates } from "./Stage";
 import { landMask, loadSilhouettes, sample } from "./sampler";
 import { Place, SIL } from "./silhouettes";
 import subs from "../../../episodes/EP01_存在/subtitles.json";
@@ -38,10 +38,24 @@ const projYuc = (t: number) => {
   return { x: GLOBE.x + GLOBE.R * Math.cos(la) * Math.sin(lo), y: GLOBE.y - GLOBE.R * Math.sin(la) };
 };
 
+const SKY = { x: 1600, y: 200 };
+type CamK = [number, number, number, number];
+const CAMK: CamK[] = [
+  [0, 960, 540, 1], [15.2, 960, 540, 1], [16.6, 900, 540, 0.92], [19.0, 1100, 530, 1.0], [20.8, 1440, 520, 2.0],
+  [22.6, SKY.x, 360, 1.0], [26.4, SKY.x, 360, 1.0], [28.0, 960, 540, 1.0], [33.6, 960, 540, 1.0], [36.4, 960, 700, 1.35],
+  [37.4, 960, 700, 1.35], [38.8, 900, 520, 1.0],
+];
+export const camAt = (t: number): Cam => ({
+  x: keyNum(t, CAMK.map((k) => [k[0], k[1]] as [number, number])),
+  y: keyNum(t, CAMK.map((k) => [k[0], k[2]] as [number, number])),
+  z: keyNum(t, CAMK.map((k) => [k[0], k[3]] as [number, number])),
+});
+const camTf = (c: Cam) => `translate(${W / 2},${H / 2}) scale(${c.z}) translate(${-c.x},${-c.y})`;
+
 const KEYS: Key[] = [
   [0, "point"], [1.6, "point"], [3.4, "human0"], [9.0, "human0"],
   ...LINE.flatMap((l, i): Key[] => [[l.at, i === 5 ? "human" : l.k], [l.at + 0.5, i === 5 ? "human" : l.k]]),
-  [16.6, "race"], [21.3, "race"], [22.3, "point"], [27.2, "point"], [28.4, "dinos"], [30.8, "dinos"], [32.2, "ash"], [33.6, "ash"],
+  [16.6, "race"], [21.2, "race"], [22.4, "sky"], [27.0, "sky"], [28.4, "dinos"], [30.8, "dinos"], [32.2, "ash"], [33.6, "ash"],
   [34.5, "mammal"], [37.4, "mammal"], [38.8, "globe"],
 ];
 
@@ -54,6 +68,9 @@ const buildStates = async (): Promise<Record<string, StateDef>> => {
   const pt = new Float32Array(N * 2);
   for (let i = 0; i < N; i++) { pt[i * 2] = 960 + (r0() - 0.5) * 6; pt[i * 2 + 1] = 470 + (r0() - 0.5) * 6; }
   S.point = { pos: pt, col: solid([1, 0.92, 0.78]), bright: new Float32Array(N).fill(0.25) };
+  const sk = new Float32Array(N * 2);
+  for (let i = 0; i < N; i++) { sk[i * 2] = SKY.x + (r0() - 0.5) * 6; sk[i * 2 + 1] = SKY.y + (r0() - 0.5) * 6; }
+  S.sky = { pos: sk, col: solid([1, 0.9, 0.7]), bright: new Float32Array(N).fill(0.3) };
   S.human0 = { pos: sample(m.human, N, FIG, 11), col: solid([1, 0.85, 0.58]) };
   LINE.forEach((l, i) => { S[i === 5 ? "human" : l.k] = { pos: sample(m[l.k], N, FIG, 20 + i), col: solid(l.col as unknown as [number, number, number]) }; });
 
@@ -171,13 +188,18 @@ const Callout: React.FC<{ t: number; a: number; b: number; big: string; small: s
 };
 
 const Overlays: React.FC<{ t: number }> = ({ t }) => {
+  const cam = camAt(t);
   const tlO = fade(t, 9.4, 15.9, 0.5, 0.4);
   const prog = clamp((t - 9.7) / (15.2 - 9.7));
-  const egg = fade(t, 15.9, 21.6, 0.6, 0.5);
+  const egg = fade(t, 15.9, 22.0, 0.3, 1.0);
+  const eggDraw = easeOut(clamp((t - 16.0) / 1.2));
+  const youTxt = fade(t, 19.6, 21.0, 0.5, 0.5);
   const hit = clamp((t - 19.0) / 0.6);
-  const dinoO = fade(t, 27.3, 37.8, 0.6, 0.6);
+  const dinoO = fade(t, 26.6, 38.6, 0.6, 0.8);
+  const shrink = easeInOut(clamp((t - 37.4) / 1.3));
   const ast = clamp((t - 28.6) / (30.4 - 28.6));
-  const ax = 1960 + (1250 - 1960) * ast * ast, ay = -100 + (700 + 100) * ast * ast;
+  const ax = SKY.x + (1250 - SKY.x) * ast * ast, ay = SKY.y + (720 - SKY.y) * ast * ast;
+  const astO = t < 30.4 ? fade(t, 26.6, 30.5, 0.6, 0.05) : 0;
   const flash = t > 30.4 ? Math.exp(-(t - 30.4) * 3.2) : 0;
   const wave = t > 30.4 ? clamp((t - 30.4) / 2.2) : 0;
   const gl = fade(t, 38.4, STYLEC_DURATION + 1, 0.8, 0.5);
@@ -189,9 +211,11 @@ const Overlays: React.FC<{ t: number }> = ({ t }) => {
     <AbsoluteFill>
       <svg width={W} height={H} style={{ position: "absolute" }}>
         <OutlineDefs />
+        <g transform={camTf(cam)}>
         <Outline id="h0" k="human" p={FIG} t={t} a={3.8} b={9.0} />
         {LINE.map((l) => <Outline key={l.k + l.at} id={l.k + l.at} k={l.k} p={FIG} t={t} a={l.at + 0.2} b={l.at + 0.75} />)}
-        {/* era bar */}
+        </g>
+        {/* era bar (screen UI) */}
         {tlO > 0 && (
           <g opacity={tlO}>
             <line x1={560} y1={860} x2={1360} y2={860} stroke="rgba(244,241,234,0.3)" strokeWidth={2} />
@@ -204,16 +228,18 @@ const Overlays: React.FC<{ t: number }> = ({ t }) => {
             <text x={1360} y={900} textAnchor="middle" fontFamily={FONT_SANS} fontSize={22} fill="rgba(244,241,234,0.6)" letterSpacing={2}>今天</text>
           </g>
         )}
+        <g transform={camTf(cam)}>
         {/* egg */}
         {egg > 0 && (
           <g opacity={egg}>
             <circle cx={EGG.x} cy={EGG.y} r={EGG.r * (1.6 + 0.5 * hit)} fill="#f2c94c" opacity={0.06 + 0.18 * hit} />
-            <circle cx={EGG.x} cy={EGG.y} r={EGG.r} fill="rgba(242,201,76,0.08)" stroke="#f2c94c" strokeWidth={3} style={{ filter: "drop-shadow(0 0 10px #f2c94c)" }} />
+            <circle cx={EGG.x} cy={EGG.y} r={EGG.r} fill="rgba(242,201,76,0.08)" stroke="#f2c94c" strokeWidth={3} pathLength={1} strokeDasharray={`${eggDraw} 1`} transform={`rotate(-90 ${EGG.x} ${EGG.y})`} style={{ filter: "drop-shadow(0 0 10px #f2c94c)" }} />
             <circle cx={EGG.x} cy={EGG.y} r={EGG.r + 18} fill="none" stroke="#f2c94c" strokeOpacity={0.35} strokeWidth={1.5} />
-            {t > 19.6 && <text x={EGG.x} y={EGG.y + 30} textAnchor="middle" fontFamily={FONT_SERIF} fontWeight={700} fontSize={88} fill={COLORS.text} opacity={easeOut(clamp((t - 19.6) / 0.5))}>你</text>}
+            {youTxt > 0 && <text x={EGG.x} y={EGG.y + 30} textAnchor="middle" fontFamily={FONT_SERIF} fontWeight={700} fontSize={88} fill={COLORS.text} opacity={youTxt}>你</text>}
           </g>
         )}
         {/* prehistoric horizon, line-art */}
+        <g transform={`translate(${yu.x},${yu.y}) scale(${1 - 0.92 * shrink}) translate(${-yu.x},${-yu.y})`} opacity={1 - shrink}>
         {dinoO > 0 && (
           <g opacity={dinoO} fill="none" stroke="#f2c94c" strokeLinecap="round" strokeLinejoin="round">
             <path d="M 0 860 Q 420 800 900 850 Q 1400 800 1920 850" strokeOpacity={0.55} strokeWidth={2.5} />
@@ -225,9 +251,9 @@ const Overlays: React.FC<{ t: number }> = ({ t }) => {
         <Outline id="sa" k="sauropod" p={SAURO} t={t} a={28.6} b={30.6} strength={0.7} />
         <Outline id="tr" k="trex" p={TREX} t={t} a={28.8} b={30.6} strength={0.7} />
         <Outline id="ma" k="shrew" p={MAMMAL} t={t} a={34.8} b={37.5} />
-        {t > 28.5 && ast < 1 && (
-          <g>
-            <line x1={ax + 300} y1={ay - 340} x2={ax} y2={ay} stroke="#f2c94c" strokeWidth={6} strokeLinecap="round" opacity={0.7} />
+        {astO > 0 && (
+          <g opacity={astO}>
+            {ast > 0 && <line x1={ax + 300 * ast} y1={ay - 400 * ast} x2={ax} y2={ay} stroke="#f2c94c" strokeWidth={6} strokeLinecap="round" opacity={0.7} />}
             <circle cx={ax} cy={ay} r={14} fill="#fff6e0" style={{ filter: "drop-shadow(0 0 16px #ffb070)" }} />
           </g>
         )}
@@ -237,12 +263,27 @@ const Overlays: React.FC<{ t: number }> = ({ t }) => {
           <g opacity={fade(t, 35, 37.8, 0.4, 0.4)}>
             <line x1={1110} y1={690} x2={1300} y2={600} stroke="#f2c94c" strokeWidth={2} />
             <circle cx={1110} cy={690} r={5} fill="#f2c94c" />
+            <text x={1310} y={600} fontFamily={FONT_SERIF} fontWeight={700} fontSize={44} letterSpacing={6} fill={COLORS.text}>我们的远祖</text>
           </g>
         )}
-        {/* globe ring, donut, pin */}
+        </g>
+        {/* globe ring + pin (world) */}
         {gl > 0 && (
           <g opacity={gl}>
             <circle cx={GLOBE.x} cy={GLOBE.y} r={GLOBE.R + 10} fill="none" stroke="#9fc4ff" strokeOpacity={0.35} strokeWidth={2} style={{ filter: "drop-shadow(0 0 12px #5aa9e6)" }} />
+            {pin > 0 && (
+              <g transform={`translate(${yu.x},${yu.y - 160 * (1 - easeOut(pin))})`} opacity={pin}>
+                <path d="M 0 0 C -8 -22 -26 -34 -26 -54 A 26 26 0 1 1 26 -54 C 26 -34 8 -22 0 0 Z" fill="rgba(11,19,34,0.6)" stroke="#f2c94c" strokeWidth={3} style={{ filter: "drop-shadow(0 0 8px #f2c94c)" }} />
+                <circle cy={-54} r={8} fill="#f2c94c" />
+              </g>
+            )}
+            {pin > 0.5 && <g opacity={easeOut(clamp((t - 43.8) / 0.4))}><line x1={yu.x + 36} y1={yu.y - 110} x2={yu.x + 36} y2={yu.y - 70} stroke="#f2c94c" strokeWidth={3} /><text x={yu.x + 50} y={yu.y - 80} fontFamily={FONT_SANS} fontSize={28} letterSpacing={3} fill={COLORS.text}>撞击点 · 希克苏鲁伯</text></g>}
+          </g>
+        )}
+        </g>
+        {/* donut (screen UI) */}
+        {gl > 0 && (
+          <g opacity={gl}>
             <g transform="translate(1480,500)" opacity={easeOut(clamp((t - 38.9) / 0.6))}>
               <circle r={110} fill="none" stroke="rgba(244,241,234,0.15)" strokeWidth={10} />
               <circle r={110} fill="none" stroke="#ef6f5e" strokeWidth={10} strokeLinecap="round" strokeDasharray={`${C * donut} ${C}`} transform="rotate(-90)" style={{ filter: "drop-shadow(0 0 8px #ef6f5e)" }} />
@@ -250,12 +291,6 @@ const Overlays: React.FC<{ t: number }> = ({ t }) => {
               <text y={180} textAnchor="middle" fontFamily={FONT_SANS} fontSize={26} fill="rgba(244,241,234,0.7)" letterSpacing={2}>会引发大灭绝的撞击区域</text>
               <text y={216} textAnchor="middle" fontFamily={FONT_SANS} fontSize={20} fill="rgba(244,241,234,0.45)">Kaiho & Oshima, 2017</text>
             </g>
-            {pin > 0 && (
-              <g transform={`translate(${yu.x},${yu.y - 160 * (1 - easeOut(pin))})`} opacity={pin}>
-                <path d="M 0 0 C -8 -22 -26 -34 -26 -54 A 26 26 0 1 1 26 -54 C 26 -34 8 -22 0 0 Z" fill="rgba(11,19,34,0.6)" stroke="#f2c94c" strokeWidth={3} style={{ filter: "drop-shadow(0 0 8px #f2c94c)" }} />
-                <circle cy={-54} r={8} fill="#f2c94c" />
-              </g>
-            )}
           </g>
         )}
       </svg>
@@ -268,8 +303,6 @@ const Overlays: React.FC<{ t: number }> = ({ t }) => {
       })}
       <Callout t={t} a={16.0} b={19.8} big="上亿个" small="只有一个抵达" y={0.06} />
       <Callout t={t} a={27.3} b={31.4} big="6600 万年前" small="希克苏鲁伯撞击 · 今墨西哥尤卡坦半岛" y={0.06} />
-      <div style={{ position: "absolute", left: 1310, top: 560, opacity: fade(t, 35.2, 37.8, 0.4, 0.4), fontFamily: FONT_SERIF, fontWeight: 700, fontSize: 44, letterSpacing: 6, color: COLORS.text }}>我们的远祖</div>
-      {pin > 0.5 && <div style={{ position: "absolute", left: yu.x + 40, top: yu.y - 120, opacity: easeOut(clamp((t - 43.8) / 0.4)), fontFamily: FONT_SANS, fontSize: 28, letterSpacing: 3, color: COLORS.text, borderLeft: "3px solid #f2c94c", paddingLeft: 12 }}>撞击点 · 希克苏鲁伯</div>}
       {/* question + title (original typography) */}
       <BigQ t={t} />
     </AbsoluteFill>
@@ -307,14 +340,14 @@ export const EP01StyleC: React.FC = () => {
   const { fps } = useVideoConfig();
   const t = frame / fps;
   const states = useStates(buildStates);
-  const gain = clamp((t - 0.3) / 1.2) * keyNum(t, [[0, 1], [24.8, 1], [25.6, 0.4], [27.0, 0.4], [28.2, 1], [STYLEC_DURATION - 0.6, 1], [STYLEC_DURATION, 0]]);
-  const camScale = keyNum(t, [[0, 1], [27.2, 1], [37.4, 1.06], [38.8, 1]]);
+  const gain = clamp((t - 0.3) / 1.2) * keyNum(t, [[0, 1], [STYLEC_DURATION - 0.6, 1], [STYLEC_DURATION, 0]]);
+  const cam = camAt(t);
   return (
     <AbsoluteFill style={{ background: `radial-gradient(ellipse at 50% 42%, #0b0e18 0%, ${COLORS.bg} 70%)` }}>
       {t > 30.4 && t < 38.6 && <AbsoluteFill style={{ background: "radial-gradient(ellipse at 65% 80%, rgba(150,40,25,0.55) 0%, rgba(0,0,0,0) 70%)", opacity: fade(t, 30.4, 38.6, 0.6, 1.0) }} />}
       {states && (
         <ThreeCanvas width={W} height={H} orthographic camera={{ zoom: 1, position: [0, 0, 100], near: 0.1, far: 1000 }} gl={{ antialias: true }}>
-          <Stage t={t} states={states} keys={KEYS} gain={gain * 1.7} size={3.2} camScale={camScale} />
+          <Stage t={t} states={states} keys={KEYS} gain={gain * 1.7} size={3.2} cam={cam} />
         </ThreeCanvas>
       )}
       <Overlays t={t} />

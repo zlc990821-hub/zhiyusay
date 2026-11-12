@@ -45,7 +45,9 @@ export const useStates = (build: () => Promise<Record<string, StateDef>>) => {
 
 const tmpA = new Float32Array(N * 2), tmpB = new Float32Array(N * 2), bA = new Float32Array(N), bB = new Float32Array(N);
 
-export const Stage: React.FC<{ t: number; states: Record<string, StateDef>; keys: Key[]; gain: number; size?: number; camScale?: number }> = ({ t, states, keys, gain, size = 2.6, camScale = 1 }) => {
+/** cam = world point (screen-pixel coords) at the centre of the frame, and zoom. Overlays must use the same camera. */
+export type Cam = { x: number; y: number; z: number };
+export const Stage: React.FC<{ t: number; states: Record<string, StateDef>; keys: Key[]; gain: number; size?: number; cam?: Cam }> = ({ t, states, keys, gain, size = 2.6, cam = { x: 960, y: 540, z: 1 } }) => {
   const { geom, mat } = useMemo(() => {
     const g = new THREE.BufferGeometry();
     g.setAttribute("position", new THREE.BufferAttribute(new Float32Array(N * 3), 3));
@@ -100,9 +102,9 @@ export const Stage: React.FC<{ t: number; states: Record<string, StateDef>; keys
   geom.attributes.aCol.needsUpdate = true;
   geom.attributes.aB.needsUpdate = true;
   mat.uniforms.uGain.value = gain;
-  mat.uniforms.uSize.value = size * camScale;
+  mat.uniforms.uSize.value = size * Math.sqrt(cam.z);
   return (
-    <group scale={[camScale, camScale, 1]}>
+    <group scale={[cam.z, cam.z, 1]} position={[-(cam.x - W / 2) * cam.z, (cam.y - H / 2) * cam.z, 0]}>
       <points geometry={geom} material={mat} frustumCulled={false} />
     </group>
   );
