@@ -7,11 +7,11 @@ import { loadFonts } from "../components/theme";
 
 export const EP00_COVER: CoverText = {
   badge: "天元纪元 · 序章",
-  hookWide: ["你到底是什么？"],
-  hookTall: ["你到底", "是什么？"],
-  title: "序章｜《人类：我们究竟是什么？》",
+  titleWide: ["人类：我们究竟是什么？"],
+  titleTall: ["人类：", "我们究竟是什么？"],
+  sub: "零件天天在换，你为什么还是你",
 };
-loadFonts(EP00_COVER.badge + EP00_COVER.hookWide.join("") + EP00_COVER.title);
+loadFonts(EP00_COVER.badge + EP00_COVER.titleTall.join("") + EP00_COVER.sub);
 
 /** Key visual: the particle hand rising from the bottom centre, fingertips just under the title. */
 export const Cover: React.FC = () => {

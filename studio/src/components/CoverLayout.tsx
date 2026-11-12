@@ -4,19 +4,20 @@ import { COLORS, FONT_SANS, FONT_SERIF } from "./theme";
 
 /**
  * Series cover template (all ratios, everything centred).
- * - badge:  "天元纪元 · 序章" small gold, top centre
- * - hook:   the big question, 1 line on wide covers, 2 lines on tall ones
- * - title:  fixed format 期号｜《片名》, small, under a thin gold rule
+ * Hierarchy (user rule): the EPISODE TITLE is the biggest element.
+ * - badge:  "天元纪元 · 第N期" small gold, top centre
+ * - title:  the episode title (片名), largest; 1 line on wide covers, may wrap to 2 on tall ones
+ * - sub:    one short hook line, small, under a thin gold rule
  * - visual: the episode's key image, centred in the lower part (children)
  * Text stays inside the central 4:3 safe area so a 16:9 cover survives a 4:3 crop.
  */
-export type CoverText = { badge: string; hookWide: string[]; hookTall: string[]; title: string };
+export type CoverText = { badge: string; titleWide: string[]; titleTall: string[]; sub: string };
 
 export const CoverLayout: React.FC<{ text: CoverText; children: React.ReactNode }> = ({ text, children }) => {
   const { width, height } = useVideoConfig();
   const ar = width / height;
   const tall = ar < 1;
-  const hook = tall ? text.hookTall : text.hookWide;
+  const hook = tall ? text.titleTall : text.titleWide;
   // size the hook by the shorter usable dimension
   const safeW = tall ? width * 0.86 : Math.min(width, height * (4 / 3)) * 0.9;
   const longest = Math.max(...hook.map((l) => Array.from(l).length));
@@ -38,7 +39,7 @@ export const CoverLayout: React.FC<{ text: CoverText; children: React.ReactNode 
           ))}
         </div>
         <div style={{ marginTop: hookSize * 0.22, width: hookSize * 2.6, height: 2, background: "linear-gradient(90deg, transparent, #f2c94c, transparent)" }} />
-        <div style={{ marginTop: hookSize * 0.16, fontFamily: FONT_SANS, fontWeight: 500, fontSize: hookSize * 0.2, letterSpacing: hookSize * 0.03, color: "rgba(244,241,234,0.9)", textShadow: "0 0 16px rgba(0,0,0,0.9)" }}>{text.title}</div>
+        <div style={{ marginTop: hookSize * 0.16, fontFamily: FONT_SANS, fontWeight: 500, fontSize: hookSize * 0.26, letterSpacing: hookSize * 0.04, color: "rgba(244,241,234,0.88)", textShadow: "0 0 16px rgba(0,0,0,0.9)" }}>{text.sub}</div>
       </AbsoluteFill>
     </AbsoluteFill>
   );

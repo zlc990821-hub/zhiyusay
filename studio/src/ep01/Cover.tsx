@@ -7,11 +7,11 @@ import { loadFonts } from "../components/theme";
 
 export const EP01_COVER: CoverText = {
   badge: "天元纪元 · 第1期",
-  hookWide: ["四十亿年，一次没输过"],
-  hookTall: ["四十亿年", "一次没输过"],
-  title: "第1期｜《我为什么会存在？》",
+  titleWide: ["我为什么会存在？"],
+  titleTall: ["我为什么", "会存在？"],
+  sub: "四十亿年，一次没输过",
 };
-loadFonts(EP01_COVER.badge + EP01_COVER.hookWide.join("") + EP01_COVER.title);
+loadFonts(EP01_COVER.badge + EP01_COVER.titleTall.join("") + EP01_COVER.sub);
 
 /** Key visual: the unbroken golden lineage rising from the bottom centre, dead branches faint around it. */
 export const Cover01: React.FC = () => {
