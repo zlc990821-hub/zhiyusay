@@ -38,7 +38,6 @@ export const EP00: React.FC = () => {
       <Subtitles subs={subs as Sub[]} hide={[timeline.question.text, timeline.ending.a[0] as string, timeline.ending.b[0] as string]} />
       <Audio src={staticFile("EP00_人类/audio/vo_edit.wav")} />
       <Audio src={staticFile("EP00_人类/audio/sfx.wav")} />
-      <Audio src={staticFile("EP00_人类/audio/bgm.wav")} />
     </AbsoluteFill>
   );
 };
