@@ -102,7 +102,7 @@ export const Stage: React.FC<{ t: number; states: Record<string, StateDef>; keys
   geom.attributes.aCol.needsUpdate = true;
   geom.attributes.aB.needsUpdate = true;
   mat.uniforms.uGain.value = gain;
-  mat.uniforms.uSize.value = size * Math.sqrt(cam.z);
+  mat.uniforms.uSize.value = size * Math.max(0.9, Math.sqrt(cam.z));
   return (
     <group scale={[cam.z, cam.z, 1]} position={[-(cam.x - W / 2) * cam.z, (cam.y - H / 2) * cam.z, 0]}>
       <points geometry={geom} material={mat} frustumCulled={false} />

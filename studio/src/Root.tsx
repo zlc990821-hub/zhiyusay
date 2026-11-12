@@ -6,6 +6,7 @@ import { EP01 } from "./ep01/EP01";
 import { Cover01 } from "./ep01/Cover";
 import { EP01StyleB, STYLEB_DURATION } from "./styleb/EP01StyleB";
 import { EP01StyleC, STYLEC_DURATION } from "./stylec/EP01StyleC";
+import { CoverC } from "./stylec/CoverC";
 import tl01 from "../../episodes/EP01_存在/timeline.json";
 import timeline from "../../episodes/EP00_人类/timeline.json";
 
@@ -23,5 +24,9 @@ export const Root: React.FC = () => (
     <Composition id="EP01-Cover-9x16" component={Cover01} durationInFrames={1} fps={30} width={1080} height={1920} />
     <Composition id="EP01-StyleB" component={EP01StyleB} durationInFrames={Math.round(STYLEB_DURATION * 30)} fps={30} width={1920} height={1080} />
     <Composition id="EP01-StyleC" component={EP01StyleC} durationInFrames={Math.round(STYLEC_DURATION * 30)} fps={30} width={1920} height={1080} />
+    <Composition id="EP01C-Cover-16x9" component={CoverC} durationInFrames={1} fps={30} width={1920} height={1080} />
+    <Composition id="EP01C-Cover-4x3" component={CoverC} durationInFrames={1} fps={30} width={1440} height={1080} />
+    <Composition id="EP01C-Cover-3x4" component={CoverC} durationInFrames={1} fps={30} width={1080} height={1440} />
+    <Composition id="EP01C-Cover-9x16" component={CoverC} durationInFrames={1} fps={30} width={1080} height={1920} />
   </>
 );

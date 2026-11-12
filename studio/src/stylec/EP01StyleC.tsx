@@ -10,9 +10,10 @@ import { LayerTags } from "../components/LayerTag";
 import { Cam, Key, N, paint, solid, Stage, StateDef, useStates } from "./Stage";
 import { landMask, loadSilhouettes, sample } from "./sampler";
 import { Place, SIL } from "./silhouettes";
+import { addStates2, CAMK2, GAIN2, HIDE2, KEYS2, Part2, TAGS2 } from "./EP01Part2";
 import subs from "../../../episodes/EP01_存在/subtitles.json";
 
-export const STYLEC_DURATION = 46.5;
+export const STYLEC_DURATION = 195.05;
 const W = 1920, H = 1080;
 loadFonts((subs as Sub[]).map((s) => s.text).join("") + "40亿年一次都没输过的连胜单细胞鱼早期四足动物哺乳动物古猿你约38亿年前今天上亿个只有一个抵达我为什么会存在？天元纪元·第1期6600万年前希克苏鲁伯撞击今墨西哥尤卡坦半岛我们的远祖约13%会引发大灭绝的撞击区域撞击点0123456789%,");
 
@@ -43,7 +44,7 @@ type CamK = [number, number, number, number];
 const CAMK: CamK[] = [
   [0, 960, 540, 1], [15.2, 960, 540, 1], [16.6, 900, 540, 0.92], [19.0, 1100, 530, 1.0], [20.8, 1440, 520, 2.0],
   [22.6, SKY.x, 360, 1.0], [26.4, SKY.x, 360, 1.0], [28.0, 960, 540, 1.0], [33.6, 960, 540, 1.0], [36.4, 960, 700, 1.35],
-  [37.4, 960, 700, 1.35], [38.8, 900, 520, 1.0],
+  [37.4, 960, 700, 1.35], [38.8, 900, 520, 1.0], ...CAMK2,
 ];
 export const camAt = (t: number): Cam => ({
   x: keyNum(t, CAMK.map((k) => [k[0], k[1]] as [number, number])),
@@ -56,7 +57,7 @@ const KEYS: Key[] = [
   [0, "point"], [1.6, "point"], [3.4, "human0"], [9.0, "human0"],
   ...LINE.flatMap((l, i): Key[] => [[l.at, i === 5 ? "human" : l.k], [l.at + 0.5, i === 5 ? "human" : l.k]]),
   [16.6, "race"], [21.2, "race"], [22.4, "sky"], [27.0, "sky"], [28.4, "dinos"], [30.8, "dinos"], [32.2, "ash"], [33.6, "ash"],
-  [34.5, "mammal"], [37.4, "mammal"], [38.8, "globe"],
+  [34.5, "mammal"], [37.4, "mammal"], [38.8, "globe"], ...KEYS2,
 ];
 
 // ───────── particle states ─────────
@@ -144,6 +145,7 @@ const buildStates = async (): Promise<Record<string, StateDef>> => {
       }
     },
   };
+  addStates2(S, m);
   return S;
 };
 
@@ -202,7 +204,7 @@ const Overlays: React.FC<{ t: number }> = ({ t }) => {
   const astO = t < 30.4 ? fade(t, 26.6, 30.5, 0.6, 0.05) : 0;
   const flash = t > 30.4 ? Math.exp(-(t - 30.4) * 3.2) : 0;
   const wave = t > 30.4 ? clamp((t - 30.4) / 2.2) : 0;
-  const gl = fade(t, 38.4, STYLEC_DURATION + 1, 0.8, 0.5);
+  const gl = fade(t, 38.4, 47.6, 0.8, 1.0);
   const donut = easeOut(clamp((t - 39.0) / 1.8)) * 0.13;
   const C = 2 * Math.PI * 110;
   const pin = clamp((t - 43.4) / 0.5);
@@ -340,7 +342,7 @@ export const EP01StyleC: React.FC = () => {
   const { fps } = useVideoConfig();
   const t = frame / fps;
   const states = useStates(buildStates);
-  const gain = clamp((t - 0.3) / 1.2) * keyNum(t, [[0, 1], [STYLEC_DURATION - 0.6, 1], [STYLEC_DURATION, 0]]);
+  const gain = clamp((t - 0.3) / 1.2) * keyNum(t, [[0, 1], ...GAIN2]);
   const cam = camAt(t);
   return (
     <AbsoluteFill style={{ background: `radial-gradient(ellipse at 50% 42%, #0b0e18 0%, ${COLORS.bg} 70%)` }}>
@@ -351,9 +353,10 @@ export const EP01StyleC: React.FC = () => {
         </ThreeCanvas>
       )}
       <Overlays t={t} />
+      <Part2 t={t} camTf={camTf} cam={cam} />
       <AbsoluteFill style={{ background: "radial-gradient(ellipse at 50% 45%, rgba(0,0,0,0) 50%, rgba(0,0,0,0.5) 100%)" }} />
-      <LayerTags tags={[{ layer: "S", in: 2.4, out: 21.5 }, { layer: "S", in: 27.3, out: 46.2 }]} />
-      <Subtitles subs={(subs as Sub[]).filter((s) => s.start < STYLEC_DURATION)} hide={["所以——我，为什么会存在？"]} />
+      <LayerTags tags={[{ layer: "S", in: 2.4, out: 21.5 }, { layer: "S", in: 27.3, out: 46.2 }, ...TAGS2]} />
+      <Subtitles subs={(subs as Sub[]).filter((s) => s.start < STYLEC_DURATION)} hide={["所以——我，为什么会存在？", ...HIDE2]} />
       <Audio src={staticFile("EP01_存在/audio/vo_edit.wav")} endAt={Math.round(STYLEC_DURATION * fps)} />
       <Audio src={staticFile("EP01_存在/styleC/audio/sfx.wav")} />
     </AbsoluteFill>
