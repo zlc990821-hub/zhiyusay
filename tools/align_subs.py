@@ -11,8 +11,14 @@ import json, os, re, sys, difflib
 d = sys.argv[1]
 lines = [l.strip() for l in open(os.path.join(d, "subtitles.txt"), encoding="utf-8")
          if l.strip() and not l.startswith("#")]
-asr = json.load(open(os.path.join(d, "audio/asr_raw.json")))
 tm = json.load(open(os.path.join(d, "audio/timemap.json")))
+# Prefer ASR run on the edited voiceover (retakes already removed): identity time mapping.
+edit_asr = os.path.join(d, "audio/asr_edit.json")
+if os.path.exists(edit_asr):
+    asr = json.load(open(edit_asr))
+    tm = {"duration": tm["duration"], "segments": [[0.0, tm["duration"], 0.0]]}
+else:
+    asr = json.load(open(os.path.join(d, "audio/asr_raw.json")))
 
 DIG = "零一二三四五六七八九"
 def num_zh(s):  # good enough for numbers < 10000 as spoken digit groups
@@ -33,6 +39,10 @@ for s in asr:
         for i, c in enumerate(cs):
             chars.append((c, st + (en - st) * i / len(cs), st + (en - st) * (i + 1) / len(cs)))
 
+# drop ASR characters that fall inside removed regions (retakes), so lines align to the kept take
+def kept(t): return any(r0 - 0.02 <= t <= r1 + 0.02 for r0, r1, _ in tm["segments"])
+chars = [c for c in chars if kept((c[1] + c[2]) / 2)]
+
 # subtitle text -> per-character with line index
 sub = [(c, li) for li, l in enumerate(lines) for c in l if keep(c)]
 A = "".join(c for c, *_ in chars); B = "".join(c for c, _ in sub)
@@ -46,9 +56,11 @@ def to_edit(t):
     for r0, r1, e0 in tm["segments"]:
         if r0 <= t < r1:
             return e0 + t - r0
-    for r0, r1, e0 in tm["segments"]:
-        if r0 - 0.05 <= t <= r1 + 0.05:
-            return e0 + min(max(t, r0), r1) - r0
+    # ASR word edges are fuzzy: snap to the nearest kept segment if within 0.3 s
+    best = min(tm["segments"], key=lambda g: max(g[0] - t, t - g[1], 0))
+    r0, r1, e0 = best
+    if max(r0 - t, t - r1, 0) <= 0.3:
+        return e0 + min(max(t, r0), r1) - r0
     raise ValueError(t)
 
 out, unmatched = [], 0
