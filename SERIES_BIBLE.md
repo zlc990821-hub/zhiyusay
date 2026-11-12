@@ -169,4 +169,5 @@ MASTER OUTLINE 的 88 回是**书的章节结构**，信息密度适合阅读。
 - `tools/edit_vo.py`：配音清理、段落停顿插入、响度标准化
 - `tools/align_subs.py`：字幕按录音自动对齐
 - `tools/synth_sfx.py`：按时间轴合成自制音效
+- `tools/mix_bgm.py`：BGM 按小节剪接、人声自动避让
 - `studio/`：Remotion 工程（共享组件：字幕、层级色标、字体、动画工具）

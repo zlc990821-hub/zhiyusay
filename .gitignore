@@ -2,3 +2,5 @@
 episodes/*/audio/vo_edit.wav
 episodes/*/audio/sfx.wav
 __pycache__/
+episodes/*/audio/bgm_src.*
+episodes/*/audio/bgm.wav
