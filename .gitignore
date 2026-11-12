@@ -1,0 +1,4 @@
+# regenerable audio (tools/edit_vo.py, tools/synth_sfx.py)
+episodes/*/audio/vo_edit.wav
+episodes/*/audio/sfx.wav
+__pycache__/

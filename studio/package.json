@@ -1,0 +1,25 @@
+{
+  "name": "tianyuan-studio",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "studio": "remotion studio",
+    "render": "remotion render"
+  },
+  "dependencies": {
+    "@fontsource/noto-sans-sc": "5.2.6",
+    "@fontsource/noto-serif-sc": "5.2.6",
+    "@react-three/fiber": "9.3.0",
+    "@remotion/cli": "4.0.532",
+    "@remotion/three": "4.0.532",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "remotion": "4.0.532",
+    "three": "0.180.0"
+  },
+  "devDependencies": {
+    "@types/react": "19.1.8",
+    "@types/three": "0.180.0",
+    "typescript": "5.8.3"
+  }
+}
