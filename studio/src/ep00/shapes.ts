@@ -2,7 +2,7 @@
 import { rng } from "../components/anim";
 
 export const N = 16000;
-export const STATES = ["point", "hand", "nebula", "star", "burst", "planet"] as const;
+export const STATES = ["point", "hand", "nebula", "star", "burst", "planet", "cells", "network", "wave", "twohands", "eye", "human"] as const;
 export type State = (typeof STATES)[number];
 
 type V2 = [number, number];
@@ -43,24 +43,38 @@ const handSdf = (p: V2) => {
 
 const gauss = (r: () => number) => Math.sqrt(-2 * Math.log(r() + 1e-9)) * Math.cos(2 * Math.PI * r());
 
-const makeHand = (seed: number) => {
+const sampleSdf = (seed: number, sdf: (p: V2) => number, box: [number, number, number, number], place: (x: number, y: number, z: number, i: number) => [number, number, number], fadeBelow?: [number, number]) => {
   const r = rng(seed);
   const out = new Float32Array(N * 3);
-  const S = 1.25, OY = 0.45;
+  const [x0, x1, y0, y1] = box;
   let i = 0;
   while (i < N) {
-    const x = (r() - 0.5) * 3.2, y = -2.3 + r() * 4.0;
-    const d = handSdf([x, y]);
+    const x = x0 + r() * (x1 - x0), y = y0 + r() * (y1 - y0);
+    const d = sdf([x, y]);
     const edge = i % 3 === 0; // a third of the particles trace the outline
     if (edge ? Math.abs(d) > 0.018 : d > 0) continue;
-    if (y < -1.3 && r() > Math.max(0, (y + 2.1) / 0.8)) continue; // wrist fades out
+    if (fadeBelow && y < fadeBelow[0] && r() > Math.max(0, (y - fadeBelow[1]) / (fadeBelow[0] - fadeBelow[1]))) continue;
     const depth = Math.min(1, Math.max(0.25, -d * 3));
-    out[i * 3] = x * S;
-    out[i * 3 + 1] = y * S + OY;
-    out[i * 3 + 2] = (r() - 0.5) * 0.35 * depth;
+    out.set(place(x, y, (r() - 0.5) * 0.35 * depth, i), i * 3);
     i++;
   }
   return out;
+};
+
+const HAND_BOX: [number, number, number, number] = [-1.6, 1.6, -2.3, 1.7];
+const makeHand = (seed: number) =>
+  sampleSdf(seed, handSdf, HAND_BOX, (x, y, z) => [x * 1.25, y * 1.25 + 0.45, z], [-1.3, -2.1]);
+
+/** Standing human silhouette, ~3.7 units tall. */
+const humanSdf = (p: V2) => {
+  let d = len(p[0], p[1] - 1.55) - 0.3;
+  d = smin(d, sdCapsule(p, [0, 1.2], [0, 1.05], 0.12), 0.1);
+  d = smin(d, sdRoundBox(p, [0, 0.45], 0.42, 0.62, 0.2), 0.12);
+  d = smin(d, sdCapsule(p, [-0.42, 0.95], [-0.62, -0.25], 0.11), 0.1);
+  d = smin(d, sdCapsule(p, [0.42, 0.95], [0.62, -0.25], 0.11), 0.1);
+  d = smin(d, sdCapsule(p, [-0.2, -0.1], [-0.27, -1.9], 0.14), 0.1);
+  d = smin(d, sdCapsule(p, [0.2, -0.1], [0.27, -1.9], 0.14), 0.1);
+  return d;
 };
 
 const fill = (fn: (r: () => number, i: number) => [number, number, number], seed: number) => {
@@ -75,8 +89,66 @@ const unit = (r: () => number): [number, number, number] => {
   return [s * Math.cos(a), s * Math.sin(a), z];
 };
 
+/** Per-particle auxiliary data: [seed, group, param]. group = cell id / edge id in [0,1); param = position along an edge (-1 for nodes). */
+export const buildAux = () => {
+  const r = rng(42);
+  const aux = new Float32Array(N * 3);
+  for (let i = 0; i < N; i++) {
+    aux[i * 3] = r();
+    aux[i * 3 + 1] = GROUP[i];
+    aux[i * 3 + 2] = PARAM[i];
+  }
+  return aux;
+};
+const GROUP = new Float32Array(N);
+const PARAM = new Float32Array(N).fill(-1);
+
+const makeCells = () => {
+  const r = rng(6);
+  const centers: V2[] = [];
+  for (let row = -3; row <= 3; row++)
+    for (let col = -6; col <= 6; col++) centers.push([col * 0.62 + (row % 2 ? 0.31 : 0), row * 0.54 + 0.35]);
+  const order = centers.map((_, k) => k).sort(() => r() - 0.5); // random cell ids so "neurons" are scattered
+  return fill((rr, i) => {
+    const k = i % centers.length;
+    GROUP[i] = order[k] / centers.length;
+    const [cx, cy] = centers[k];
+    const kind = rr();
+    const a = rr() * Math.PI * 2;
+    const rad = kind < 0.55 ? 0.25 + gauss(rr) * 0.01 : kind < 0.8 ? Math.abs(gauss(rr)) * 0.065 : rr() * 0.22;
+    return [cx + Math.cos(a) * rad * 1.05, cy + Math.sin(a) * rad, gauss(rr) * 0.03];
+  }, 7);
+};
+
+const makeNetwork = () => {
+  const r = rng(8);
+  const nodes: [number, number, number][] = [];
+  for (let k = 0; k < 150; k++) nodes.push([(r() - 0.5) * 8.5, (r() - 0.5) * 4.2 + 0.3, (r() - 0.5) * 3]);
+  const edges: [number, number][] = [];
+  nodes.forEach((a, i) => {
+    const near = nodes.map((b, j) => [Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]), j]).sort((x, y) => x[0] - y[0]);
+    for (const [, j] of near.slice(1, 4)) if (i < j) edges.push([i, j]);
+  });
+  const eg = edges.map(() => r());
+  return fill((rr, i) => {
+    if (i % 7 === 0) {
+      const n = nodes[(i / 7) % nodes.length | 0];
+      return [n[0] + gauss(rr) * 0.035, n[1] + gauss(rr) * 0.035, n[2] + gauss(rr) * 0.035];
+    }
+    const e = i % edges.length;
+    const [a, b] = [nodes[edges[e][0]], nodes[edges[e][1]]];
+    const u = rr();
+    GROUP[i] = GROUP[i] || eg[e];
+    PARAM[i] = u;
+    return [a[0] + (b[0] - a[0]) * u + gauss(rr) * 0.01, a[1] + (b[1] - a[1]) * u + gauss(rr) * 0.01, a[2] + (b[2] - a[2]) * u];
+  }, 9);
+};
+
+const melody = (x: number) => 0.55 * Math.sin(x * 1.25) + 0.28 * Math.sin(x * 3.1 + 1) + 0.12 * Math.sin(x * 6.7 + 2);
+
 export const buildShapes = (): Record<State, Float32Array> => {
   const hand = makeHand(11);
+  const hand2 = makeHand(12);
   return {
     point: fill((r) => [gauss(r) * 0.03, gauss(r) * 0.03 + 0.45, gauss(r) * 0.03], 1),
     hand,
@@ -103,6 +175,37 @@ export const buildShapes = (): Record<State, Float32Array> => {
       const rad = i % 8 === 0 ? 1.32 + r() * 0.14 : 1.2;
       return [ux * rad, uy * rad + 0.35, uz * rad];
     }, 5),
+    cells: makeCells(),
+    network: makeNetwork(),
+    wave: fill((r, i) => {
+      const x = -4.6 + r() * 9.2;
+      const layer = i % 3; // three parallel voices of the same melody
+      const y = melody(x) * (1 - layer * 0.18) + 0.35 + (layer - 1) * 0.22 + gauss(r) * 0.025;
+      return [x, y, (layer - 1) * 0.15 + gauss(r) * 0.03];
+    }, 10),
+    twohands: (() => {
+      const out = new Float32Array(N * 3);
+      for (let i = 0; i < N; i++) {
+        const src = i % 2 ? hand : hand2;
+        const s = i % 2 ? 1 : -1;
+        out[i * 3] = src[i * 3] * 0.7 + s * 1.75;
+        out[i * 3 + 1] = (src[i * 3 + 1] - 0.45) * 0.7 + 0.45;
+        out[i * 3 + 2] = src[i * 3 + 2];
+      }
+      return out;
+    })(),
+    eye: fill((r, i) => {
+      const k = i % 10;
+      if (k < 4) { // lids
+        const x = -2.3 + r() * 4.6;
+        const h = 0.95 * Math.pow(Math.max(0, 1 - (x / 2.3) ** 2), 0.8);
+        return [x, (i % 2 ? h : -h) * 1 + 0.35 + gauss(r) * 0.012, gauss(r) * 0.04];
+      }
+      const a = r() * Math.PI * 2;
+      const rad = k < 7 ? 0.62 + gauss(r) * 0.012 : k < 9 ? 0.3 + r() * 0.3 : Math.sqrt(r()) * 0.26;
+      return [Math.cos(a) * rad, Math.sin(a) * rad + 0.35, gauss(r) * 0.03];
+    }, 13),
+    human: sampleSdf(14, humanSdf, [-1.0, 1.0, -2.1, 1.95], (x, y, z) => [x, y * 1.0 + 0.2, z]),
   };
 };
 
