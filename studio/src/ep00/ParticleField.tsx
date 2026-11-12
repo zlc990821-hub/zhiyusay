@@ -88,7 +88,7 @@ export const stateMix = (t: number) => {
 
 const fx = timeline.fx;
 
-export const ParticleField: React.FC<{ t: number; width: number; height: number }> = ({ t, height }) => {
+export const ParticleField: React.FC<{ t: number; width: number; height: number; cam?: [number, number, number]; boost?: number }> = ({ t, height, cam, boost = 1 }) => {
   const { camera } = useThree();
   const { geom, mat, sky } = useMemo(() => {
     const shapes = buildShapes();
@@ -134,11 +134,16 @@ export const ParticleField: React.FC<{ t: number; width: number; height: number 
   u.uNeuron.value = w.cells * keyNum(t, fx.neuron as [number, number][]);
   u.uPulse.value = w.network;
   const fadeIn = clamp((t - 0.5) / 1.5);
-  u.uGain.value = blend((s) => STYLE[s].gain) * fadeIn * keyNum(t, fx.dim as [number, number][]);
+  u.uGain.value = blend((s) => STYLE[s].gain) * fadeIn * keyNum(t, fx.dim as [number, number][]) * boost;
   sky.m.opacity = 0.55 * keyNum(t, fx.sky as [number, number][]);
 
-  camera.position.set(0, 0.25, keyNum(t, timeline.camera as [number, number][]));
-  camera.lookAt(0, 0.3, 0);
+  if (cam) {
+    camera.position.set(cam[0], cam[1], cam[2]);
+    camera.lookAt(cam[0], cam[1] + 0.05, 0);
+  } else {
+    camera.position.set(0, 0.25, keyNum(t, timeline.camera as [number, number][]));
+    camera.lookAt(0, 0.3, 0);
+  }
 
   const [f0, f1] = timeline.flip;
   const flip = Math.PI * easeInOut(clamp((t - f0) / (f1 - f0)));
