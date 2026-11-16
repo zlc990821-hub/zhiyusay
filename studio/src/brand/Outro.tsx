@@ -11,7 +11,7 @@ const G = (t: number) => 0.25 * t + (t > TM ? 0.6 * Math.pow(t - TM, 2) : 0);
 export const Outro: React.FC = () => {
   const draw = useCallback((ctx: CanvasRenderingContext2D, t: number, frame: number) => {
     const fadeIn = smooth(t / 0.6);
-    const fadeOut = 1 - smooth((t - 7.3) / 0.7);
+    const fadeOut = 1; // 标志停留到最后一帧，不渐黑
 
     const collapse = easeInCubic(clamp((t - TM) / (TC - TM)));
     const radiusScale = 1.15 * (1 - collapse);
@@ -86,9 +86,6 @@ export const Outro: React.FC = () => {
     }
     ctx.globalCompositeOperation = "source-over";
 
-    // 标题在光点归来后散开、淡去
-    const dis = clamp((t - TM) / 1.0);
-    drawTitle(ctx, { x: CX, y: CY, reveal: 1.02, sweep: null, alpha: fadeIn * (1 - smooth(dis)), spacing: 64 + 80 * easeOutCubic(dis) });
 
     // 黑暗里留下口号
     // 收尾与片头最后一帧完全一致：金色「离心力」+ 口号，首尾呼应

@@ -208,7 +208,7 @@ def outro():
     dry += pan(pad([110, 164.8, 220, 246.9, 329.6], env([(5.5, 0), (6.4, 0.1), (8, 0.1)])), 0)
 
     st = dry + reverb(wet, 3.0, 0.55)
-    return finish(st, 0.4, 7.3)
+    return finish(st, 0.4, 7.85)  # 画面不渐黑，声音只在最后一瞬收掉
 
 
 if __name__ == "__main__":
