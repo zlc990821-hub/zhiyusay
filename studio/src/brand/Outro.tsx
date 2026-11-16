@@ -88,12 +88,12 @@ export const Outro: React.FC = () => {
 
     // 标题在光点归来后散开、淡去
     const dis = clamp((t - TM) / 1.0);
-    drawTitle(ctx, { x: CX, y: CY, reveal: 1.02, sweep: null, alpha: fadeIn * (1 - smooth(dis)), spacing: 56 + 70 * easeOutCubic(dis) });
+    drawTitle(ctx, { x: CX, y: CY, reveal: 1.02, sweep: null, alpha: fadeIn * (1 - smooth(dis)), spacing: 64 + 80 * easeOutCubic(dis) });
 
     // 黑暗里留下口号
     const sAlpha = smooth((t - 5.6) / 0.8) * fadeOut;
-    drawSubtitle(ctx, "不知道，所以继续探索", CX, CY - 10, 50, sAlpha);
-    drawSubtitle(ctx, "离 心 力", CX, CY + 70, 24, sAlpha * 0.7, "170, 158, 140", 10);
+    drawSubtitle(ctx, "不知道，所以继续探索", CX, CY - 30, 76, sAlpha);
+    drawSubtitle(ctx, "离 心 力", CX, CY + 80, 46, sAlpha * 0.8, "190, 176, 156", 14);
 
     drawFilm(ctx, frame);
   }, []);

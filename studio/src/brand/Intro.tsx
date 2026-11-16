@@ -99,7 +99,7 @@ export const Intro: React.FC = () => {
     const rev = clamp((t - 5.0) / 1.0);
     drawTitle(ctx, { x: CX, y: CY, reveal: smooth(rev) * 1.02, sweep: rev < 1 ? smooth(rev) : null, alpha: master });
     // 口号
-    drawSubtitle(ctx, "不知道，所以继续探索", CX, CY + 175, 44, master * smooth((t - 6.3) / 0.7));
+    drawSubtitle(ctx, "不知道，所以继续探索", CX, CY + 215, 68, master * smooth((t - 6.3) / 0.7));
     ctx.restore();
 
     drawFilm(ctx, frame);

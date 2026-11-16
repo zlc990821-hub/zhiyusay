@@ -49,18 +49,18 @@ export const drawTitle = (
 ) => {
   const { x, y, reveal, sweep, alpha } = opts;
   if (alpha <= 0.001 || reveal <= 0) return;
-  const spacing = opts.spacing ?? 56;
+  const spacing = opts.spacing ?? 64;
   const off = document.createElement("canvas");
   off.width = W; off.height = H;
   const o = off.getContext("2d")!;
-  o.font = `190px ${TITLE_FONT}`;
+  o.font = `240px ${TITLE_FONT}`;
   (o as any).letterSpacing = `${spacing}px`;
   o.textAlign = "center";
   o.textBaseline = "middle";
   const m = o.measureText("离心力");
   const left = x - m.width / 2 - 20;
   const right = x + m.width / 2 + 20;
-  const g = o.createLinearGradient(0, y - 100, 0, y + 100);
+  const g = o.createLinearGradient(0, y - 125, 0, y + 125);
   g.addColorStop(0, "#fff1d8");
   g.addColorStop(0.55, "#f2cf98");
   g.addColorStop(1, "#c58f4e");
