@@ -91,9 +91,10 @@ export const Outro: React.FC = () => {
     drawTitle(ctx, { x: CX, y: CY, reveal: 1.02, sweep: null, alpha: fadeIn * (1 - smooth(dis)), spacing: 64 + 80 * easeOutCubic(dis) });
 
     // 黑暗里留下口号
-    const sAlpha = smooth((t - 5.6) / 0.8) * fadeOut;
-    drawSubtitle(ctx, "不知道，所以继续探索", CX, CY - 30, 76, sAlpha);
-    drawSubtitle(ctx, "离 心 力", CX, CY + 80, 46, sAlpha * 0.8, "190, 176, 156", 14);
+    // 收尾与片头最后一帧完全一致：金色「离心力」+ 口号，首尾呼应
+    const endAlpha = smooth((t - 5.6) / 0.9) * fadeOut;
+    drawTitle(ctx, { x: CX, y: CY, reveal: 1.02, sweep: null, alpha: endAlpha });
+    drawSubtitle(ctx, "不知道，所以继续探索", CX, CY + 215, 68, smooth((t - 6.0) / 0.8) * fadeOut);
 
     drawFilm(ctx, frame);
   }, []);
