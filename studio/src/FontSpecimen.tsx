@@ -17,7 +17,7 @@ export const FontSpecimen: React.FC<{ names?: string[]; fonts?: string[] }> = ({
   return (
     <AbsoluteFill style={{ backgroundColor: "#07070a", padding: "60px 70px", color: "#f3e6d0" }}>
       <div style={{ fontFamily: '"Noto Sans SC"', fontSize: 26, color: "#9a8f80", marginBottom: 28 }}>
-        字体样张 · 全部 OFL 开源授权，可免费商用
+        字体样张 · 全部可免费商用（授权以各字体自带说明为准）
       </div>
       {list.map((f) => (
         <div key={f.family} style={{ display: "flex", alignItems: "center", height: 138, borderTop: "1px solid #222" }}>
