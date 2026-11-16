@@ -3,5 +3,5 @@
 set -e
 cd "$(dirname "$0")"
 npm install --no-audit --no-fund
-pip install -q faster-whisper
+pip install -q faster-whisper scipy
 echo "完成。测试渲染：npx remotion render src/index.ts Test out/test.mp4"
