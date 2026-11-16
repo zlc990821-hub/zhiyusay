@@ -1,0 +1,25 @@
+{
+  "name": "zhiyusay-studio",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "studio": "remotion studio",
+    "render": "remotion render"
+  },
+  "dependencies": {
+    "@fontsource/noto-sans-sc": "5.2.8",
+    "@fontsource/noto-serif-sc": "5.2.8",
+    "@react-three/fiber": "9.3.0",
+    "@remotion/cli": "4.0.344",
+    "@remotion/three": "4.0.344",
+    "react": "19.1.1",
+    "react-dom": "19.1.1",
+    "remotion": "4.0.344",
+    "three": "0.179.1"
+  },
+  "devDependencies": {
+    "@types/react": "19.1.10",
+    "@types/three": "0.179.0",
+    "typescript": "5.9.2"
+  }
+}
