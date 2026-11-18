@@ -5,7 +5,7 @@ export type ClueNode = { id: string; x: number; y: number; label: string; key?: 
 export const CLUES: ClueNode[] = [
   { id: "common", x: 330, y: 330, label: "常识：我＝我的记忆", pos: "a" },
   { id: "piaget", x: 610, y: 560, label: "皮亚杰的假童年", pos: "b" },
-  { id: "loftus", x: 900, y: 330, label: "一个词，撒下一地碎玻璃", pos: "a" },
+  { id: "loftus", x: 900, y: 330, label: "一个词，撒下碎玻璃", pos: "a" },
   { id: "mall", x: 1140, y: 610, label: "商场里走丢过", pos: "b" },
   { id: "challenger", x: 1500, y: 400, label: "挑战者号：记成了另一个样子", pos: "a" },
   { id: "rat", x: 1640, y: 640, label: "想起时，记忆会松动", pos: "b" },
