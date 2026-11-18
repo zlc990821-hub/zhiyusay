@@ -58,7 +58,7 @@ const Bars: React.FC<{ t: number; a: number; b: number; title: string; unit: str
         <div style={{ position: "absolute", left: 860, width: 200, top: 330, textAlign: "center", fontFamily: DISPLAY, fontSize: 96, color: "#f6c27f",
           opacity: smooth((t - note.at) / 0.3), transform: `scale(${1.3 - 0.3 * smooth((t - note.at) / 0.3)})` }}>{note.text}</div>
       ) : null}
-      <div style={{ position: "absolute", right: 90, top: 70, fontFamily: SANS, fontSize: 46, color: "rgba(240,225,200,0.55)" }}>Loftus &amp; Palmer, 1974</div>
+      <div style={{ position: "absolute", right: 90, bottom: 170, fontFamily: SANS, fontSize: 46, color: "rgba(240,225,200,0.55)" }}>Loftus &amp; Palmer, 1974</div>
     </AbsoluteFill>
   );
 };

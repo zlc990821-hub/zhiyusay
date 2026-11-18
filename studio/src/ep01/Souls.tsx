@@ -168,7 +168,7 @@ export const Souls: React.FC = () => {
       <Clip src="ep01/clips/fire.mp4" from={S0} a={814.6} b={817.2} start={0.5} zoom={[1.0, 1.06]} fi={0.5} fo={0.4} />
       <Clip src="ep01/clips/candle.mp4" from={S0} a={816.8} b={S_END} start={0} zoom={[1.0, 1.05]} fi={0.4} fo={0.8} />
       <Film t={t} />
-      <Subtitles t={t} hide={(x) => x > 808.5 && x < 814.85} />
+      <Subtitles t={t} hide={(x) => (x > 808.5 && x < 814.85) || x > 819.3} />
     </AbsoluteFill>
   );
 };
