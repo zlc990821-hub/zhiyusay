@@ -74,6 +74,8 @@ ev("sparkle_touch", 102.8, 0.07, wet=0.5)
 ev("shutter_vintage", 105.4, 0.15, pan=-0.5, wet=0.15)
 ev("sparkle_touch", 111.1, 0.06, pan=0.2, wet=0.5); ev("whoosh_air", 114.4, 0.07, pan=0.4, wet=0.3)
 ev("bell_chime", 117.4, 0.08, pan=0.5, wet=0.5)
+ev(soft_tone(220, 3.0, attack=1.0, release=1.5), 120.3, 0.04, wet=0.7)                     # 「默认了一件事」那团光
+ev("pop_dry", 123.4, 0.07, wet=0.3); ev("pop_dry", 125.0, 0.07, wet=0.3)                  # 两行字浮现
 keyline(128.4); new_clue(130.1)
 ev("glass_break", 135.3, 0.06, pan=-0.4, wet=0.4); ev(tinkles(0.8, n=8, seed=31), 135.4, 0.03, wet=0.5)
 
@@ -103,7 +105,8 @@ ev("paper_slide", 277.4, 0.12, pan=-0.4, wet=0.2); chain("pen_write", 281.0, 286
 ev("paper_slide", 287.5, 0.12, pan=0.4, wet=0.2); chain("pen_write", 288.4, 293.6, 0.07)
 ev("marker_line", 298.4, 0.14, pan=-0.3); ev("marker_line", 298.6, 0.14, pan=0.3)
 ev(thump(0.6, 95, 50, 0.2), 301.1, 0.22, pan=0.3, wet=0.15); ev("paper_slice", 301.1, 0.08, pan=0.3)   # 盖章
-for v, p in ((312.4, -0.5), (315.8, 0.0), (318.9, 0.5)): ev("page_turn", v, 0.14, pan=p, wet=0.15)
+types(309.3, 9)                                                                          # 巴特莱特人名条
+for v, p in ((311.8, -0.5), (315.8, 0.0), (318.9, 0.5)): ev("page_turn", v, 0.14, pan=p, wet=0.15)
 ev("marker_line", 324.4, 0.12); ev("sparkle_touch", 328.1, 0.06, wet=0.5)
 ev("pop_long", 331.0, 0.10, wet=0.2); ev(soft_tone(220, 2.4, attack=0.2, release=1.4), 331.0, 0.05, wet=0.5)
 ev("whoosh_air", 334.9, 0.06, wet=0.3)
