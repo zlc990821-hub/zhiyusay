@@ -1,0 +1,109 @@
+"""把稿子和录音识别结果逐字对齐，生成字幕和卡点时间。
+用法：python3 studio/tools/align_subs.py SCRIPT.md transcript.json 输出.json [替换规则.json] ["短语1|短语2"] [不断词.txt]
+- 字幕文字以稿子为准（可用替换规则对齐实际录音），时间以录音为准。
+- 输出：subs（字幕行）、cues（稿子里每个短语首次/全部出现的时间，供画面卡点）。
+"""
+import difflib, json, re, sys
+from opencc import OpenCC
+script_md, tr_json, out = sys.argv[1], sys.argv[2], sys.argv[3]
+repl = json.load(open(sys.argv[4], encoding="utf-8")) if len(sys.argv) > 4 else {}
+cc = OpenCC("t2s")
+PUN = "，。？！；：、「」『』“”‘’（）…—,.?!;:\"' \n*《》【】"
+
+# 1. 取出稿子正文（00–09 段），去掉标题、（停）、加粗、片头片尾标记
+lines, seg = [], None
+for raw in open(script_md, encoding="utf-8").read().splitlines():
+    m = re.match(r"## (\d\d) ", raw)
+    if m: seg = m.group(1); continue
+    if raw.startswith("## ") or raw.startswith("#"): seg = None if raw.startswith("# ") else seg; continue
+    if seg is None or not raw.strip() or raw.strip() in ("---",) or raw.startswith("【") or raw.startswith("- ") or raw.startswith("全片") or raw.startswith("状态") or raw.startswith("标记"):
+        continue
+    t = raw.replace("（停）", "").replace("**", "").strip()
+    if t: lines.append((seg, t))
+text = "\n".join(f"{s}\t{t}" for s, t in lines)
+for a, b in repl.items(): text = text.replace(a, b)
+lines = [tuple(l.split("\t", 1)) for l in text.splitlines()]
+
+# 2. 稿子字符序列（去标点）
+sc, sc_pos = [], []   # 字符，以及它在 (行号, 行内位置)
+for li, (s, t) in enumerate(lines):
+    for ci, ch in enumerate(t):
+        if ch not in PUN: sc.append(ch); sc_pos.append((li, ci))
+
+# 3. 识别结果字符序列与时间
+tr = json.load(open(tr_json, encoding="utf-8"))
+ac, at = [], []
+for s in tr:
+    for w in s.get("words", []):
+        word = cc.convert(w["w"]).strip()
+        chars = [c for c in word if c not in PUN]
+        if not chars: continue
+        dur = (w["e"] - w["s"]) / len(chars)
+        for k, c in enumerate(chars):
+            ac.append(c); at.append((w["s"] + k * dur, w["s"] + (k + 1) * dur))
+
+# 4. 对齐
+sm = difflib.SequenceMatcher(None, sc, ac, autojunk=False)
+st, en = [None] * len(sc), [None] * len(sc)
+for a, b, n in sm.get_matching_blocks():
+    for k in range(n): st[a + k], en[a + k] = at[b + k]
+known = [i for i in range(len(sc)) if st[i] is not None]
+for i in range(len(sc)):   # 没对上的字：在前后已知的字之间插值
+    if st[i] is None:
+        prev = max([k for k in known if k < i], default=None); nxt = min([k for k in known if k > i], default=None)
+        if prev is None: st[i] = en[i] = st[nxt]
+        elif nxt is None: st[i] = en[i] = en[prev]
+        else:
+            f = (i - prev) / (nxt - prev); st[i] = en[prev] + (st[nxt] - en[prev]) * f; en[i] = st[i]
+matched = len(known) / len(sc)
+
+# 5. 切字幕：按标点断句，每行不超过 16 个字
+# 超长句硬切时，不在人名、地名、数字中间断开；尽量断在「的、了、给、把」等虚词后面
+PROTECT = [w.strip() for w in open(sys.argv[6], encoding="utf-8").read().split() if w.strip()] if len(sys.argv) > 6 else []
+def hard_split(c):
+    banned = set()
+    for w in PROTECT + re.findall(r"[0-9A-Za-z.]+", c):
+        k = c.find(w)
+        while k >= 0:
+            banned.update(range(k + 1, k + len(w))); k = c.find(w, k + 1)
+    mid = len(c) / 2
+    best = min((abs(i - mid) - (3 if c[i - 1] in "的了着过，、" or c[i] in "给把在和与对是就都也还" else 0) + (100 if i in banned else 0), i) for i in range(4, len(c) - 3))[1]
+    return [c[:best], c[best:]]
+pos2idx = {p: i for i, p in enumerate(sc_pos)}
+subs = []
+for li, (s, t) in enumerate(lines):
+    pieces = [p for p in re.split(r"(?<=[，。？！；：])", t) if p.strip()]
+    buf = ""
+    chunks = []
+    for p in pieces:
+        if len(re.sub(f"[{re.escape(PUN)}]", "", buf + p)) <= 16: buf += p
+        else:
+            if buf: chunks.append(buf)
+            buf = p
+    if buf: chunks.append(buf)
+    final = []
+    for c in chunks:   # 仍然超长的硬切
+        core = re.sub(f"[{re.escape(PUN)}]", "", c)
+        if len(core) > 16:
+            final += hard_split(c)
+        else: final.append(c)
+    cur = 0
+    for c in final:
+        start_ci = t.find(c, cur); cur = start_ci + len(c)
+        idxs = [pos2idx[(li, ci)] for ci in range(start_ci, start_ci + len(c)) if (li, ci) in pos2idx]
+        if not idxs: continue
+        disp = c.strip().strip("，。；：、").replace("「", "").replace("」", "")
+        subs.append({"seg": s, "start": round(st[idxs[0]], 2), "end": round(en[idxs[-1]] + 0.25, 2), "text": disp})
+for i in range(len(subs) - 1):   # 防止重叠，保证最短显示 0.8 秒
+    subs[i]["end"] = min(max(subs[i]["end"], subs[i]["start"] + 0.8), subs[i + 1]["start"] - 0.05)
+
+# 6. 卡点：每个短语在稿子里出现的时间
+plain = "".join(sc)
+def find_all(ph):
+    ph2 = "".join(c for c in ph if c not in PUN); res, k = [], plain.find(ph2)
+    while k >= 0: res.append(round(st[k], 2)); k = plain.find(ph2, k + 1)
+    return res
+cue_list = sys.argv[5].split("|") if len(sys.argv) > 5 else []
+cues = {ph: find_all(ph) for ph in cue_list}
+json.dump({"matched": round(matched, 3), "subs": subs, "cues": cues}, open(out, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+print(f"对齐率 {matched:.1%}，字幕 {len(subs)} 行")
