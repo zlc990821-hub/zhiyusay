@@ -95,18 +95,18 @@ const ClipInner: React.FC<{ src: string; len: number; zoom: [number, number]; fi
 };
 
 // 一张图，缓慢推拉，放在暗色背景里
-export const Still: React.FC<{ src: string; from: number; a: number; b: number; zoom?: [number, number]; height?: number; fade?: number; x?: number }> = ({ src, from, a, b, zoom = [1, 1.08], height = 900, fade = 0.4, x = 0 }) => (
+export const Still: React.FC<{ src: string; from: number; a: number; b: number; zoom?: [number, number]; height?: number; fade?: number; x?: number; y?: number; bg?: string }> = ({ src, from, a, b, zoom = [1, 1.08], height = 900, fade = 0.4, x = 0, y = 0, bg = "#0b0a09" }) => (
   <Sequence from={sec(a - from)} durationInFrames={Math.max(1, sec(b - a))} layout="none">
-    <StillInner src={src} len={b - a} zoom={zoom} height={height} fade={fade} x={x} />
+    <StillInner src={src} len={b - a} zoom={zoom} height={height} fade={fade} x={x} y={y} bg={bg} />
   </Sequence>
 );
-const StillInner: React.FC<{ src: string; len: number; zoom: [number, number]; height: number; fade: number; x: number }> = ({ src, len, zoom, height, fade, x }) => {
+const StillInner: React.FC<{ src: string; len: number; zoom: [number, number]; height: number; fade: number; x: number; y: number; bg: string }> = ({ src, len, zoom, height, fade, x, y, bg }) => {
   const f = useCurrentFrame() / FPS;
   const z = interpolate(f, [0, len], zoom);
   const o = smooth(f / fade) * (1 - smooth((f - (len - fade)) / fade));
   return (
-    <AbsoluteFill style={{ background: "#0b0a09", justifyContent: "center", alignItems: "center", opacity: o }}>
-      <Img src={staticFile(src)} style={{ height, transform: `translateX(${x}px) scale(${z})`, filter: "sepia(0.25) saturate(0.8) contrast(1.05)", boxShadow: "0 0 80px rgba(0,0,0,0.8)" }} />
+    <AbsoluteFill style={{ background: bg, justifyContent: "center", alignItems: "center", opacity: o }}>
+      <Img src={staticFile(src)} style={{ height, transform: `translate(${x}px, ${y}px) scale(${z})`, filter: "sepia(0.25) saturate(0.8) contrast(1.05)", boxShadow: "0 0 80px rgba(0,0,0,0.8)" }} />
       <AbsoluteFill style={{ background: "radial-gradient(ellipse at center, rgba(0,0,0,0) 45%, rgba(0,0,0,0.75) 100%)" }} />
     </AbsoluteFill>
   );
