@@ -44,6 +44,7 @@
 - 语音识别：faster-whisper（small 模型），用于把用户录音转成带时间戳的文字来对齐画面、生成字幕、找出重录的句子。注意：`av` 版本不兼容，需用 `wave` 读入 numpy 数组再传给模型。只能识别说了什么，判断不了语气。
 - 渲染后必须截帧检查画面，不能只看「导出成功」。
 - 大视频文件：GitHub 单文件上限 100MB，超过要切分或压缩；源视频不入库。
+- 剪辑工具（setup.sh 会安装）：PySceneDetect（镜头切分）与 `studio/tools/shot_sheet.py`（镜头表）、ffmpeg-normalize（响度）、auto-editor、OpenTimelineIO、pyJianYingDraft（导出剪映草稿）。不要装 MoviePy，它会把 Pillow 降级。
 - 素材抓取工具（setup.sh 会安装）：yt-dlp（YouTube、B 站、互联网档案馆等上千个网站）、internetarchive 的 `ia` 命令（搜索下载普林格档案等公有领域老片，实测可用）、gallery-dl（批量图片）、you-get（国内网站）；Openverse 接口（开放授权图片，无需账号）；维基共享资源 API 查授权。
 - 已知限制：这台服务器的 IP 被 YouTube 要求人机验证，YouTube 视频下载不了；维基共享资源下载会被限速（429）。这两类素材请用户下载后发来。互联网档案馆下载正常。
 
