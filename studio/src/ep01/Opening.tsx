@@ -9,11 +9,11 @@ export const OPEN_END = 73.4;
 export const OPENING_FRAMES = sec(OPEN_END) + 240;
 
 // ---------------- 日记页（S2–S4） ----------------
-const FS = 56, LH = 84, TOP = -700, X0 = -450;
-const lineY = (i: number) => TOP + i * LH;
-const S1 = "我现在，才真正醒过来。";
-const S2 = "我现在，彻彻底底地醒了。";
-type Entry = { line: number; text: string; a: number; b: number; strike: number };
+export const FS = 56, LH = 84, TOP = -700, X0 = -450;
+export const lineY = (i: number) => TOP + i * LH;
+export const S1 = "我现在，才真正醒过来。";
+export const S2 = "我现在，彻彻底底地醒了。";
+export type Entry = { line: number; text: string; a: number; b: number; strike: number };
 const PRE = ["7:09", "7:22", "7:46", "8:02", "8:10", "8:17"];
 const ENTRIES: Entry[] = [
   ...PRE.map((tm, k) => ({ line: 2 + k, text: `${tm} ${k % 3 === 2 ? S2 : S1}`, a: -10, b: -9, strike: -8 })),
@@ -37,7 +37,7 @@ const strikePath = (ctx: CanvasRenderingContext2D, x: number, y: number, w: numb
   ctx.stroke();
 };
 
-const drawLine = (ctx: CanvasRenderingContext2D, e: Entry, t: number, alpha = 1) => {
+export const drawLine = (ctx: CanvasRenderingContext2D, e: Entry, t: number, alpha = 1) => {
   if (t < e.a) return;
   const y = lineY(e.line);
   ctx.font = `${FS}px ${HAND}`;
@@ -55,7 +55,7 @@ const drawLine = (ctx: CanvasRenderingContext2D, e: Entry, t: number, alpha = 1)
   }
 };
 
-const drawPaper = (ctx: CanvasRenderingContext2D, seed: number, alpha: number) => {
+export const drawPaper = (ctx: CanvasRenderingContext2D, seed: number, alpha: number) => {
   ctx.save();
   ctx.globalAlpha = alpha;
   ctx.shadowColor = "rgba(0,0,0,0.6)"; ctx.shadowBlur = 60;

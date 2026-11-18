@@ -12,6 +12,9 @@ import { Seg02a, Seg02c, SEG02A_FRAMES, SEG02C_FRAMES } from "./ep01/Seg02";
 import { Seg03, SEG03_FRAMES } from "./ep01/Seg03";
 import { Seg04, SEG04_FRAMES } from "./ep01/Seg04";
 import { Seg05, SEG05_FRAMES } from "./ep01/Seg05";
+import { Seg06, SEG06_FRAMES } from "./ep01/Seg06";
+import { Seg07, SEG07_FRAMES } from "./ep01/Seg07";
+import { Seg09, SEG09_FRAMES, Ep01Outro, OUTRO_FRAMES } from "./ep01/Seg09";
 
 export const Root: React.FC = () => (
   <>
@@ -27,6 +30,10 @@ export const Root: React.FC = () => (
     <Composition id="Ep01Seg03" component={Seg03} durationInFrames={SEG03_FRAMES} fps={30} width={1920} height={1080} />
     <Composition id="Ep01Seg04" component={Seg04} durationInFrames={SEG04_FRAMES} fps={30} width={1920} height={1080} />
     <Composition id="Ep01Seg05" component={Seg05} durationInFrames={SEG05_FRAMES} fps={30} width={1920} height={1080} />
+    <Composition id="Ep01Seg06" component={Seg06} durationInFrames={SEG06_FRAMES} fps={30} width={1920} height={1080} />
+    <Composition id="Ep01Seg07" component={Seg07} durationInFrames={SEG07_FRAMES} fps={30} width={1920} height={1080} />
+    <Composition id="Ep01Seg09" component={Seg09} durationInFrames={SEG09_FRAMES} fps={30} width={1920} height={1080} />
+    <Composition id="Ep01Outro" component={Ep01Outro} durationInFrames={OUTRO_FRAMES} fps={30} width={1920} height={1080} />
     <Composition id="HandTest" component={HandTest} durationInFrames={1} fps={30} width={1920} height={1080} />
     <Composition id="Ep01Opening" component={Opening} durationInFrames={OPENING_FRAMES} fps={30} width={1920} height={1080} />
     <Composition id="Ep01Glass" component={GlassRoot} durationInFrames={GLASS_FRAMES} fps={30} width={1920} height={1080} />
