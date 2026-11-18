@@ -18,7 +18,7 @@ SEGS = [
     ("out/seg/Ep01Seg05.mp4", 2379),
     ("out/seg/Ep01Seg06.mp4", 3816),
     ("out/seg/Ep01Seg07.mp4", 1698),
-    ("out/ep01_Ep01Souls.mp4", 1791),     # 759.6–819.3
+    ("out/seg/Ep01Souls.mp4", 1791),      # 759.6–819.3
     ("out/seg/Ep01Seg09.mp4", 1689),
     ("out/seg/Ep01Outro.mp4", 240),
 ]
