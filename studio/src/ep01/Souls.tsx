@@ -163,7 +163,7 @@ export const Souls: React.FC = () => {
   const draw = useCallback((ctx: CanvasRenderingContext2D, tt: number) => drawSouls(ctx, tt), []);
   return (
     <AbsoluteFill style={{ background: "#050507" }}>
-      {ready && t < 809.5 ? <Canvas t={t} draw={draw} /> : null}
+      {ready && t < 809.05 ? <Canvas t={t} draw={draw} /> : null}
       {/* 场 31 薪火：燃烧的木柴压暗，庄子原文浮在上面；「柴会烧完」时字淡去、火变亮；「火，传下去了」叠化成烛火 */}
       <Clip src="ep01/clips/fire.mp4" from={S0} a={808.3} b={817.5} start={0} zoom={[1.0, 1.08]} fi={0.9} fo={0.7}
         style={{ filter: `brightness(${0.38 + 0.62 * smooth((t - 814.6) / 0.9)})` }} />

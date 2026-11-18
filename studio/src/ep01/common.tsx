@@ -121,6 +121,9 @@ export const Canvas: React.FC<{ t: number; draw: (ctx: CanvasRenderingContext2D,
     ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.globalCompositeOperation = "source-over";
     ctx.clearRect(0, 0, w, h);
     draw(ctx, t);
+    // 无显卡的软件渲染里，画布被清成全透明后这一层可能不刷新，留下上一帧的画面；画一个看不见的像素强制刷新
+    ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.globalCompositeOperation = "source-over";
+    ctx.fillStyle = "rgba(0,0,0,0.004)"; ctx.fillRect(0, 0, 1, 1);
   }, [t, draw, w, h]);
   return <canvas ref={ref} width={w} height={h} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", ...style }} />;
 };

@@ -150,7 +150,7 @@ const Board: React.FC<{ t: number; ready: boolean }> = ({ t, ready }) => {
               <Sequence from={sec(5.6)} durationInFrames={sec(5.0)} layout="none"><Clip src="ep01/clips/car_road.mp4" from={0} a={0} b={5.0} zoom={[1, 1]} /></Sequence>
             </Loop>
           </Sequence>
-          {ready ? <Canvas t={t} draw={crackDraw} w={SCR.w} h={SCR.h} /> : null}
+          {ready && t > 221.6 && t < 229.3 ? <Canvas t={t} draw={crackDraw} w={SCR.w} h={SCR.h} /> : null}
           {banner > 0 ? (
             <div style={{ position: "absolute", left: 0, right: 0, bottom: 0, padding: "14px 0 18px", background: "rgba(10,9,8,0.72)", textAlign: "center", opacity: banner }}>
               <div style={{ fontFamily: SANS, fontSize: 46, color: "rgba(240,225,200,0.7)" }}>一周以后</div>
