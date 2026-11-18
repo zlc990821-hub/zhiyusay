@@ -2,7 +2,7 @@
 // Seg02a 137.9–196.0：场 8 皮亚杰的假童年；Seg02c 237.5–270.9：场 10 商场里走丢、场 11 小结
 import { AbsoluteFill, Img, staticFile } from "remotion";
 import { useCallback } from "react";
-import { Canvas, Clip, Corner, Film, KeyText, NameBar, Still, Subtitles, clamp, glow, rand, sec, smooth, useFonts, useT, DISPLAY, HAND, SERIF, SANS, GOLD } from "./common";
+import { Atmos, Canvas, Clip, Corner, Film, KeyText, NameBar, Still, Subtitles, clamp, glow, rand, sec, smooth, useFonts, useT, DISPLAY, HAND, SERIF, SANS, GOLD } from "./common";
 import { drawClueMap, clueOn } from "./clue";
 
 export const T02A = 137.9, E02A = 196.0, T02C = 237.5, E02C = 270.9;
@@ -65,6 +65,7 @@ export const Seg02a: React.FC = () => {
   const draw = useCallback((ctx: CanvasRenderingContext2D, tt: number) => mapA(ctx, tt), []);
   return (
     <AbsoluteFill style={{ background: "#0b0a09" }}>
+      <Atmos t={t} />
       <Still src="ep01/raw/piaget.png" from={T02A} a={T02A} b={150.5} zoom={[1.0, 1.06]} height={920} x={300} fade={0.5} />
       <NameBar name="让·皮亚杰" years="1896–1980  瑞士心理学家" t={t} a={138.8} b={150.0} />
       {/* 他「记得」的画面：一个固定的老胶片画框，里面依次换镜头 */}
@@ -129,6 +130,7 @@ export const Seg02c: React.FC = () => {
   const draw = useCallback((ctx: CanvasRenderingContext2D, tt: number) => mapC(ctx, tt), []);
   return (
     <AbsoluteFill style={{ background: "#0b0a09" }}>
+      <Atmos t={t} />
       <Clip src="ep01/clips/store_a.mp4" from={T02C} a={240.2} b={249.8} zoom={[1.0, 1.05]} fi={0.5} />
       <Clip src="ep01/clips/store_arcade.mp4" from={T02C} a={249.8} b={253.2} zoom={[1.02, 1.06]} />
       <Clip src="ep01/clips/store_b.mp4" from={T02C} a={253.2} b={259.3} zoom={[1.0, 1.08]} fo={0.6} />

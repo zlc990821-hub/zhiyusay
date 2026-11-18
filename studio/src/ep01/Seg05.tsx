@@ -2,7 +2,7 @@
 // 场 20 AI 里的亲人、场 21 传送机、场 22 不可能就是你
 import { AbsoluteFill } from "remotion";
 import { useCallback } from "react";
-import { Canvas, Clip, Film, NameBar, Still, Subtitles, clamp, glow, rand, sec, smooth, useFonts, useT, DISPLAY, SERIF, SANS } from "./common";
+import { Atmos, Canvas, Clip, Film, NameBar, Still, Subtitles, clamp, glow, rand, sec, smooth, useFonts, useT, DISPLAY, SERIF, SANS } from "./common";
 import { drawClueMap, clueById, clueOn } from "./clue";
 import { person, headPos, memoryOrb, label, chip } from "./figures";
 
@@ -38,9 +38,9 @@ const drawChat = (ctx: CanvasRenderingContext2D, t: number) => {
   BUBBLES.forEach((b, i) => {
     const at = 506.1 + i * 0.32;
     const on = fin(t, at, 0.35);
-    const x0 = 300 + (i % 4) * 440 + (rand(i, 2) - 0.5) * 80, y0 = 230 + Math.floor(i / 4) * 160 + (rand(i, 3) - 0.5) * 50;
+    const x0 = 330 + (i % 4) * 400 + (rand(i, 2) - 0.5) * 60, y0 = 250 + Math.floor(i / 4) * 230 + (i % 2) * 70 + (rand(i, 3) - 0.5) * 40;
     const x = lerp(x0, 960, gather), y = lerp(y0, 520, gather);
-    chip(ctx, b, x, y, 50, a * on * (1 - gather), SERIF, i % 2 ? GOLD_RGB : BLUE_RGB);
+    chip(ctx, b, x, y, 58, a * on * (1 - gather), SERIF, i % 2 ? GOLD_RGB : BLUE_RGB);
   });
   // 人形：由一圈小光点组成，中间是空的
   const fig = fin(t, 509.6, 1.4);
@@ -153,6 +153,7 @@ export const Seg05: React.FC = () => {
   }, []);
   return (
     <AbsoluteFill style={{ background: "#08080b" }}>
+      <Atmos t={t} />
       <Clip src="ep01/clips/phone.mp4" from={T05} a={498.6} b={506.2} zoom={[1.0, 1.07]} fi={0.5} fo={0.4} />
       <Still src="ep01/raw/parfit.jpg" from={T05} a={516.9} b={521.3} zoom={[1.0, 1.06]} height={900} x={300} fade={0.4} />
       <NameBar name="德里克·帕菲特" years="1942–2017  英国哲学家" t={t} a={517.2} b={521.0} />

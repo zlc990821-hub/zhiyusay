@@ -2,7 +2,7 @@
 // 场 16 亨利·莫莱森（一张讲解板）、场 17 克莱夫的音乐、场 18 外婆的糖、场 19 第一个发现
 import { AbsoluteFill } from "remotion";
 import { useCallback } from "react";
-import { Canvas, Clip, Corner, Film, KeyText, NameBar, Subtitles, clamp, glow, rand, sec, smooth, useFonts, useT, DISPLAY, HAND, SERIF, SANS } from "./common";
+import { Atmos, Canvas, Clip, Corner, Film, KeyText, NameBar, Subtitles, clamp, glow, rand, sec, smooth, useFonts, useT, DISPLAY, HAND, SERIF, SANS } from "./common";
 import { drawClueMap, clueById, clueOn } from "./clue";
 import { chip, label } from "./figures";
 
@@ -128,6 +128,7 @@ export const Seg04: React.FC = () => {
   const draw = useCallback((ctx: CanvasRenderingContext2D, tt: number) => { drawBrain(ctx, tt); drawForget(ctx, tt); drawStars(ctx, tt); drawFound1(ctx, tt); }, []);
   return (
     <AbsoluteFill style={{ background: "#08080b" }}>
+      <Atmos t={t} />
       {/* 场 17、18 的真实影像 */}
       <Clip src="ep01/clips/clive_piano.mp4" from={T04} a={442.0} b={446.6} zoom={[1.0, 1.04]} fi={0.4} />
       <Clip src="ep01/clips/piano_back.mp4" from={T04} a={446.6} b={452.8} zoom={[1.0, 1.06]} />

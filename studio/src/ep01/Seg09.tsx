@@ -2,7 +2,7 @@
 // 场 32 上香、场 33 去了哪里、场 34 留言
 import { AbsoluteFill } from "remotion";
 import { useCallback } from "react";
-import { Canvas, Clip, Film, KeyText, Subtitles, glow, sec, smooth, useFonts, useT, DISPLAY, HAND } from "./common";
+import { Atmos, Canvas, Clip, Film, KeyText, Subtitles, glow, sec, smooth, useFonts, useT, DISPLAY, HAND } from "./common";
 import { drawClueMap } from "./clue";
 
 export const T09 = 819.3, E09 = 875.6;
@@ -61,6 +61,7 @@ export const Seg09: React.FC = () => {
   const draw = useCallback((ctx: CanvasRenderingContext2D, tt: number) => { drawGone(ctx, tt); drawEnd(ctx, tt); }, []);
   return (
     <AbsoluteFill style={{ background: "#060608" }}>
+      <Atmos t={t} />
       <Clip src="ep01/clips/incense.mp4" from={T09} a={823.9} b={831.6} zoom={[1.0, 1.08]} fi={0.8} fo={0.5} />
       <Name t={t} />
       {ready ? <Canvas t={t} draw={draw} /> : null}

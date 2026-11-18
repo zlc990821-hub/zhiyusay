@@ -2,7 +2,7 @@
 // 场 23 里德的将军、场 24 那先的车、场 25 线断了、场 26 讲故事的人
 import { AbsoluteFill } from "remotion";
 import { useCallback } from "react";
-import { Canvas, Clip, Film, KeyText, NameBar, Still, Subtitles, clamp, glow, rand, sec, smooth, useFonts, useT, DISPLAY, HAND, SERIF } from "./common";
+import { Atmos, Canvas, Clip, Film, KeyText, NameBar, Still, Subtitles, clamp, glow, rand, sec, smooth, useFonts, useT, DISPLAY, HAND, SERIF } from "./common";
 import { drawClueMap, clueById, clueOn } from "./clue";
 import { person, headPos, label, chip } from "./figures";
 
@@ -183,6 +183,7 @@ export const Seg06: React.FC = () => {
   }, []);
   return (
     <AbsoluteFill style={{ background: "#08080b" }}>
+      <Atmos t={t} />
       <Still src="ep01/raw/reid.jpg" from={T06} a={580.5} b={584.4} zoom={[1.0, 1.06]} height={900} x={300} fade={0.4} />
       <NameBar name="托马斯·里德" years="1710–1796  苏格兰哲学家" t={t} a={580.8} b={584.2} />
       <Clip src="ep01/clips/writing.mp4" from={T06} a={654.0} b={660.6} zoom={[1.0, 1.06]} fi={0.4} fo={0.4} />

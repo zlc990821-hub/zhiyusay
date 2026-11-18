@@ -3,7 +3,7 @@ import { AbsoluteFill, Audio, Sequence, staticFile } from "remotion";
 import { useCallback } from "react";
 import { Intro } from "../brand/Intro";
 import { PARTICLES, orbitPos, CX, CY } from "../brand/centrifuge";
-import { Canvas, Clip, Film, KeyText, Label, Subtitles, glow, rand, sec, smooth, clamp, useFonts, useT, HAND, DISPLAY, SANS, SERIF } from "./common";
+import { Atmos, Canvas, Clip, Film, KeyText, Label, Subtitles, glow, rand, sec, smooth, clamp, useFonts, useT, HAND, DISPLAY, SANS, SERIF } from "./common";
 
 export const OPEN_END = 73.4;
 export const OPENING_FRAMES = sec(OPEN_END) + 240;
@@ -184,6 +184,7 @@ export const Opening: React.FC = () => {
   return (
     <AbsoluteFill style={{ background: "#050507" }}>
       <Sequence durationInFrames={sec(OPEN_END)}>
+        <Atmos t={t} />
         <Clip src="ep01/clips/s1_hand.mp4" from={0} a={0} b={9.75} zoom={[1.0, 1.08]} fi={1.4} />
         <Clip src="ep01/clips/s5_hug.mp4" from={0} a={34.2} b={42.6} zoom={[1.02, 1.08]} />
         <Clip src="ep01/clips/s6_photo.mp4" from={0} a={42.6} b={48.1} zoom={[1.0, 1.12]} fo={0.9} />

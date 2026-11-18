@@ -2,7 +2,7 @@
 // v2：一个「实验板」画面讲完整个实验（录像屏幕 + 两组问题卡 + 车速 + 50 人点阵），镜头在画面里推拉，不频繁切换
 import { AbsoluteFill, Audio, Loop, Sequence, staticFile } from "remotion";
 import { useCallback } from "react";
-import { Canvas, Clip, Film, NameBar, Still, Subtitles, clamp, glow, rand, sec, smooth, useFonts, useT, DISPLAY, SERIF, SANS, GOLD } from "./common";
+import { Atmos, Canvas, Clip, Film, NameBar, Still, Subtitles, clamp, glow, rand, sec, smooth, useFonts, useT, DISPLAY, SERIF, SANS, GOLD } from "./common";
 import { drawClueMap, clueById } from "./clue";
 
 export const G0 = 196.0;
@@ -259,6 +259,7 @@ export const Glass: React.FC = () => {
   const draw = useCallback((ctx: CanvasRenderingContext2D, tt: number) => drawGlassScene(ctx, tt), []);
   return (
     <AbsoluteFill style={{ background: "#0b0a09" }}>
+      <Atmos t={t} />
       <Still src="ep01/raw/loftus.jpg" from={G0} a={G0} b={200.9} zoom={[1.0, 1.07]} height={900} fade={0.35} x={300} />
       <NameBar name="伊丽莎白·洛夫特斯" years="1944–  美国心理学家" t={t} a={197.0} b={200.6} />
       <Board t={t} ready={ready} />

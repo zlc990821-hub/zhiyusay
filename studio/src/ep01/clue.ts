@@ -36,8 +36,8 @@ export const drawClueMap = (
     const k = smooth(v);
     const g = ctx.createLinearGradient(pa.x, pa.y, pb.x, pb.y);
     const ba = (opt.bright?.(a) ?? 1), bb = (opt.bright?.(b) ?? 1);
-    g.addColorStop(0, `rgba(255,205,140,${0.38 * ba * k})`); g.addColorStop(1, `rgba(255,205,140,${0.38 * bb * k})`);
-    ctx.strokeStyle = g; ctx.lineWidth = 2.2;
+    g.addColorStop(0, `rgba(255,205,140,${0.45 * ba * k})`); g.addColorStop(1, `rgba(255,205,140,${0.45 * bb * k})`);
+    ctx.strokeStyle = g; ctx.lineWidth = 2.6;
     ctx.beginPath(); ctx.moveTo(pa.x, pa.y); ctx.lineTo(pa.x + (pb.x - pa.x) * k, pa.y + (pb.y - pa.y) * k); ctx.stroke();
   }
   for (const n of CLUES) {
@@ -45,16 +45,16 @@ export const drawClueMap = (
     if (v <= 0) continue;
     const p = P(n), br = opt.bright?.(n.id) ?? 1;
     const pulse = 1 + 0.06 * Math.sin(t * 2.1 + n.x * 0.01);
-    glow(ctx, p.x, p.y, (n.key ? 64 : 46) * pulse * Math.min(1.2, 0.6 + 0.6 * s), 0.85 * v * br);
+    glow(ctx, p.x, p.y, (n.key ? 78 : 58) * pulse * Math.min(1.2, 0.6 + 0.6 * s), 0.9 * v * br);
     const la = (opt.label?.(n.id) ?? 1) * clamp(v * 1.5 - 0.3) * Math.min(1, br * 1.2);
     if (la > 0.01) {
-      ctx.font = `${opt.labelSize ?? 46}px ${SERIF}`;
+      ctx.font = `${opt.labelSize ?? 52}px ${SERIF}`;
       ctx.fillStyle = `rgba(243,230,208,${0.92 * la})`;
       ctx.textBaseline = "middle";
       ctx.shadowColor = "rgba(0,0,0,0.9)"; ctx.shadowBlur = 8;
       const w = ctx.measureText(n.label).width;
-      if (n.pos) ctx.fillText(n.label, Math.min(1860 - w, Math.max(60, p.x - w / 2)), p.y + (n.pos === "a" ? -70 : 74));
-      else ctx.fillText(n.label, p.x + 40 + w > 1860 ? p.x - 40 - w : p.x + 40, p.y - 46);
+      if (n.pos) ctx.fillText(n.label, Math.min(1860 - w, Math.max(60, p.x - w / 2)), p.y + (n.pos === "a" ? -78 : 82));
+      else ctx.fillText(n.label, p.x + 46 + w > 1860 ? p.x - 46 - w : p.x + 46, p.y - 50);
       ctx.shadowBlur = 0; ctx.textBaseline = "alphabetic";
     }
   }

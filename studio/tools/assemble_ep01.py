@@ -1,6 +1,6 @@
 """第 01 期成片合成：拼接各段画面 + 人声（片头处空出 8 秒）+ 全片音效 + 片头片尾音效 → 响度规整 → 成片。
 用法（在 studio/ 下）：python3 tools/assemble_ep01.py 输出.mp4
-需要：out/ep01_Ep01Opening.mp4、out/seg/*.mp4（见 SEGS）、public/ep01/voice.wav、public/ep01/sfx_full.wav、public/brand/intro.wav、outro.wav
+需要：out/ep01_Ep01Opening.mp4、out/seg/*.mp4（见 SEGS）、media_src/voice.wav、public/ep01/sfx_full.wav、public/brand/intro.wav、outro.wav
 """
 import os, re, subprocess, sys, tempfile
 
@@ -8,7 +8,7 @@ OUT = sys.argv[1]
 FPS = 30
 # （文件, 取多少帧）——按成片顺序；帧数 = 各段时长 × 30，合计 26748 帧 = 891.6 秒
 SEGS = [
-    ("out/ep01_Ep01Opening.mp4", 2442),   # 开场 0–73.4 + 主题片头 8 秒
+    ("out/seg/Ep01Opening.mp4", 2442),    # 开场 0–73.4 + 主题片头 8 秒
     ("out/seg/Ep01Seg01.mp4", 1935),
     ("out/seg/Ep01Seg02a.mp4", 1743),
     ("out/seg/Ep01Glass.mp4", 1245),      # 196.0–237.5
@@ -41,7 +41,7 @@ for f, n in SEGS:
 
 # 1 声音：人声在片头处空出 8 秒，与音效、片头片尾音效混在一起
 voice = f"{tmp}/voice_film.wav"
-run(["ffmpeg", "-v", "error", "-y", "-i", "public/ep01/voice.wav", "-filter_complex",
+run(["ffmpeg", "-v", "error", "-y", "-i", "media_src/voice.wav", "-filter_complex",
      f"[0]atrim=0:{TITLE_AT},asetpts=PTS-STARTPTS[a];[0]atrim={TITLE_AT},asetpts=PTS-STARTPTS[b];"
      f"aevalsrc=0:d={TITLE_LEN}:s=48000[s];[a][s][b]concat=n=3:v=0:a=1,apad,atrim=0:{FILM}[o]",
      "-map", "[o]", "-ac", "2", "-ar", "48000", voice])

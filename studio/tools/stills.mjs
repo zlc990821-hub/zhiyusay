@@ -4,6 +4,7 @@ import { bundle } from "@remotion/bundler";
 import { renderStill, selectComposition } from "@remotion/renderer";
 import path from "node:path";
 import fs from "node:fs";
+// 注意：每次打包会在临时目录里复制一份 public（几百 MB），用完必须删掉，否则磁盘会满
 const [id, outDir, frames] = process.argv.slice(2);
 fs.mkdirSync(outDir, { recursive: true });
 const serveUrl = await bundle({ entryPoint: path.resolve("src/index.ts") });
@@ -14,3 +15,4 @@ for (const f of frames.split(",").map(Number)) {
   await renderStill({ composition, serveUrl, frame: f, output: path.join(outDir, `${id}_${String(f).padStart(5, "0")}.jpg`), imageFormat: "jpeg", browserExecutable, chromiumOptions, scale: 0.5 });
   console.log("ok", f);
 }
+fs.rmSync(serveUrl, { recursive: true, force: true });

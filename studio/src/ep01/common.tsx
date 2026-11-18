@@ -142,6 +142,34 @@ export const glow = (ctx: CanvasRenderingContext2D, x: number, y: number, r: num
 
 export const rand = (i: number, s = 1) => { const x = Math.sin(i * 127.1 * s + s * 311.7) * 43758.5453; return x - Math.floor(x); };
 
+// 氛围底（2026-11-18 审查后加）：代码画面背景不再是纯黑——中间一团很淡的暖光，加缓慢漂浮的光尘和几团虚焦光斑。
+// 放在各段最底层；真实影像会盖住它。画面一直有内容，也避免了软件渲染的残影问题。
+const DUST = Array.from({ length: 80 }, (_, i) => ({ x: rand(i, 21) * 1920, y: rand(i, 22) * 1080, vx: 3 + rand(i, 23) * 9, vy: -(2 + rand(i, 24) * 7), r: 1 + rand(i, 25) * 2.2, a: 0.12 + rand(i, 26) * 0.3, ph: rand(i, 27) * 6.28 }));
+const BOKEH = Array.from({ length: 7 }, (_, i) => ({ x: rand(i, 31) * 1920, y: rand(i, 32) * 1080, r: 50 + rand(i, 33) * 90, a: 0.035 + rand(i, 34) * 0.035, vx: (rand(i, 35) - 0.5) * 6, vy: (rand(i, 36) - 0.5) * 4 }));
+const drawAtmos = (ctx: CanvasRenderingContext2D, t: number) => {
+  ctx.fillStyle = "#08070a"; ctx.fillRect(0, 0, 1920, 1080);
+  const breath = 1 + 0.04 * Math.sin(t * 0.35);
+  const g = ctx.createRadialGradient(960, 500, 0, 960, 520, 1150 * breath);
+  g.addColorStop(0, "rgba(74,50,30,0.55)"); g.addColorStop(0.45, "rgba(36,25,17,0.45)"); g.addColorStop(1, "rgba(8,7,10,0)");
+  ctx.fillStyle = g; ctx.fillRect(0, 0, 1920, 1080);
+  ctx.globalCompositeOperation = "lighter";
+  BOKEH.forEach((b) => {
+    const x = ((b.x + t * b.vx) % 2100 + 2100) % 2100 - 90, y = ((b.y + t * b.vy) % 1260 + 1260) % 1260 - 90;
+    const gr = ctx.createRadialGradient(x, y, 0, x, y, b.r);
+    gr.addColorStop(0, `rgba(255,200,140,${b.a})`); gr.addColorStop(1, "rgba(255,200,140,0)");
+    ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(x, y, b.r, 0, Math.PI * 2); ctx.fill();
+  });
+  DUST.forEach((d) => {
+    const x = ((d.x + t * d.vx + Math.sin(t * 0.5 + d.ph) * 12) % 1960 + 1960) % 1960 - 20;
+    const y = ((d.y + t * d.vy) % 1120 + 1120) % 1120 - 20;
+    const tw = 0.55 + 0.45 * Math.sin(t * 1.3 + d.ph * 3);
+    ctx.fillStyle = `rgba(255,220,180,${d.a * tw})`;
+    ctx.beginPath(); ctx.arc(x, y, d.r, 0, Math.PI * 2); ctx.fill();
+  });
+  ctx.globalCompositeOperation = "source-over";
+};
+export const Atmos: React.FC<{ t: number }> = ({ t }) => <Canvas t={t} draw={drawAtmos} />;
+
 // 代码画面上的轻颗粒与暗角，让它和真实影像质感一致
 export const Film: React.FC<{ t: number }> = ({ t }) => (
   <Canvas t={t} draw={(ctx, tt) => {

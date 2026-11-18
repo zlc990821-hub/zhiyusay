@@ -47,6 +47,7 @@
 - 剪辑工具（setup.sh 会安装）：PySceneDetect（镜头切分）与 `studio/tools/shot_sheet.py`（镜头表）、ffmpeg-normalize（响度）、auto-editor、OpenTimelineIO、pyJianYingDraft（导出剪映草稿）。不要装 MoviePy，它会把 Pillow 降级。
 - 素材抓取工具（setup.sh 会安装）：yt-dlp（YouTube、B 站、互联网档案馆等上千个网站）、internetarchive 的 `ia` 命令（搜索下载普林格档案等公有领域老片，实测可用）、gallery-dl（批量图片）、you-get（国内网站）；Openverse 接口（开放授权图片，无需账号）；维基共享资源 API 查授权。
 - 已知坑：无显卡软件渲染时，Canvas 被清成全透明后这一层可能不刷新，连续渲染会残留上一帧（单帧截图看不出来）。`studio/src/ep01/common.tsx` 的 Canvas 已画一个看不见的像素强制刷新；只在需要的时间段挂载画布。检查要看成片截帧，不能只看单帧截图。
+- 已知坑：Remotion 每次打包（渲染、截帧）都会在 /tmp 复制一份 `studio/public`，几百 MB 一份，积累几次就会把磁盘写满。`render_seg.sh`、`stills.mjs` 已在用完后删除；渲染用不到的大文件（录音、素材原片）放 `studio/media_src/`，不要放进 public。
 - 已知限制：这台服务器的 IP 被 YouTube 要求人机验证，YouTube 视频下载不了；维基共享资源下载会被限速（429）。这两类素材请用户下载后发来。互联网档案馆下载正常。
 
 ## 每期的文件规范（参考 docs 里的制作总纲）

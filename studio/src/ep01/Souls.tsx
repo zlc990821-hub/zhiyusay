@@ -1,7 +1,7 @@
 // 第 01 期 · S83–S88 三条线索 → 三魂 → 薪火（录音 759.6–820.2 秒）
 import { AbsoluteFill, Audio, staticFile } from "remotion";
 import { useCallback } from "react";
-import { Canvas, Clip, Film, Subtitles, clamp, glow, rand, sec, smooth, useFonts, useT, KAI, SERIF, GOLD } from "./common";
+import { Atmos, Canvas, Clip, Film, Subtitles, clamp, glow, rand, sec, smooth, useFonts, useT, KAI, SERIF, GOLD } from "./common";
 import { drawClueMap, clueById } from "./clue";
 
 export const S0 = 759.6;
@@ -163,6 +163,7 @@ export const Souls: React.FC = () => {
   const draw = useCallback((ctx: CanvasRenderingContext2D, tt: number) => drawSouls(ctx, tt), []);
   return (
     <AbsoluteFill style={{ background: "#050507" }}>
+      <Atmos t={t} />
       {ready && t < 809.05 ? <Canvas t={t} draw={draw} /> : null}
       {/* 场 31 薪火：燃烧的木柴压暗，庄子原文浮在上面；「柴会烧完」时字淡去、火变亮；「火，传下去了」叠化成烛火 */}
       <Clip src="ep01/clips/fire.mp4" from={S0} a={808.3} b={817.5} start={0} zoom={[1.0, 1.08]} fi={0.9} fo={0.7}

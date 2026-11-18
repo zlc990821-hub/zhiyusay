@@ -2,7 +2,7 @@
 // 场 12 挑战者号、场 13 巴特莱特的故事、场 14 老鼠与蛋白质、场 15 日志
 import { AbsoluteFill } from "remotion";
 import { useCallback } from "react";
-import { Canvas, Clip, Corner, Film, KeyText, Subtitles, clamp, glow, rand, sec, smooth, useFonts, useT, DISPLAY, HAND, SERIF, SANS, GOLD } from "./common";
+import { Atmos, Canvas, Clip, Corner, Film, KeyText, NameBar, Subtitles, clamp, glow, rand, sec, smooth, useFonts, useT, DISPLAY, HAND, SERIF, SANS, GOLD } from "./common";
 import { drawClueMap, clueOn } from "./clue";
 import { chip } from "./figures";
 
@@ -52,9 +52,9 @@ const Version: React.FC<{ t: number; x: number; w: number; at: number; title: st
   if (o <= 0) return null;
   const cut = fin(t, 324.4, 0.5), swap = fin(t, 328.1, 0.5);
   return (
-    <div style={{ position: "absolute", left: x, top: 120, width: w, opacity: o, transform: `translateY(${(1 - o) * 30}px)` }}>
+    <div style={{ position: "absolute", left: x, top: 150, width: w, opacity: o, transform: `translateY(${(1 - o) * 30}px)` }}>
       <div style={{ fontFamily: SANS, fontSize: 46, color: "rgba(240,225,200,0.7)", marginBottom: 14 }}>{title}</div>
-      <div style={{ background: "rgba(28,24,20,0.9)", border: "1.5px solid rgba(231,184,115,0.35)", borderRadius: 12, padding: "22px 26px", fontFamily: SERIF, fontSize: 46, lineHeight: 1.55, color: GOLD }}>
+      <div style={{ background: "rgba(28,24,20,0.9)", border: "1.5px solid rgba(231,184,115,0.35)", borderRadius: 12, padding: "24px 28px", fontFamily: SERIF, fontSize: 52, lineHeight: 1.5, color: GOLD }}>
         {words.map((wd, i) => (
           <span key={i} style={{
             textDecoration: wd.cut && cut > 0.5 ? "line-through" : "none", textDecorationColor: "#e0604a", textDecorationThickness: 4,
@@ -153,12 +153,13 @@ const drawQ = (ctx: CanvasRenderingContext2D, t: number) => {
 
 export const Seg03: React.FC = () => {
   const ready = useFonts([`"Source Han Serif CN for Display"`, `"Noto Serif SC"`, `"Noto Sans SC"`, `"hongleixingshu"`],
-    "我在宗教课上，有几个人走进来说起这件事。下课后回到宿舍看电视新闻才知道细节第一次听说是和室友一起插播了一条快讯们都惊呆非常确定1986年1月29日事发第二天1988两半以后原文复述再一一天夜里两个年轻人到河边去猎海豹忽然听见战斗的呼喊五只独木舟朝他划来打仗吧一半说幽灵群船叫后才知道那些兄弟钓鱼遇受伤回家死阻止蛋白质合成药想起来刻松动存那年夏秋天外婆妈带湖第翻开奈瑟示意据巴特莱特NASA？最珍贵的记忆也可能被改写得最多常识＝皮亚杰假童年词撒下地碎玻璃商场走丢过挑战者号成了另样子时记忆会");
+    "弗雷德里克·巴特莱特1886–1969英国心理学家我在宗教课上，有几个人走进来说起这件事。下课后回到宿舍看电视新闻才知道细节第一次听说是和室友一起插播了一条快讯们都惊呆非常确定1986年1月29日事发第二天1988两半以后原文复述再一一天夜里两个年轻人到河边去猎海豹忽然听见战斗的呼喊五只独木舟朝他划来打仗吧一半说幽灵群船叫后才知道那些兄弟钓鱼遇受伤回家死阻止蛋白质合成药想起来刻松动存那年夏秋天外婆妈带湖第翻开奈瑟示意据巴特莱特NASA？最珍贵的记忆也可能被改写得最多常识＝皮亚杰假童年词撒下地碎玻璃商场走丢过挑战者号成了另样子时记忆会");
   const t = useT(T03);
   const draw = useCallback((ctx: CanvasRenderingContext2D, tt: number) => { drawQ(ctx, tt); drawRat(ctx, tt); drawBook(ctx, tt); drawMap(ctx, tt); }, []);
   const ratDim = 1 - 0.5 * fin(t, 353.7, 1.0);
   return (
     <AbsoluteFill style={{ background: "#0b0a09" }}>
+      <Atmos t={t} />
       {/* 场 12 */}
       <Clip src="ep01/clips/challenger.mp4" from={T03} a={270.9} b={276.4} zoom={[1.0, 1.05]} fi={0.3} />
       <Corner text="NASA，1986" t={t} a={271.1} b={276.3} />
@@ -166,10 +167,11 @@ export const Seg03: React.FC = () => {
       <HandCard t={t} x={1020} at={287.5} writeA={288.4} writeB={293.6} title="1988 年（两年半以后）" lines={CARD88} hotAt={298.4} stampAt={301.1} rot={1.2} />
       <Corner text="Neisser & Harsch, 1992" t={t} a={278.4} b={307.2} />
       {/* 场 13 */}
-      <Version t={t} x={80} w={760} at={312.4} title="原文" words={V1} />
-      <Version t={t} x={900} w={560} at={315.8} title="第一次复述" words={V2} />
-      <Version t={t} x={1500} w={360} at={318.9} title="再复述一次" words={V3} />
-      <Corner text="示意，据巴特莱特，1932" t={t} a={312.6} b={330.6} />
+      <NameBar name="弗雷德里克·巴特莱特" years="1886–1969  英国心理学家" t={t} a={309.2} b={312.6} />
+      <Version t={t} x={60} w={720} at={311.8} title="原文" words={V1} />
+      <Version t={t} x={810} w={570} at={315.8} title="第一次复述" words={V2} />
+      <Version t={t} x={1410} w={450} at={318.9} title="再复述一次" words={V3} />
+      <Corner text="示意，据巴特莱特，1932" t={t} a={312.8} b={330.6} />
       {/* 场 14 */}
       <Clip src="ep01/clips/microscope.mp4" from={T03} a={335.0} b={341.7} zoom={[1.0, 1.06]} fi={0.4} />
       <Clip src="ep01/clips/rat.mp4" from={T03} a={341.7} b={364.5} zoom={[1.08, 1.16]} fo={0.6} style={{ filter: `brightness(${ratDim})` }} />

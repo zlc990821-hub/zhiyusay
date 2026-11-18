@@ -2,7 +2,7 @@
 // 场 27 日记重现、场 28 看得见她、场 29 六亿个此刻
 import { AbsoluteFill } from "remotion";
 import { useCallback } from "react";
-import { Canvas, Clip, Film, KeyText, Subtitles, clamp, glow, rand, sec, smooth, useFonts, useT, DISPLAY, SERIF } from "./common";
+import { Atmos, Canvas, Clip, Film, KeyText, Subtitles, clamp, glow, rand, sec, smooth, useFonts, useT, DISPLAY, SERIF } from "./common";
 import { drawClueMap, clueById, clueOn, CLUES } from "./clue";
 import { drawLine, drawPaper, Entry, S1, S2, lineY } from "./Opening";
 import { chip } from "./figures";
@@ -38,8 +38,8 @@ const drawDiary = (ctx: CanvasRenderingContext2D, t: number) => {
 };
 
 // ---------- 场 29：六亿个此刻 ----------
-const N = 1400;
-const STAR = Array.from({ length: N }, (_, i) => ({ x: rand(i, 1) * 1920, y: rand(i, 2) * 1080, at: 737.0 + rand(i, 3) * 9.5, life: 0.25 + rand(i, 4) * 0.9, r: 1.5 + rand(i, 5) * 2.5 }));
+const N = 1700;
+const STAR = Array.from({ length: N }, (_, i) => ({ x: rand(i, 1) * 1920, y: rand(i, 2) * 1080, at: 737.0 + rand(i, 3) * 9.5, life: 0.35 + rand(i, 4) * 1.0, r: 2.5 + rand(i, 5) * 3.5 }));
 const ONE = { x: 1180, y: 430 };   // 被推近的那一颗
 const drawMoments = (ctx: CanvasRenderingContext2D, t: number) => {
   const a = fin(t, 737.0, 0.6) * (1 - fin(t, 751.0, 0.8));
@@ -53,8 +53,11 @@ const drawMoments = (ctx: CanvasRenderingContext2D, t: number) => {
     const u = (t - p.at) / p.life;
     if (u < 0 || u > 1) return;
     const k = Math.sin(u * Math.PI);
-    ctx.fillStyle = `rgba(255,${210 + Math.round(30 * rand(p.x, 7))},${170 + Math.round(60 * rand(p.y, 8))},${0.85 * k * a * (1 - push * 0.8)})`;
+    const al = k * a * (1 - push * 0.8);
+    ctx.fillStyle = `rgba(255,${210 + Math.round(30 * rand(p.x, 7))},${170 + Math.round(60 * rand(p.y, 8))},${0.95 * al})`;
     ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = `rgba(255,200,140,${0.18 * al})`;
+    ctx.beginPath(); ctx.arc(p.x, p.y, p.r * 3.5, 0, Math.PI * 2); ctx.fill();
   });
   ctx.globalCompositeOperation = "source-over";
   ctx.restore();
@@ -88,6 +91,7 @@ export const Seg07: React.FC = () => {
   const draw = useCallback((ctx: CanvasRenderingContext2D, tt: number) => { drawDiary(ctx, tt); drawMoments(ctx, tt); drawFound3(ctx, tt); }, []);
   return (
     <AbsoluteFill style={{ background: "#08080b" }}>
+      <Atmos t={t} />
       <Clip src="ep01/clips/couple_park.mp4" from={T07} a={727.4} b={737.2} zoom={[1.0, 1.07]} fi={0.6} fo={0.5} />
       {ready ? <Canvas t={t} draw={draw} /> : null}
       <KeyText text="它不在任何一页日记里" t={t} a={757.4} b={759.6} size={80} font={DISPLAY} y={-360} />

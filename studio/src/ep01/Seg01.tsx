@@ -1,7 +1,7 @@
 // 第 01 期 · 01 先立一个常识（录音 73.4–137.9）：场 5 记忆对调、场 6 洛克的王子、场 7 第一个常识
 import { AbsoluteFill } from "remotion";
 import { useCallback } from "react";
-import { Canvas, Film, KeyText, Still, Subtitles, clamp, glow, sec, smooth, useFonts, useT, DISPLAY, SERIF, SANS } from "./common";
+import { Atmos, Canvas, Film, KeyText, Still, Subtitles, clamp, glow, sec, smooth, useFonts, useT, DISPLAY, SERIF, SANS } from "./common";
 import { person, headPos, crown, memoryOrb, label, chip } from "./figures";
 import { drawClueMap, clueById } from "./clue";
 
@@ -100,6 +100,9 @@ const scene6 = (ctx: CanvasRenderingContext2D, t: number) => {
 
 // 场 7：第一个常识 → 线索图第一颗光点 → 裂开
 const scene7 = (ctx: CanvasRenderingContext2D, t: number) => {
+  // 「我们心里早就默认了一件事」：一团光在中间慢慢亮起
+  const pre = smooth((t - 120.3) / 1.2) * (1 - smooth((t - 123.0) / 0.6));
+  if (pre > 0) glow(ctx, 960, 520, 110, 0.8 * pre);
   if (t < 129.6) return;
   const node = clueById("common");
   const fly = smooth((t - 130.1) / 1.0);
@@ -131,6 +134,7 @@ export const Seg01: React.FC = () => {
   const lockeA = smooth((t - 105.6) / 0.6) * (1 - smooth((t - 119.6) / 0.6));
   return (
     <AbsoluteFill style={{ background: "#07070a" }}>
+      <Atmos t={t} />
       {/* 洛克肖像在左三分之一，说明文字在肖像下方 */}
       <Still src="ep01/raw/locke.jpg" from={T01} a={105.3} b={120.1} zoom={[1.0, 1.06]} height={640} x={-540} y={-40} fade={0.6} bg="transparent" />
       {lockeA > 0 ? (
@@ -140,9 +144,11 @@ export const Seg01: React.FC = () => {
         </div>
       ) : null}
       {ready ? <Canvas t={t} draw={draw} /> : null}
+      <KeyText text="我之所以是我，" t={t} a={123.4} b={128.3} size={72} font={SERIF} y={-60} />
+      <KeyText text="是因为我记得我的一生" t={t} a={125.0} b={128.3} size={72} font={SERIF} y={50} />
       <KeyText text="我，就是我的记忆" t={t} a={128.4} b={130.6} size={120} font={DISPLAY} />
       <Film t={t} />
-      <Subtitles t={t} hide={(x) => (x > 97.0 && x < 100.6) || (x > 128.4 && x < 130.1)} />
+      <Subtitles t={t} hide={(x) => (x > 97.0 && x < 100.6) || (x > 123.4 && x < 130.1)} />
     </AbsoluteFill>
   );
 };
