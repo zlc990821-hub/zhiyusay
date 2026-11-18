@@ -5,7 +5,7 @@
     tr.bed(pad([55, 82.4, 110], 60.0), [(0, 0), (2, 0.05), (58, 0.05), (60, 0)])
     tr.write("out.wav", gain_db=-6)
 """
-import wave
+import glob, os, wave
 import numpy as np
 from scipy import signal
 
@@ -221,6 +221,26 @@ def clue_chime():
     return norm(y)
 
 
+# ---------- 真实录制的音效（Mixkit，见 sound/mixkit_manifest.txt；文件在 studio/sfx/lib，不入库） ----------
+LIB = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "sfx", "lib")
+
+
+def lib(name, seconds=None, start=0.0, fade=0.05):
+    """读取音效库里的一个声音，返回立体声 (N,2)，峰值归一到 1。seconds/start 可截取一段（结尾自动淡出）"""
+    files = glob.glob(os.path.join(LIB, f"{name}_mixkit*.wav"))
+    if not files:
+        raise FileNotFoundError(f"音效库里没有 {name}，先按 sound/mixkit_manifest.txt 下载")
+    w = wave.open(files[0])
+    assert w.getframerate() == SR and w.getnchannels() == 2
+    x = np.frombuffer(w.readframes(w.getnframes()), np.int16).astype(np.float64).reshape(-1, 2) / 32768
+    a = int(start * SR)
+    x = x[a: a + int(seconds * SR)] if seconds else x[a:]
+    if fade:
+        n = min(len(x), int(fade * SR))
+        x[-n:] *= np.linspace(1, 0, n)[:, None]
+    return x / (np.max(np.abs(x)) + 1e-9)
+
+
 # ---------- 时间线 ----------
 class Track:
     def __init__(self, dur):
@@ -236,8 +256,11 @@ class Track:
             return
         s = sig[: self.N - max(i, 0)] if i >= 0 else sig[-i:][: self.N]
         i = max(i, 0)
-        ang = (np.clip(pan, -1, 1) + 1) * np.pi / 4
-        st = np.stack([s * np.cos(ang), s * np.sin(ang)], axis=1) * gain
+        if s.ndim == 2:   # 立体声素材：pan 当作左右平衡
+            st = s * np.array([min(1.0, 1 - pan), min(1.0, 1 + pan)]) * gain
+        else:
+            ang = (np.clip(pan, -1, 1) + 1) * np.pi / 4
+            st = np.stack([s * np.cos(ang), s * np.sin(ang)], axis=1) * gain
         self.dry[i: i + len(s)] += st * (1 - wet)
         self.wet[i: i + len(s)] += st * wet
 

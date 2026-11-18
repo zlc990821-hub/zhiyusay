@@ -7,7 +7,7 @@ export const TITLE_FONT = '"Source Han Serif CN for Display"';
 export const SUB_FONT = '"Zhuque Fangsong (technical preview)"';
 
 // 一个按帧绘制的画布：draw(ctx, 秒, 帧) 必须只依赖时间，保证可重复渲染
-export const BrandCanvas: React.FC<{ draw: (ctx: CanvasRenderingContext2D, t: number, frame: number) => void }> = ({ draw }) => {
+export const BrandCanvas: React.FC<{ draw: (ctx: CanvasRenderingContext2D, t: number, frame: number) => void; sample?: string }> = ({ draw, sample = "" }) => {
   const ref = useRef<HTMLCanvasElement>(null);
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
@@ -16,8 +16,8 @@ export const BrandCanvas: React.FC<{ draw: (ctx: CanvasRenderingContext2D, t: nu
 
   useLayoutEffect(() => {
     Promise.all([
-      document.fonts.load(`190px ${TITLE_FONT}`, "离心力"),
-      document.fonts.load(`48px ${SUB_FONT}`, "不知道，所以继续探索离心力"),
+      document.fonts.load(`190px ${TITLE_FONT}`, "离心力" + sample),
+      document.fonts.load(`48px ${SUB_FONT}`, "不知道，所以继续探索离心力" + sample),
     ]).then(() => {
       setFontsReady(true);
       continueRender(handle);
@@ -45,19 +45,21 @@ export const BrandCanvas: React.FC<{ draw: (ctx: CanvasRenderingContext2D, t: nu
 // 画标题，并让一道光带从左到右扫过字面
 export const drawTitle = (
   ctx: CanvasRenderingContext2D,
-  opts: { x: number; y: number; reveal: number; sweep: number | null; alpha: number; spacing?: number }
+  opts: { x: number; y: number; reveal: number; sweep: number | null; alpha: number; spacing?: number; text?: string; size?: number }
 ) => {
+  const text = opts.text ?? "离心力";
+  const size = opts.size ?? 240;
   const { x, y, reveal, sweep, alpha } = opts;
   if (alpha <= 0.001 || reveal <= 0) return;
   const spacing = opts.spacing ?? 64;
   const off = document.createElement("canvas");
   off.width = W; off.height = H;
   const o = off.getContext("2d")!;
-  o.font = `240px ${TITLE_FONT}`;
+  o.font = `${size}px ${TITLE_FONT}`;
   (o as any).letterSpacing = `${spacing}px`;
   o.textAlign = "center";
   o.textBaseline = "middle";
-  const m = o.measureText("离心力");
+  const m = o.measureText(text);
   const left = x - m.width / 2 - 20;
   const right = x + m.width / 2 + 20;
   const g = o.createLinearGradient(0, y - 125, 0, y + 125);
@@ -68,7 +70,7 @@ export const drawTitle = (
   o.shadowColor = "rgba(255, 190, 110, 0.55)";
   o.shadowBlur = 28;
   // spacing 会在最后一个字后面也加间距，向右补偿一半让视觉居中
-  o.fillText("离心力", x + spacing / 2, y);
+  o.fillText(text, x + spacing / 2, y);
   // 光带：只落在字上
   if (sweep !== null) {
     const sx = left + (right - left) * sweep;

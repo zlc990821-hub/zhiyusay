@@ -1,0 +1,35 @@
+# Mixkit 音效清单（Mixkit Sound Effects Free License：可商用、无需署名；不能单独转售/分发音效文件，所以文件不入库）
+# 下载：python3 tools/mixkit_sfx.py get sfx/ $(grep -v '^#' sound/mixkit_manifest.txt | cut -d' ' -f1)
+1489:whoosh_air 空气嗖声（镜头移动、轻转场）
+1490:whoosh_fast 快速嗖声（换场）
+166:sweep_small 小扫音（元素滑入）
+1486:whoosh_tunnel 带混响的长嗖声（大转场）
+3005:pop_whoosh 讲解视频式的嗖啵（卡片出现）
+2358:pop_long 长啵
+2356:pop_dry 干脆的啵（标签出现）
+1530:paper_slide 纸张滑动（信纸滑入）
+1104:page_turn 翻一页
+1105:page_big 大翻页
+3194:pencil_write 铅笔写字
+2367:pen_write 钢笔写字
+2369:scribble 涂写
+2998:marker_line 马克笔划一道（划掉）
+2370:signing 快速签字
+2384:paper_slice 纸被划开（撕开）
+759:glass_break 玻璃碎裂（带一声闷响）
+172:glass_sweep 扫碎玻璃碴
+235:reveal_ding 讲解视频的揭晓音
+3060:sparkle_transition 闪光转场
+871:sparkle_fairy 一点闪光（新线索）
+2633:sparkle_sweep 闪光扫过（标题、发现）
+3083:sparkle_touch 轻触闪光
+2581:light_aura 光晕（三魂）
+1438:shutter_vintage 老相机快门（肖像出现）
+1125:type_soft 打字机轻响（人名条）
+1368:type_bell 打字机回车铃
+1061:clock_tick 一声嘀嗒（数字跳动）
+1053:tick_counter 嘀嗒计数（数字增长）
+1441:projector 老放映机运转（老胶片画面）
+1330:campfire 柴火噼啪
+2590:match_light 划火柴
+3109:bell_chime 轻柔的铃

@@ -1,4 +1,4 @@
-// 第 01 期 · 00 开场（录音 0–73.4 秒）+ 品牌片头
+// 第 01 期 · 00 开场（录音 0–73.4 秒）+ 本期主题片头（不放账号名，IP 只在片尾）
 import { AbsoluteFill, Audio, Sequence, staticFile } from "remotion";
 import { useCallback } from "react";
 import { Intro } from "../brand/Intro";
@@ -194,11 +194,11 @@ export const Opening: React.FC = () => {
         <Subtitles t={t} hide={(x) => x > 63.6 && x < 66.6} />
       </Sequence>
       <Sequence from={sec(OPEN_END)} durationInFrames={240}>
-        <Intro />
+        <Intro title="记忆之外" kicker="第 01 期" sub="我，是我的记忆吗？" />
         <Audio src={staticFile("brand/intro.wav")} />
       </Sequence>
       <Audio src={staticFile("ep01/voice_open.wav")} />
-      <Audio src={staticFile("ep01/sfx_open.wav")} />
+      <Audio src={staticFile("ep01/sfx_open.wav")} volume={1.26} />
     </AbsoluteFill>
   );
 };

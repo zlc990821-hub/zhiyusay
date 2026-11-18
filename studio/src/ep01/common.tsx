@@ -113,16 +113,16 @@ const StillInner: React.FC<{ src: string; len: number; zoom: [number, number]; h
 };
 
 // 透明画布：draw 只依赖全局时间，保证可重复渲染
-export const Canvas: React.FC<{ t: number; draw: (ctx: CanvasRenderingContext2D, t: number) => void; style?: React.CSSProperties }> = ({ t, draw, style }) => {
+export const Canvas: React.FC<{ t: number; draw: (ctx: CanvasRenderingContext2D, t: number) => void; style?: React.CSSProperties; w?: number; h?: number }> = ({ t, draw, style, w = 1920, h = 1080 }) => {
   const ref = useRef<HTMLCanvasElement>(null);
   useLayoutEffect(() => {
     const c = ref.current; if (!c) return;
     const ctx = c.getContext("2d")!;
     ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.globalCompositeOperation = "source-over";
-    ctx.clearRect(0, 0, 1920, 1080);
+    ctx.clearRect(0, 0, w, h);
     draw(ctx, t);
-  }, [t, draw]);
-  return <canvas ref={ref} width={1920} height={1080} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", ...style }} />;
+  }, [t, draw, w, h]);
+  return <canvas ref={ref} width={w} height={h} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", ...style }} />;
 };
 
 export const glow = (ctx: CanvasRenderingContext2D, x: number, y: number, r: number, a: number, rgb = "255,200,130") => {

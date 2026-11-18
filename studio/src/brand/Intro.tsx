@@ -15,7 +15,8 @@ const F = (t: number) => {
 
 const particles = PARTICLES.map((p, i) => (i === ESC ? { ...p, r: 420, k: 1, size: 4.5, th0: Math.PI / 2 - F(TE) } : p));
 
-export const Intro: React.FC = () => {
+// 不传参数是品牌片头（离心力 + 口号）；传 title 就是「本期主题」片头：同样的动画，换成本期标题，不出现账号名
+export const Intro: React.FC<{ title?: string; sub?: string; kicker?: string }> = ({ title, sub, kicker }) => {
   const draw = useCallback((ctx: CanvasRenderingContext2D, t: number, frame: number) => {
     const tau = t - TE;
     const fadeIn = smooth(t / 0.8);
@@ -97,12 +98,18 @@ export const Intro: React.FC = () => {
 
     // 标题：光带扫过，字随之显现
     const rev = clamp((t - 5.0) / 1.0);
-    drawTitle(ctx, { x: CX, y: CY, reveal: smooth(rev) * 1.02, sweep: rev < 1 ? smooth(rev) : null, alpha: master });
-    // 口号
-    drawSubtitle(ctx, "不知道，所以继续探索", CX, CY + 215, 68, master * smooth((t - 6.3) / 0.7));
+    if (title) {
+      drawSubtitle(ctx, kicker ?? "", CX, CY - 200, 52, master * smooth((t - 5.0) / 0.6), "220, 205, 180", 12);
+      drawTitle(ctx, { x: CX, y: CY, reveal: smooth(rev) * 1.02, sweep: rev < 1 ? smooth(rev) : null, alpha: master, text: title, size: 220, spacing: 40 });
+      drawSubtitle(ctx, sub ?? "", CX, CY + 205, 72, master * smooth((t - 6.1) / 0.7), "236, 222, 198", 10);
+    } else {
+      drawTitle(ctx, { x: CX, y: CY, reveal: smooth(rev) * 1.02, sweep: rev < 1 ? smooth(rev) : null, alpha: master });
+      // 口号
+      drawSubtitle(ctx, "不知道，所以继续探索", CX, CY + 215, 68, master * smooth((t - 6.3) / 0.7));
+    }
     ctx.restore();
 
     drawFilm(ctx, frame);
-  }, []);
-  return <BrandCanvas draw={draw} />;
+  }, [title, sub, kicker]);
+  return <BrandCanvas draw={draw} sample={(title ?? "") + (sub ?? "") + (kicker ?? "")} />;
 };

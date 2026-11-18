@@ -19,4 +19,12 @@ if [ ! -f $M/checkpoints/model_120.ckpt.best ]; then
   curl -sSL -o $M/model.safetensors https://huggingface.co/fal/DeepFilterNet3/resolve/main/model.safetensors
   /root/dfenv/bin/python -c "import torch; from safetensors.torch import load_file; torch.save(load_file('$M/model.safetensors'), '$M/checkpoints/model_120.ckpt.best')"
 fi
+# 音效库：Mixkit 免费可商用音效（授权不允许单独分发音效文件，所以不入库，按清单下载并去掉首尾静音）
+if [ ! -d sfx/lib ]; then
+  grep -v '^#' sound/mixkit_manifest.txt | cut -d' ' -f1 | xargs python3 tools/mixkit_sfx.py get sfx/raw/
+  mkdir -p sfx/lib
+  for f in sfx/raw/*.wav; do
+    ffmpeg -v error -y -i "$f" -af "silenceremove=start_periods=1:start_threshold=-55dB,areverse,silenceremove=start_periods=1:start_threshold=-60dB,areverse" -ar 48000 -ac 2 -c:a pcm_s16le "sfx/lib/$(basename "$f")"
+  done
+fi
 echo "完成。测试渲染：npx remotion render src/index.ts Test out/test.mp4"
