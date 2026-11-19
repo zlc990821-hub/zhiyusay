@@ -8,7 +8,7 @@ const fin = (t: number, a: number, d = 0.5) => smooth((t - a) / d);
 
 // ---------- 素材打底 ----------
 // 一串背景素材，按时间排；相邻两段重叠 xf 秒做叠化。dim：亮度（0–1），blur：虚化像素
-export type BedClip = { src: string; a: number; b: number; start?: number; rate?: number; dim?: number; blur?: number; zoom?: [number, number]; fit?: "cover" | "contain"; sat?: number };
+export type BedClip = { src: string; a: number; b: number; start?: number; rate?: number; dim?: number; blur?: number; zoom?: [number, number]; fit?: "cover" | "contain"; sat?: number; flip?: boolean };
 // 虚化提前用 FFmpeg 做好（tools/bake_blur.py）：CSS blur 在软件渲染下慢 6 倍；没有预虚化的文件才退回 CSS
 const baked = (src: string, blur?: number) => {
   if (!blur) return null;
@@ -20,7 +20,7 @@ export const Bed: React.FC<{ from: number; clips: BedClip[]; xf?: number }> = ({
     {clips.map((c, i) => (
       <Clip key={i} src={baked(c.src, c.blur) ?? c.src} from={from} a={c.a} b={c.b} start={c.start ?? 0} rate={c.rate ?? 1} zoom={c.zoom ?? [1.0, 1.06]} fit={c.fit}
         fi={i === 0 ? 0.6 : xf} fo={i === clips.length - 1 ? 0.6 : xf}
-        style={{ filter: `brightness(${c.dim ?? 0.55}) saturate(${c.sat ?? 0.85})${c.blur && !baked(c.src, c.blur) ? ` blur(${c.blur}px)` : ""}` }} />
+        style={{ ...(c.flip ? { transform: "scaleX(-1)" } : {}), filter: `brightness(${c.dim ?? 0.55}) saturate(${c.sat ?? 0.85})${c.blur && !baked(c.src, c.blur) ? ` blur(${c.blur}px)` : ""}` }} />
     ))}
   </>
 );

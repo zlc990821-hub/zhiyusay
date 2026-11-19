@@ -13,7 +13,7 @@ const lerp = (a: number, b: number, k: number) => a + (b - a) * k;
 
 // ---------- 场 16：大脑线稿，海马体被取走 ----------
 const drawBrain = (ctx: CanvasRenderingContext2D, t: number) => {
-  const a = fin(t, 398.0, 0.8) * (1 - fin(t, 422.6, 0.6));
+  const a = fin(t, 400.3, 0.8) * (1 - fin(t, 422.6, 0.6));   // 段首标题卡退了再出现
   if (a <= 0) return;
   ctx.save(); ctx.translate(700, 430); ctx.globalAlpha = a;
   ctx.strokeStyle = "rgba(255,210,160,0.75)"; ctx.lineWidth = 3; ctx.lineCap = "round"; ctx.lineJoin = "round";
@@ -102,7 +102,7 @@ export const Seg04: React.FC = () => {
     <AbsoluteFill style={{ background: "#08080b" }}>
       {/* 打底：屏幕上的脑部扫描（H.M. 的大脑线稿叠在上面）→ 写字的手（描星星）→ 侦探的案头（线索清单） */}
       <Bed from={T04} clips={[
-        { src: "ep01/clips/b_brainscreen.mp4", a: 397.5, b: 412.2, dim: 0.3, blur: 2 },
+        { src: "ep01/clips/b_brainscreen.mp4", a: 397.5, b: 412.2, dim: 0.3, blur: 2, flip: true },   // 镜像：画面里的人移到右边，不和大脑线稿叠在一起
         { src: "ep01/clips/b_brainscan.mp4", a: 411.8, b: 423.2, dim: 0.3, blur: 2 },
         { src: "ep01/clips/writing.mp4", a: 422.8, b: 442.3, rate: 0.42, dim: 0.28, blur: 3 },
         { src: DESK, a: 475.4, b: E04, dim: 0.32, blur: 4 },
