@@ -16,7 +16,7 @@ const F = (t: number) => {
 const particles = PARTICLES.map((p, i) => (i === ESC ? { ...p, r: 420, k: 1, size: 4.5, th0: Math.PI / 2 - F(TE) } : p));
 
 // 不传参数是品牌片头（离心力 + 口号）；传 title 就是「本期主题」片头：同样的动画，换成本期标题，不出现账号名
-export const Intro: React.FC<{ title?: string; sub?: string; kicker?: string }> = ({ title, sub, kicker }) => {
+export const Intro: React.FC<{ title?: string; sub?: string; kicker?: string; transparent?: boolean }> = ({ title, sub, kicker, transparent }) => {
   const draw = useCallback((ctx: CanvasRenderingContext2D, t: number, frame: number) => {
     const tau = t - TE;
     const fadeIn = smooth(t / 0.8);
@@ -111,5 +111,5 @@ export const Intro: React.FC<{ title?: string; sub?: string; kicker?: string }> 
 
     drawFilm(ctx, frame);
   }, [title, sub, kicker]);
-  return <BrandCanvas draw={draw} sample={(title ?? "") + (sub ?? "") + (kicker ?? "")} />;
+  return <BrandCanvas draw={draw} sample={(title ?? "") + (sub ?? "") + (kicker ?? "")} transparent={transparent} />;
 };

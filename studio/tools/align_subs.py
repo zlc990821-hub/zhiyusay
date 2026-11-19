@@ -1,6 +1,7 @@
 """把稿子和录音识别结果逐字对齐，生成字幕和卡点时间。
 用法：python3 studio/tools/align_subs.py SCRIPT.md transcript.json 输出.json [替换规则.json] ["短语1|短语2"] [不断词.txt]
 - 字幕文字以稿子为准（可用替换规则对齐实际录音），时间以录音为准。
+- 字幕一屏一整句（长句两行），不在句子中间截断。
 - 输出：subs（字幕行）、cues（稿子里每个短语首次/全部出现的时间，供画面卡点）。
 """
 import difflib, json, re, sys
@@ -57,45 +58,65 @@ for i in range(len(sc)):   # 没对上的字：在前后已知的字之间插值
             f = (i - prev) / (nxt - prev); st[i] = en[prev] + (st[nxt] - en[prev]) * f; en[i] = st[i]
 matched = len(known) / len(sc)
 
-# 5. 切字幕：按标点断句，每行不超过 16 个字
-# 超长句硬切时，不在人名、地名、数字中间断开；尽量断在「的、了、给、把」等虚词后面
+# 5. 切字幕：一屏一整句（2026-11-19 用户要求，按稿子完整显示，不在句子中间截断）
+#    句子以 。？！ 结束（引号里的句号跟着引号走）；一句太长（超过 MAXU 字）时，才在最靠近中间的逗号处分成两屏，
+#    每屏仍是完整的分句。每屏最多两行，每行不超过 LINE 字，换行点放在标点后。
+LINE, MAXU = 20, 40
 PROTECT = [w.strip() for w in open(sys.argv[6], encoding="utf-8").read().split() if w.strip()] if len(sys.argv) > 6 else []
-def hard_split(c):
-    banned = set()
-    for w in PROTECT + re.findall(r"[0-9A-Za-z.]+", c):
-        k = c.find(w)
-        while k >= 0:
-            banned.update(range(k + 1, k + len(w))); k = c.find(w, k + 1)
+core_len = lambda x: len(re.sub(f"[{re.escape(PUN)}]", "", x))
+
+def sentences(t):
+    out, buf, q = [], "", 0
+    for i, ch in enumerate(t):
+        buf += ch
+        if ch in "「『": q += 1
+        elif ch in "」』": q = max(0, q - 1)
+        nxt = t[i + 1] if i + 1 < len(t) else ""
+        if ch in "。？！" and q == 0 and nxt not in "」』":
+            out.append(buf); buf = ""
+        elif ch in "」』" and q == 0 and buf and buf[-2:-1] in "。？！":
+            out.append(buf); buf = ""
+    if buf.strip(): out.append(buf)
+    return [x for x in out if x.strip()]
+
+def split_long(c):
+    if core_len(c) <= MAXU: return [c]
+    cuts = [m.end() for m in re.finditer(r"[，；：]", c) if 4 < m.end() < len(c) - 3]
+    if not cuts: return [c]
     mid = len(c) / 2
-    best = min((abs(i - mid) - (3 if c[i - 1] in "的了着过，、" or c[i] in "给把在和与对是就都也还" else 0) + (100 if i in banned else 0), i) for i in range(4, len(c) - 3))[1]
-    return [c[:best], c[best:]]
+    k = min(cuts, key=lambda x: abs(x - mid))
+    return split_long(c[:k]) + split_long(c[k:])
+
+def wrap(d):
+    """两行：在最靠近中间的标点后换行；没有标点时在虚词处换行，不切开人名"""
+    if core_len(d) <= LINE: return d
+    mid = len(d) / 2
+    cand = [m.end() for m in re.finditer(r"[，、；：」]", d) if 2 < m.end() < len(d) - 1]
+    if cand:
+        k = min(cand, key=lambda x: abs(x - mid))
+        if abs(k - mid) <= len(d) * 0.3: return d[:k] + "\n" + d[k:]
+    banned = set()
+    for w in PROTECT + re.findall(r"[0-9A-Za-z.]+", d):
+        j = d.find(w)
+        while j >= 0: banned.update(range(j + 1, j + len(w))); j = d.find(w, j + 1)
+    k = min(range(3, len(d) - 2), key=lambda i: abs(i - mid) - (3 if d[i - 1] in "的了着过" or d[i] in "给把在和与对是就都也还" else 0) + (100 if i in banned else 0))
+    return d[:k] + "\n" + d[k:]
+
 pos2idx = {p: i for i, p in enumerate(sc_pos)}
 subs = []
 for li, (s, t) in enumerate(lines):
-    pieces = [p for p in re.split(r"(?<=[，。？！；：])", t) if p.strip()]
-    buf = ""
-    chunks = []
-    for p in pieces:
-        if len(re.sub(f"[{re.escape(PUN)}]", "", buf + p)) <= 16: buf += p
-        else:
-            if buf: chunks.append(buf)
-            buf = p
-    if buf: chunks.append(buf)
-    final = []
-    for c in chunks:   # 仍然超长的硬切
-        core = re.sub(f"[{re.escape(PUN)}]", "", c)
-        if len(core) > 16:
-            final += hard_split(c)
-        else: final.append(c)
     cur = 0
-    for c in final:
-        start_ci = t.find(c, cur); cur = start_ci + len(c)
-        idxs = [pos2idx[(li, ci)] for ci in range(start_ci, start_ci + len(c)) if (li, ci) in pos2idx]
-        if not idxs: continue
-        disp = c.strip().strip("，。；：、").replace("「", "").replace("」", "")
-        subs.append({"seg": s, "start": round(st[idxs[0]], 2), "end": round(en[idxs[-1]] + 0.25, 2), "text": disp})
-for i in range(len(subs) - 1):   # 防止重叠，保证最短显示 0.8 秒
-    subs[i]["end"] = min(max(subs[i]["end"], subs[i]["start"] + 0.8), subs[i + 1]["start"] - 0.05)
+    for sent in sentences(t):
+        for c in split_long(sent):
+            start_ci = t.find(c, cur); cur = start_ci + len(c)
+            idxs = [pos2idx[(li, ci)] for ci in range(start_ci, start_ci + len(c)) if (li, ci) in pos2idx]
+            if not idxs: continue
+            disp = c.strip()
+            disp = re.sub(r"[。，；：、]+$", "", disp)
+            disp = re.sub(r"。」$", "」", disp)
+            subs.append({"seg": s, "start": round(st[idxs[0]], 2), "end": round(en[idxs[-1]] + 0.35, 2), "text": wrap(disp)})
+for i in range(len(subs) - 1):   # 防止重叠，保证最短显示 1.0 秒
+    subs[i]["end"] = min(max(subs[i]["end"], subs[i]["start"] + 1.0), subs[i + 1]["start"] - 0.05)
 
 # 6. 卡点：每个短语在稿子里出现的时间
 plain = "".join(sc)

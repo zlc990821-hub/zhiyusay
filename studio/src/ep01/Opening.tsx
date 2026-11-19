@@ -3,7 +3,7 @@ import { AbsoluteFill, Audio, Sequence, staticFile } from "remotion";
 import { useCallback } from "react";
 import { Intro } from "../brand/Intro";
 import { PARTICLES, orbitPos, CX, CY } from "../brand/centrifuge";
-import { Atmos, Canvas, Clip, Film, KeyText, Label, Subtitles, glow, rand, sec, smooth, clamp, useFonts, useT, HAND, DISPLAY, SANS, SERIF } from "./common";
+import { Canvas, Clip, Film, KeyText, Label, Subtitles, glow, rand, sec, smooth, clamp, useFonts, useT, HAND, DISPLAY, SANS, SERIF } from "./common";
 
 export const OPEN_END = 73.4;
 export const OPENING_FRAMES = sec(OPEN_END) + 240;
@@ -133,15 +133,6 @@ const drawLights = (ctx: CanvasRenderingContext2D, t: number) => {
   // 三颗光的亮度：出现 → 迷信时暗下去 → 不确定时又闪起来 → 大字时退后
   const lvl = t < 54.4 ? 1 : t < 57.7 ? 1 - 0.9 * smooth((t - 54.4) / 1.2) : t < 59.7 ? 0.1 + 0.25 * smooth((t - 57.7) / 1.2) : 0.35 + 0.65 * smooth((t - 59.7) / 1.0);
   const dimKey = 1 - 0.65 * smooth((t - 63.6) / 0.6) * (1 - smooth((t - 67.2) / 0.6));
-  if (t < 69.4) {
-    for (let i = 0; i < 3; i++) {
-      const tx = P3[i].x, ty = P3[i].y;
-      const sx = 960 + (tx - 960) * split * (1 - merge), sy = 500 + (ty - 500) * split * (1 - merge) + 20 * merge;
-      const a = appear * (split > 0 ? (i === 1 ? 1 : split) : i === 1 ? 1 : 0) * (split > 0.01 ? lvl * flick(t, i) * (1 - merge) + merge : 1) * dimKey;
-      if (!split && i !== 1) continue;
-      glow(ctx, sx, sy, 70 * breath, 0.9 * a);
-    }
-  }
   // 第一颗线索：亮起，开始绕圈
   const ig = t - 68.86;
   if (ig > 0) {
@@ -173,29 +164,40 @@ const drawLights = (ctx: CanvasRenderingContext2D, t: number) => {
   }
 };
 
+// 三支烛火的亮度：说到「迷信」暗下去，「不确定了」又亮起来，大字出现时退后
+const candleLvl = (t: number) => {
+  const a = 0.75 - 0.45 * smooth((t - 54.4) / 1.2) + 0.12 * smooth((t - 57.7) / 1.2) + 0.33 * smooth((t - 59.7) / 1.0);
+  return a * (1 - 0.45 * smooth((t - 63.6) / 0.6) * (1 - smooth((t - 67.2) / 0.6)));
+};
+
 export const Opening: React.FC = () => {
   const ready = useFonts([`"hongleixingshu"`, `"Source Han Serif CN for Display"`, `"Noto Sans SC"`, `"Noto Serif SC"`],
     "0123456789:我现在，才真正醒过来。彻底地了不止一个自己？1985·英国");
   const t = useT(0);
   const draw = useCallback((ctx: CanvasRenderingContext2D, tt: number) => {
     if (tt >= 9.75 && tt < 34.2) drawDiary(ctx, tt);
-    else if (tt >= 47.2) drawLights(ctx, tt);
+    else if (tt >= 68.4) drawLights(ctx, tt);
   }, []);
   return (
     <AbsoluteFill style={{ background: "#050507" }}>
       <Sequence durationInFrames={sec(OPEN_END)}>
-        <Atmos t={t} />
         <Clip src="ep01/clips/s1_hand.mp4" from={0} a={0} b={9.75} zoom={[1.0, 1.08]} fi={1.4} />
         <Clip src="ep01/clips/s5_hug.mp4" from={0} a={34.2} b={42.6} zoom={[1.02, 1.08]} />
         <Clip src="ep01/clips/s6_photo.mp4" from={0} a={42.6} b={48.1} zoom={[1.0, 1.12]} fo={0.9} />
-        {ready && (t >= 47.2 || (t >= 9.75 && t < 34.2)) ? <Canvas t={t} draw={draw} /> : null}
+        {/* 「这个还在的」：一支烛火 →「人有三魂」：三支烛火（说到「迷信」暗下去，「不确定了」又亮起来）→「当一回侦探」：放大镜与文件 */}
+        <Clip src="ep01/clips/b_candle1.mp4" from={0} a={47.4} b={52.4} zoom={[1.04, 1.1]} fi={0.8} fo={0.5} style={{ filter: "brightness(0.8)" }} />
+        <Clip src="ep01/clips/b_candles3.mp4" from={0} a={51.9} b={68.1} zoom={[1.0, 1.08]} fi={0.5} fo={0.5}
+          style={{ filter: `brightness(${candleLvl(t)})` }} />
+        <Clip src="ep01/clips/b_magnify.mp4" from={0} a={67.6} b={OPEN_END} zoom={[1.0, 1.06]} fi={0.5} style={{ filter: "brightness(0.5) saturate(0.8)" }} />
+        {ready && ((t >= 68.4) || (t >= 9.75 && t < 34.2)) ? <Canvas t={t} draw={draw} /> : null}
         <Label text="1985 · 英国" t={t} a={1.2} b={9.4} />
         <KeyText text="不止一个自己？" t={t} a={63.7} b={67.6} size={124} font={DISPLAY} />
         <Film t={t} />
         <Subtitles t={t} hide={(x) => x > 63.6 && x < 66.6} />
       </Sequence>
       <Sequence from={sec(OPEN_END)} durationInFrames={240}>
-        <Intro title="记忆之外" kicker="第 01 期" sub="我，是我的记忆吗？" />
+        <Clip src="ep01/clips/b_archive.mp4" from={0} a={0} b={8} zoom={[1.0, 1.08]} fi={0.6} style={{ filter: "brightness(0.38) saturate(0.8)" }} />
+        <Intro title="记忆之外" kicker="第 01 期" sub="我，是我的记忆吗？" transparent />
         <Audio src={staticFile("brand/intro.wav")} />
       </Sequence>
       <Audio src={staticFile("ep01/voice_open.wav")} />

@@ -7,7 +7,7 @@ export const TITLE_FONT = '"Source Han Serif CN for Display"';
 export const SUB_FONT = '"Zhuque Fangsong (technical preview)"';
 
 // 一个按帧绘制的画布：draw(ctx, 秒, 帧) 必须只依赖时间，保证可重复渲染
-export const BrandCanvas: React.FC<{ draw: (ctx: CanvasRenderingContext2D, t: number, frame: number) => void; sample?: string }> = ({ draw, sample = "" }) => {
+export const BrandCanvas: React.FC<{ draw: (ctx: CanvasRenderingContext2D, t: number, frame: number) => void; sample?: string; transparent?: boolean }> = ({ draw, sample = "", transparent = false }) => {
   const ref = useRef<HTMLCanvasElement>(null);
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
@@ -30,13 +30,13 @@ export const BrandCanvas: React.FC<{ draw: (ctx: CanvasRenderingContext2D, t: nu
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.globalAlpha = 1;
     ctx.globalCompositeOperation = "source-over";
-    ctx.fillStyle = "#050507";
-    ctx.fillRect(0, 0, W, H);
+    if (transparent) { ctx.clearRect(0, 0, W, H); ctx.fillStyle = "rgba(0,0,0,0.004)"; ctx.fillRect(0, 0, 1, 1); }
+    else { ctx.fillStyle = "#050507"; ctx.fillRect(0, 0, W, H); }
     draw(ctx, frame / fps, frame);
-  }, [frame, fps, draw, fontsReady]);
+  }, [frame, fps, draw, fontsReady, transparent]);
 
   return (
-    <AbsoluteFill style={{ backgroundColor: "#050507" }}>
+    <AbsoluteFill style={{ backgroundColor: transparent ? "transparent" : "#050507" }}>
       <canvas ref={ref} width={W} height={H} style={{ width: "100%", height: "100%" }} />
     </AbsoluteFill>
   );

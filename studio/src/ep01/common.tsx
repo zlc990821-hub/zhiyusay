@@ -32,11 +32,17 @@ export const useFonts = (families: string[], sample: string) => {
 // 字幕：时间以录音为准，文字以稿子为准；hide 为 true 时不显示（关键句大字出现时避免重复）
 export const Subtitles: React.FC<{ t: number; hide?: (t: number) => boolean }> = ({ t, hide }) => {
   const s = (SUBS as any).subs.find((x: any) => t >= x.start && t < x.end);
-  if (!s || (hide && hide(t))) return null;
+  const show = s && !(hide && hide(t));
   return (
-    <AbsoluteFill style={{ justifyContent: "flex-end", alignItems: "center", paddingBottom: 64, pointerEvents: "none" }}>
-      <div style={{ fontFamily: SANS, fontSize: 60, color: "#f6efe2", letterSpacing: 2, maxWidth: 1600, textAlign: "center",
-        textShadow: "0 0 10px rgba(0,0,0,0.95), 0 2px 3px rgba(0,0,0,0.9)" }}>{s.text}</div>
+    <AbsoluteFill style={{ pointerEvents: "none" }}>
+      {/* 底部一层很淡的暗带：字幕压在任何素材上都看得清 */}
+      <div style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: 300, background: "linear-gradient(rgba(0,0,0,0), rgba(0,0,0,0.5))" }} />
+      {show ? (
+        <div style={{ position: "absolute", left: 0, right: 0, bottom: 52, display: "flex", justifyContent: "center" }}>
+          <div style={{ fontFamily: SANS, fontSize: 60, lineHeight: 1.32, color: "#f6efe2", letterSpacing: 2, maxWidth: 1700, textAlign: "center", whiteSpace: "pre-line",
+            textShadow: "0 0 10px rgba(0,0,0,0.95), 0 2px 3px rgba(0,0,0,0.9)" }}>{s.text}</div>
+        </div>
+      ) : null}
     </AbsoluteFill>
   );
 };
@@ -56,7 +62,7 @@ export const NameBar: React.FC<{ name: string; years: string; t: number; a: numb
   const o = fadeInOut(t, a, b, 0.4);
   if (o <= 0.001) return null;
   return (
-    <div style={{ position: "absolute", left: 120, bottom: 200, opacity: o, transform: `translateX(${(1 - o) * -20}px)` }}>
+    <div style={{ position: "absolute", left: 120, bottom: 270, opacity: o, transform: `translateX(${(1 - o) * -20}px)` }}>
       <div style={{ width: 80, height: 3, background: "#e7b873", marginBottom: 16 }} />
       <div style={{ fontFamily: SERIF, fontSize: 60, color: GOLD, letterSpacing: 6 }}>{name}</div>
       <div style={{ fontFamily: SANS, fontSize: 46, color: "rgba(240,225,200,0.75)", marginTop: 6 }}>{years}</div>

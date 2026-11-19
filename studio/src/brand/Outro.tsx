@@ -8,7 +8,7 @@ const TC = 4.6; // 收拢完成的时刻
 
 const G = (t: number) => 0.25 * t + (t > TM ? 0.6 * Math.pow(t - TM, 2) : 0);
 
-export const Outro: React.FC = () => {
+export const Outro: React.FC<{ transparent?: boolean }> = ({ transparent }) => {
   const draw = useCallback((ctx: CanvasRenderingContext2D, t: number, frame: number) => {
     const fadeIn = smooth(t / 0.6);
     const fadeOut = 1; // 标志停留到最后一帧，不渐黑
@@ -95,5 +95,5 @@ export const Outro: React.FC = () => {
 
     drawFilm(ctx, frame);
   }, []);
-  return <BrandCanvas draw={draw} />;
+  return <BrandCanvas draw={draw} transparent={transparent} />;
 };
