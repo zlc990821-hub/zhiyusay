@@ -1,4 +1,4 @@
-// 素材时长（秒），由 tools/gen_clipdur.sh 生成；Bed 用它自动放慢，避免素材播完定格
+// 素材时长（秒），由 tools/gen_clipdur.sh 生成；Clip 用它自动放慢，Bed 用它判断有没有预虚化的素材
 export const CLIPDUR: Record<string, number> = {
   "ep01/clips/album.mp4": 11.40,
   "ep01/clips/b_altar.mp4": 16.20,
@@ -66,4 +66,17 @@ export const CLIPDUR: Record<string, number> = {
   "ep01/clips/store_arcade.mp4": 5.00,
   "ep01/clips/store_b.mp4": 6.63,
   "ep01/clips/writing.mp4": 7.83,
+  "ep01/clips/blur/b_altar_b3.mp4": 16.20,
+  "ep01/clips/blur/b_books_b3.mp4": 17.13,
+  "ep01/clips/blur/b_books_b4.mp4": 17.13,
+  "ep01/clips/blur/b_brainscan_b2.mp4": 16.93,
+  "ep01/clips/blur/b_brainscreen_b2.mp4": 14.30,
+  "ep01/clips/blur/b_kids_b2.mp4": 14.00,
+  "ep01/clips/blur/b_magnify_b4.mp4": 9.00,
+  "ep01/clips/blur/b_oldlib_b2.mp4": 15.00,
+  "ep01/clips/blur/b_phonebed_b2.mp4": 13.00,
+  "ep01/clips/blur/b_reader_b3.mp4": 10.43,
+  "ep01/clips/blur/b_ruins_b2.mp4": 19.60,
+  "ep01/clips/blur/b_student_b3.mp4": 14.00,
+  "ep01/clips/blur/writing_b3.mp4": 7.83,
 };
