@@ -41,7 +41,7 @@ const drawChat = (ctx: CanvasRenderingContext2D, t: number) => {
 };
 
 // ---------- 场 21：传送机 ----------
-const BL = { x: 480, y: 610 }, BR = { x: 1440, y: 610 };
+const BL = { x: 480, y: 560 }, BR = { x: 1440, y: 560 };   // 整体上移，舱下的「地球/火星」不碰两行字幕
 const booth = (ctx: CanvasRenderingContext2D, x: number, y: number, a: number, warn: number, name: string) => {
   if (a <= 0) return;
   ctx.save(); ctx.globalAlpha = a;
@@ -50,7 +50,7 @@ const booth = (ctx: CanvasRenderingContext2D, x: number, y: number, a: number, w
   ctx.fillStyle = "rgba(255,205,150,0.05)"; ctx.fill();
   ctx.restore();
   glow(ctx, x, y - 300, 120, 0.35 * a);
-  label(ctx, name, x, y + 270, 58, a, SERIF);
+  label(ctx, name, x, y + 262, 52, a, SERIF);
 };
 const drawTeleport = (ctx: CanvasRenderingContext2D, t: number) => {
   const a = fin(t, 521.0, 0.6) * (1 - fin(t, 554.2, 0.5));
