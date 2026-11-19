@@ -62,7 +62,7 @@ export const Seg02a: React.FC = () => {
       <Bed from={T02A} clips={[
         { src: "ep01/clips/b_kids.mp4", a: 137.9, b: 150.8, dim: 0.38, blur: 2 },
       ]} />
-      <Still src="ep01/raw/piaget.png" from={T02A} a={T02A} b={150.5} zoom={[1.0, 1.06]} height={880} x={300} fade={0.5} bg="transparent" />
+      <Still src="ep01/raw/piaget.png" from={T02A} a={140.6} b={150.5} zoom={[1.0, 1.06]} height={880} x={300} fade={0.5} bg="transparent" />
       <NameBar name="让·皮亚杰" years="1896–1980  瑞士心理学家" t={t} a={141.2} b={150.0} />
       {/* 他「记得」的画面：一个固定的老胶片画框，里面依次换镜头 */}
       <Clip src="ep01/clips/lum_carriage.mp4" from={T02A} a={150.3} b={157.4} zoom={[1.0, 1.05]} fi={0.4} />
