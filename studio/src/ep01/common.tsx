@@ -1,3 +1,4 @@
+import { CLIPDUR } from "./clipdur";
 import { AbsoluteFill, OffthreadVideo, Img, Sequence, staticFile, useCurrentFrame, useVideoConfig, interpolate, continueRender, delayRender } from "remotion";
 import { useLayoutEffect, useRef, useState, useEffect } from "react";
 import "../fontLibrary";
@@ -83,10 +84,16 @@ export const Label: React.FC<{ text: string; t: number; a: number; b: number }> 
 };
 
 // 一段调好色的视频，放在全局时间 [a, b) 内，带缓慢推拉；fi/fo 为淡入淡出秒数
+// 素材不够长时自动放慢，不让它播完后定格在最后一帧
+export const fitRate = (src: string, start: number, rate: number, len: number) => {
+  const d = CLIPDUR[src];
+  if (!d || len <= 0) return rate;
+  return Math.min(rate, Math.max(0.15, (d - start - 0.15) / len));
+};
 export const Clip: React.FC<{ src: string; from: number; a: number; b: number; zoom?: [number, number]; fi?: number; fo?: number; rate?: number; start?: number; style?: React.CSSProperties; fit?: "cover" | "contain" }> =
   ({ src, from, a, b, zoom = [1, 1.06], fi = 0, fo = 0, rate = 1, start = 0, style, fit = "cover" }) => (
   <Sequence from={sec(a - from)} durationInFrames={Math.max(1, sec(b - a))} layout="none">
-    <ClipInner src={src} len={b - a} zoom={zoom} fi={fi} fo={fo} rate={rate} start={start} style={style} fit={fit} />
+    <ClipInner src={src} len={b - a} zoom={zoom} fi={fi} fo={fo} rate={fitRate(src, start, rate, b - a)} start={start} style={style} fit={fit} />
   </Sequence>
 );
 const ClipInner: React.FC<{ src: string; len: number; zoom: [number, number]; fi: number; fo: number; rate: number; start: number; style?: React.CSSProperties; fit: "cover" | "contain" }> = ({ src, len, zoom, fi, fo, rate, start, style, fit }) => {

@@ -2,8 +2,8 @@
 // 场 27 日记重现、场 28 看得见她、场 29 六亿个此刻
 import { AbsoluteFill } from "remotion";
 import { useCallback } from "react";
-import { Atmos, Canvas, Clip, Film, KeyText, Subtitles, clamp, glow, rand, sec, smooth, useFonts, useT, DISPLAY, SERIF } from "./common";
-import { drawClueMap, clueById, clueOn, CLUES } from "./clue";
+import { Canvas, Clip, Film, Subtitles, glow, rand, sec, smooth, useFonts, useT, SERIF } from "./common";
+import { Bed, Chapter, ClueList, CL, DESK } from "./kit";
 import { drawLine, drawPaper, Entry, S1, S2, lineY } from "./Opening";
 import { chip } from "./figures";
 
@@ -23,13 +23,14 @@ const ENTRIES: Entry[] = Array.from({ length: 20 }, (_, i) => {
   return { line: i, text, a, b, strike };
 });
 const drawDiary = (ctx: CanvasRenderingContext2D, t: number) => {
-  const a = fin(t, 703.2, 0.8) * (1 - fin(t, 726.6, 0.8));
+  const a = fin(t, 705.8, 0.8) * (1 - fin(t, 726.6, 0.8));
   if (a <= 0) return;
   const blank = fin(t, 723.0, 1.6);   // 记录没了、书写停了：字迹淡去
   // 先贴近正在写的那几行，页面写满时拉远成整页
   const back = smooth((t - 716.4) / 4.4);
-  const s = 1.45 + (0.5 - 1.45) * back;
-  const cx = -110 * (1 - back), cy = lineY(1) * (1 - back) + 40 * back;
+  // 拉远后整页放进画面：顶上不出画，底下给字幕留位置
+  const s = 1.45 + (0.4 - 1.45) * back;
+  const cx = -110 * (1 - back), cy = lineY(1) * (1 - back) + 125 * back;
   ctx.save(); ctx.translate(960, 520); ctx.scale(s, s); ctx.translate(-cx, -cy); ctx.rotate(-0.01);
   drawPaper(ctx, 7, a);
   ctx.globalAlpha = 1;
@@ -68,36 +69,32 @@ const drawMoments = (ctx: CanvasRenderingContext2D, t: number) => {
   chip(ctx, "一生，约 6 亿个三秒钟长的「此刻」", 960, 160, 52, a * fin(t, 740.4, 0.6) * (1 - fin(t, 746.4, 0.5)), SERIF);
 };
 
-// 发现三 → 线索图全景（和下一段三魂的开头接上）
-const drawFound3 = (ctx: CanvasRenderingContext2D, t: number) => {
-  const a = fin(t, 750.6, 0.8);
-  if (a <= 0) return;
-  const pan = smooth((t - 756.8) / 2.8);           // 最后拉远成全景
-  const f3 = clueById("found3");
-  const scale = 1.7 + (0.92 - 1.7) * pan;
-  const cx = f3.x + (960 - f3.x) * pan, cy = f3.y - 60 + (540 - (f3.y - 60)) * pan;
-  drawClueMap(ctx, t, {
-    vis: (id) => (id === "found3" ? clueOn("found3", t) : a * (0.35 + 0.65 * pan)),
-    bright: (id) => (clueById(id).key ? 1 : 0.6 + 0.4 * pan),
-    label: (id) => (clueById(id).key ? 1 : 0),
-    scale, cx, cy,
-  });
-};
 
 export const Seg07: React.FC = () => {
   const ready = useFonts([`"Source Han Serif CN for Display"`, `"Noto Serif SC"`, `"Noto Sans SC"`, `"hongleixingshu"`],
-    "0123456789:我现在，才真正醒过来。彻底地了一生，约6亿个三秒钟长的「此刻」发现：记忆是份记录你在书写看着那它不任何页日里");
+    "07第三个发现：看着的那个线索清单→？★发现一：记忆，更像是一份记录二你是正在书写过去的人三还有一个，看这切它不在任何页日记里0123456789:我现在，才真正醒过来。彻底地了一生，约6亿个三秒钟长的「此刻」发现：记忆是份记录你在书写看着那它不任何页日里");
   const t = useT(T07);
-  const draw = useCallback((ctx: CanvasRenderingContext2D, tt: number) => { drawDiary(ctx, tt); drawMoments(ctx, tt); drawFound3(ctx, tt); }, []);
+  const draw = useCallback((ctx: CanvasRenderingContext2D, tt: number) => { drawDiary(ctx, tt); drawMoments(ctx, tt); }, []);
   return (
     <AbsoluteFill style={{ background: "#08080b" }}>
-      <Atmos t={t} />
+      {/* 打底：夜里的窗（克莱夫的日记）→ 公园里的一对（看得见她）→ 夜晚城市的万家灯火（六亿个此刻）→ 案头（线索清单） */}
+      <Bed from={T07} clips={[
+        { src: "ep01/clips/b_window.mp4", a: T07, b: 727.8, dim: 0.5 },
+        { src: "ep01/clips/b_city.mp4", a: 736.8, b: 751.4, dim: 0.42, zoom: [1.0, 1.12] },
+        { src: DESK, a: 750.6, b: E07, dim: 0.32, blur: 4 },
+      ]} />
       <Clip src="ep01/clips/couple_park.mp4" from={T07} a={727.4} b={737.2} zoom={[1.0, 1.07]} fi={0.6} fo={0.5} />
       {ready ? <Canvas t={t} draw={draw} /> : null}
-      <KeyText text="它不在任何一页日记里" t={t} a={757.4} b={759.6} size={80} font={DISPLAY} y={-360} />
+      <ClueList t={t} a={750.6} b={E07 + 0.6} items={[
+        { text: CL.find1, at: 750.8, kind: "find" },
+        { text: CL.find2, at: 751.0, kind: "find" },
+        { text: CL.find3, at: 752.4, kind: "find" },
+        { text: "它不在任何一页日记里", at: 757.5, kind: "sum" },
+      ]} top={250} />
+      <Chapter t={t} no="07" title="第三个发现：看着的那个" at={703.2} end={E07 + 1} />
       <Film t={t} />
-      <Subtitles t={t} hide={(x) => x > 757.4} />
+      <Subtitles t={t} />
     </AbsoluteFill>
   );
 };
-void CLUES;
+

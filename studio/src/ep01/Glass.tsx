@@ -2,8 +2,8 @@
 // v2：一个「实验板」画面讲完整个实验（录像屏幕 + 两组问题卡 + 车速 + 50 人点阵），镜头在画面里推拉，不频繁切换
 import { AbsoluteFill, Audio, Loop, Sequence, staticFile } from "remotion";
 import { useCallback } from "react";
-import { Atmos, Canvas, Clip, Film, NameBar, Still, Subtitles, clamp, glow, rand, sec, smooth, useFonts, useT, DISPLAY, SERIF, SANS, GOLD } from "./common";
-import { drawClueMap, clueById } from "./clue";
+import { Canvas, Clip, Film, NameBar, Still, Subtitles, clamp, glow, rand, sec, smooth, useFonts, useT, DISPLAY, SERIF, SANS, GOLD } from "./common";
+import { Bed, Chapter } from "./kit";
 
 export const G0 = 196.0;
 export const G_END = 238.4;
@@ -214,7 +214,7 @@ const drawWord = (ctx: CanvasRenderingContext2D, t: number) => {
     return;
   }
   const u = t - T_BREAK;
-  const target = clueById("loftus");
+  const target = { x: 960, y: 140 };   // 碎碴化成光点，向上飘散
   TRIS.forEach((tr) => {
     const cx = (tr.p[0].x + tr.p[1].x + tr.p[2].x) / 3, cy = (tr.p[0].y + tr.p[1].y + tr.p[2].y) / 3;
     const vx = (cx - WORD_W / 2) * 0.9 + (rand(tr.id, 4) - 0.5) * 260, vy = -120 - rand(tr.id, 5) * 200;
@@ -240,15 +240,6 @@ const drawWord = (ctx: CanvasRenderingContext2D, t: number) => {
 
 const drawGlassScene = (ctx: CanvasRenderingContext2D, t: number) => {
   if (t < 231.0) return;
-  ctx.fillStyle = `rgba(11,10,9,${smooth((t - 231.0) / 0.3)})`; ctx.fillRect(0, 0, 1920, 1080);
-  // 线索图：前两条线索已经在，第三条由碎玻璃化成
-  const mapA = smooth((t - 235.0) / 0.8);
-  if (mapA > 0) {
-    drawClueMap(ctx, t, {
-      vis: (id) => (id === "common" || id === "piaget" ? mapA : id === "loftus" ? smooth((t - 235.9) / 0.7) : 0),
-      label: (id) => (id === "loftus" ? smooth((t - 236.3) / 0.6) : 1),
-    });
-  }
   drawWord(ctx, t);
 };
 
@@ -259,12 +250,18 @@ export const Glass: React.FC = () => {
   const draw = useCallback((ctx: CanvasRenderingContext2D, tt: number) => drawGlassScene(ctx, tt), []);
   return (
     <AbsoluteFill style={{ background: "#0b0a09" }}>
-      <Atmos t={t} />
-      <Still src="ep01/raw/loftus.jpg" from={G0} a={G0} b={200.9} zoom={[1.0, 1.07]} height={900} fade={0.35} x={300} />
+      {/* 打底：给人看录像的观众（虚化压暗）→「撞毁」碎掉时：慢动作碎裂的玻璃瓶 →「一地玻璃碴」：扫碎玻璃 */}
+      <Bed from={G0} clips={[
+        { src: "ep01/clips/b_audience.mp4", a: G0, b: 231.3, rate: 0.42, dim: 0.3, blur: 3 },
+        { src: "ep01/clips/b_bottle.mp4", a: 231.0, b: 234.6, start: 0.5, dim: 0.45 },
+        { src: "ep01/clips/b_sweep.mp4", a: 234.2, b: G_END, dim: 0.55 },
+      ]} />
+      <Still src="ep01/raw/loftus.jpg" from={G0} a={G0} b={200.9} zoom={[1.0, 1.07]} height={860} fade={0.35} x={300} bg="transparent" />
       <NameBar name="伊丽莎白·洛夫特斯" years="1944–  美国心理学家" t={t} a={197.0} b={200.6} />
       <Board t={t} ready={ready} />
       {ready && t >= 231.0 ? <Canvas t={t} draw={draw} /> : null}
       <Film t={t} />
+      <Chapter t={t} no="02" title="第一道裂缝：记忆可以被写进去" at={138.0} end={G_END + 1} hideCorner={(x) => x > 200.3 && x < 231.4} />
       <Subtitles t={t} hide={(x) => x > 236.9} />
     </AbsoluteFill>
   );

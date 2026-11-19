@@ -2,8 +2,8 @@
 // Seg02a 137.9–196.0：场 8 皮亚杰的假童年；Seg02c 237.5–270.9：场 10 商场里走丢、场 11 小结
 import { AbsoluteFill, Img, staticFile } from "remotion";
 import { useCallback } from "react";
-import { Atmos, Canvas, Clip, Corner, Film, KeyText, NameBar, Still, Subtitles, clamp, glow, rand, sec, smooth, useFonts, useT, DISPLAY, HAND, SERIF, SANS, GOLD } from "./common";
-import { drawClueMap, clueOn } from "./clue";
+import { Bed, Chapter, ClueList, CL, DESK } from "./kit";
+import { Canvas, Clip, Corner, Film, KeyText, NameBar, Still, Subtitles, clamp, glow, rand, sec, smooth, useFonts, useT, DISPLAY, HAND, SERIF, SANS, GOLD } from "./common";
 
 export const T02A = 137.9, E02A = 196.0, T02C = 237.5, E02C = 270.9;
 export const SEG02A_FRAMES = sec(E02A - T02A), SEG02C_FRAMES = sec(E02C - T02C);
@@ -15,7 +15,7 @@ const FrameTag: React.FC<{ t: number; a: number; b: number; text: string }> = ({
   const o = fin(t, a, 0.6) * (1 - fin(t, b - 0.5, 0.5));
   if (o <= 0) return null;
   return (
-    <div style={{ position: "absolute", left: 270, top: 46, padding: "8px 22px", borderRadius: 30, background: "rgba(15,13,11,0.75)", border: "1.5px solid rgba(231,184,115,0.45)",
+    <div style={{ position: "absolute", left: 270, top: 124, padding: "8px 22px", borderRadius: 30, background: "rgba(15,13,11,0.75)", border: "1.5px solid rgba(231,184,115,0.45)",
       fontFamily: SERIF, fontSize: 50, color: GOLD, letterSpacing: 4, opacity: o }}>{text}</div>
   );
 };
@@ -52,22 +52,18 @@ const Torn: React.FC<{ t: number }> = ({ t }) => {
   return <>{half(left, -1)}{half(right, 1)}</>;
 };
 
-const mapA = (ctx: CanvasRenderingContext2D, t: number) => {
-  const a = fin(t, 186.6, 0.8);
-  if (a <= 0) return;
-  drawClueMap(ctx, t, { vis: (id) => (id === "common" ? a : id === "piaget" ? clueOn("piaget", t) : 0) });
-};
 
 export const Seg02a: React.FC = () => {
-  const ready = useFonts([`"Source Han Serif CN for Display"`, `"Noto Serif SC"`, `"Noto Sans SC"`, `"hongleixingshu"`],
-    "让·皮亚杰瑞士心理学家他记得的画面卢米埃尔兄弟约皮亚杰先生、太太：我信了教，想要忏悔。当年那块手表，要还给你们常识＝的假童年1896–1980");
+  useFonts([`"Source Han Serif CN for Display"`, `"Noto Serif SC"`, `"Noto Sans SC"`, `"hongleixingshu"`],
+    "02第一道裂缝：记忆可以被写进去让·皮亚杰瑞士心理学家他记得的画面卢米埃尔兄弟约皮亚杰先生、太太：我信了教，想要忏悔。当年那块手表，要还给你们常识＝的假童年1896–1980");
   const t = useT(T02A);
-  const draw = useCallback((ctx: CanvasRenderingContext2D, tt: number) => mapA(ctx, tt), []);
   return (
     <AbsoluteFill style={{ background: "#0b0a09" }}>
-      <Atmos t={t} />
-      <Still src="ep01/raw/piaget.png" from={T02A} a={T02A} b={150.5} zoom={[1.0, 1.06]} height={920} x={300} fade={0.5} />
-      <NameBar name="让·皮亚杰" years="1896–1980  瑞士心理学家" t={t} a={138.8} b={150.0} />
+      <Bed from={T02A} clips={[
+        { src: "ep01/clips/b_kids.mp4", a: 137.9, b: 150.8, dim: 0.38, blur: 2 },
+      ]} />
+      <Still src="ep01/raw/piaget.png" from={T02A} a={T02A} b={150.5} zoom={[1.0, 1.06]} height={880} x={300} fade={0.5} bg="transparent" />
+      <NameBar name="让·皮亚杰" years="1896–1980  瑞士心理学家" t={t} a={141.2} b={150.0} />
       {/* 他「记得」的画面：一个固定的老胶片画框，里面依次换镜头 */}
       <Clip src="ep01/clips/lum_carriage.mp4" from={T02A} a={150.3} b={157.4} zoom={[1.0, 1.05]} fi={0.4} />
       <Clip src="ep01/clips/lum_crowd.mp4" from={T02A} a={157.4} b={163.8} zoom={[1.0, 1.04]} />
@@ -76,7 +72,12 @@ export const Seg02a: React.FC = () => {
       <Letter t={t} />
       <FrameTag t={t} a={150.6} b={184.4} text="他记得的画面" />
       <Corner text="卢米埃尔兄弟，约 1896" t={t} a={150.6} b={184.4} />
-      {ready ? <Canvas t={t} draw={draw} /> : null}
+      {/* 「两岁的记忆，记错很正常」→ 孩子；「那成年人呢？」→ 车站里的大人 */}
+      <Bed from={T02A} clips={[
+        { src: "ep01/clips/b_kids.mp4", a: 186.2, b: 193.9, start: 4, dim: 0.62 },
+        { src: "ep01/clips/b_commute.mp4", a: 193.5, b: E02A, dim: 0.62 },
+      ]} />
+      <Chapter t={t} no="02" title="第一道裂缝：记忆可以被写进去" at={138.0} end={E02A + 1} />
       <Film t={t} />
       <Subtitles t={t} />
     </AbsoluteFill>
@@ -89,7 +90,7 @@ const People: React.FC<{ t: number }> = ({ t }) => {
   if (o <= 0) return null;
   const lit = fin(t, 249.9, 0.5);
   return (
-    <div style={{ position: "absolute", left: 270, top: 60, padding: "20px 30px", borderRadius: 18, background: "rgba(14,12,10,0.8)", border: "1.5px solid rgba(231,184,115,0.4)", opacity: o, display: "flex", alignItems: "center", gap: 26 }}>
+    <div style={{ position: "absolute", left: 270, top: 130, padding: "20px 30px", borderRadius: 18, background: "rgba(14,12,10,0.8)", border: "1.5px solid rgba(231,184,115,0.4)", opacity: o, display: "flex", alignItems: "center", gap: 26 }}>
       {[0, 1, 2, 3].map((i) => {
         const on = i === 0 ? lit : 0;
         const c = on > 0.5 ? "#f2b066" : "rgba(240,225,200,0.35)";
@@ -111,37 +112,34 @@ const Recall: React.FC<{ t: number; text: string; at: number; x: number; y: numb
     textShadow: "0 0 22px rgba(255,170,90,0.75), 0 2px 6px rgba(0,0,0,0.9)" }}>{text}</div>;
 };
 
-const mapC = (ctx: CanvasRenderingContext2D, t: number) => {
-  const a1 = 1 - fin(t, 240.0, 0.5);      // 开头：接着碎玻璃那一场的线索图
-  const a2 = fin(t, 259.0, 0.6);           // 小结
-  const a = Math.max(a1, a2);
-  if (a <= 0) return;
-  const back = smooth((t - 264.6) / 5);
-  drawClueMap(ctx, t, {
-    vis: (id) => (["common", "piaget", "loftus"].includes(id) ? a : id === "mall" ? (t > 259 ? clueOn("mall", t) : 0) : 0),
-    scale: 1 - 0.12 * back, cy: 540 + 60 * back,
-  });
-};
 
 export const Seg02c: React.FC = () => {
-  const ready = useFonts([`"Source Han Serif CN for Display"`, `"Noto Serif SC"`, `"Noto Sans SC"`, `"hongleixingshu"`],
-    "约1/4我在哭……一个老人牵着我资料：普林格档案，百货公司老片记忆，可以从外面被写进去常识＝的皮亚杰假童年一个词撒下地碎玻璃商场里走丢过");
+  useFonts([`"Source Han Serif CN for Display"`, `"Noto Serif SC"`, `"Noto Sans SC"`, `"hongleixingshu"`],
+    "02第一道裂缝：记忆可以被写进去线索清单→？★0123456789只要没人来改，的总是可靠吧清清楚楚童年是别编换一个就多出碎玻璃没发生过事也能想起来从外面约1/4我在哭……一个老人牵着我资料：普林格档案，百货公司老片记忆，可以从外面被写进去常识＝的皮亚杰假童年一个词撒下地碎玻璃商场里走丢过");
   const t = useT(T02C);
-  const draw = useCallback((ctx: CanvasRenderingContext2D, tt: number) => mapC(ctx, tt), []);
   return (
     <AbsoluteFill style={{ background: "#0b0a09" }}>
-      <Atmos t={t} />
-      <Clip src="ep01/clips/store_a.mp4" from={T02C} a={240.2} b={249.8} zoom={[1.0, 1.05]} fi={0.5} />
-      <Clip src="ep01/clips/store_arcade.mp4" from={T02C} a={249.8} b={253.2} zoom={[1.02, 1.06]} />
-      <Clip src="ep01/clips/store_b.mp4" from={T02C} a={253.2} b={259.3} zoom={[1.0, 1.08]} fo={0.6} />
+      <Bed from={T02C} clips={[
+        { src: "ep01/clips/store_a.mp4", a: 237.5, b: 246.7, dim: 0.85, sat: 1 },
+        { src: "ep01/clips/store_arcade.mp4", a: 246.4, b: 251.3, dim: 0.85, sat: 1, zoom: [1.02, 1.06] },
+        { src: "ep01/clips/store_b.mp4", a: 251.0, b: 259.7, rate: 0.78, dim: 0.85, sat: 1, zoom: [1.0, 1.08] },
+        { src: DESK, a: 259.3, b: E02C, dim: 0.32, blur: 4 },
+      ]} />
       <People t={t} />
       <Recall t={t} text="我在哭……" at={253.2} x={330} y={150} />
       <Recall t={t} text="一个老人牵着我" at={255.4} x={900} y={260} />
       <Corner text="资料：普林格档案，百货公司老片" t={t} a={240.4} b={259.0} />
-      {ready ? <Canvas t={t} draw={draw} /> : null}
-      <KeyText text="记忆，可以从外面被写进去" t={t} a={259.4} b={264.4} size={84} font={DISPLAY} y={300} />
+      <ClueList t={t} a={259.3} b={E02C + 0.6} items={[
+        { text: CL.common, at: 259.6, crackAt: 259.6 },
+        { text: CL.piaget, at: 260.2 },
+        { text: CL.loftus, at: 260.8 },
+        { text: CL.mall, at: 261.4 },
+        { text: CL.sumIn, at: 262.3, kind: "sum" },
+        { text: "只要没人来改，我的记忆总是可靠的吧？", at: 265.2, kind: "ask" },
+      ]} />
+      <Chapter t={t} no="02" title="第一道裂缝：记忆可以被写进去" at={138.0} end={E02C + 1} />
       <Film t={t} />
-      <Subtitles t={t} hide={(x) => x > 259.3 && x < 264.3} />
+      <Subtitles t={t} />
     </AbsoluteFill>
   );
 };

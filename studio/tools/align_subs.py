@@ -91,7 +91,8 @@ def wrap(d):
     """两行：在最靠近中间的标点后换行；没有标点时在虚词处换行，不切开人名"""
     if core_len(d) <= LINE: return d
     mid = len(d) / 2
-    cand = [m.end() for m in re.finditer(r"[，、；：」]", d) if 2 < m.end() < len(d) - 1]
+    # 换行点后面不能紧跟标点（否则下一行以「，」开头）
+    cand = [m.end() for m in re.finditer(r"[，、；：」]", d) if 2 < m.end() < len(d) - 1 and d[m.end()] not in "，、；：。」！？"]
     if cand:
         k = min(cand, key=lambda x: abs(x - mid))
         if abs(k - mid) <= len(d) * 0.3: return d[:k] + "\n" + d[k:]

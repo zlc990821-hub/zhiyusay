@@ -2,8 +2,8 @@
 // 场 23 里德的将军、场 24 那先的车、场 25 线断了、场 26 讲故事的人
 import { AbsoluteFill } from "remotion";
 import { useCallback } from "react";
-import { Atmos, Canvas, Clip, Film, KeyText, NameBar, Still, Subtitles, clamp, glow, rand, sec, smooth, useFonts, useT, DISPLAY, HAND, SERIF } from "./common";
-import { drawClueMap, clueById, clueOn } from "./clue";
+import { Bed, Chapter, ClueList, CL, DESK, Veil } from "./kit";
+import { Canvas, Clip, Film, KeyText, NameBar, Still, Subtitles, clamp, glow, rand, sec, smooth, useFonts, useT, DISPLAY, HAND, SERIF } from "./common";
 import { person, headPos, label, chip } from "./figures";
 
 export const T06 = 575.8, E06 = 703.0;
@@ -12,35 +12,42 @@ const fin = (t: number, a: number, d = 0.5) => smooth((t - a) / d);
 const lerp = (a: number, b: number, k: number) => a + (b - a) * k;
 const ALL7 = ["common", "piaget", "loftus", "mall", "challenger", "rat", "found1", "parfit"];
 
-// 开头：「洛克的说法很快就有人挑出了问题」——回到第一颗线索，裂缝亮起
-const drawOpen = (ctx: CanvasRenderingContext2D, t: number) => {
-  const a = fin(t, 575.8, 0.4) * (1 - fin(t, 580.4, 0.5));
-  if (a <= 0) return;
-  const n = clueById("common");
-  drawClueMap(ctx, t, { vis: (id) => (ALL7.includes(id) ? a : 0), bright: (id) => (id === "common" ? 1.3 : 0.3), label: (id) => (id === "common" ? 1 : 0), scale: 1.5, cx: n.x + 150, cy: n.y + 120 });
-  const P = { x: 960 + (n.x - n.x - 150) * 1.5, y: 540 + (n.y - n.y - 120) * 1.5 };
-  ctx.save(); ctx.translate(P.x, P.y); ctx.scale(1.5, 1.5);
-  ctx.strokeStyle = `rgba(255,250,240,${0.9 * a})`; ctx.lineWidth = 3; ctx.lineCap = "round";
-  ctx.beginPath(); [[-70, -60], [-22, -18], [-34, 6], [8, 22], [-4, 44], [52, 78]].forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y))); ctx.stroke();
-  ctx.restore();
-};
 
 // ---------- 场 23：小男孩、军官、老将军 ----------
 const FIG = [
-  { name: "小男孩", x: 430, s: 0.62, at: 584.0, chip: "偷果子，挨了一顿打", chipAt: 585.0 },
-  { name: "军官", x: 960, s: 0.92, at: 588.0, chip: "夺下敌人的军旗", chipAt: 590.0 },
-  { name: "老将军", x: 1490, s: 0.95, at: 598.6, chip: "记得当年夺旗", chipAt: 599.0 },
+  { name: "小男孩", x: 350, src: "ep01/clips/b_boy.mp4", at: 584.0, chip: "偷果子，挨了一顿打", chipAt: 585.0 },
+  { name: "军官", x: 960, src: "ep01/clips/b_soldiers.mp4", at: 588.0, chip: "夺下敌人的军旗", chipAt: 590.0 },
+  { name: "老将军", x: 1570, src: "ep01/clips/b_oldman.mp4", at: 598.6, chip: "记得当年夺旗", chipAt: 599.0 },
 ];
+const PW = 570, PH = 330, PY = 360;
+const ReidPanels: React.FC<{ t: number }> = ({ t }) => {
+  const a = fin(t, 583.8, 0.5) * (1 - fin(t, 620.6, 0.5));
+  if (a <= 0) return null;
+  return (
+    <>
+      {FIG.map((f, i) => {
+        const o = a * fin(t, f.at, 0.6);
+        if (o <= 0) return null;
+        return (
+          <div key={i}>
+            <div style={{ position: "absolute", left: f.x - PW / 2, top: PY, width: PW, height: PH, overflow: "hidden", borderRadius: 14, opacity: o,
+              boxShadow: "0 0 0 2px rgba(231,184,115,0.55), 0 24px 60px rgba(0,0,0,0.7)" }}>
+              <Clip src={f.src} from={T06} a={583.8} b={621.0} zoom={[1.04, 1.12]} style={{ filter: "brightness(0.8)" }} />
+            </div>
+            <div style={{ position: "absolute", left: f.x - PW / 2, width: PW, top: PY + PH + 16, textAlign: "center", fontFamily: SERIF, fontSize: 58, color: "#f3e6d0", opacity: o,
+              textShadow: "0 0 12px rgba(0,0,0,0.9)" }}>{f.name}</div>
+          </div>
+        );
+      })}
+    </>
+  );
+};
 const drawReid = (ctx: CanvasRenderingContext2D, t: number) => {
   const a = fin(t, 583.8, 0.5) * (1 - fin(t, 620.6, 0.5));
   if (a <= 0) return;
-  const base = 780;
   const heads = FIG.map((f) => {
-    const p = { x: f.x, y: base - 175 * f.s, s: f.s, alpha: a * fin(t, f.at, 0.6) };
-    person(ctx, p);
-    label(ctx, f.name, f.x, base + 50, 56, p.alpha, SERIF);
-    chip(ctx, f.chip, f.x, 250, 48, a * fin(t, f.chipAt, 0.5) * (1 - fin(t, 604.6, 0.5)), SERIF);
-    return headPos(p, 40);
+    chip(ctx, f.chip, f.x, PY - 125, 50, a * fin(t, f.chipAt, 0.5) * (1 - fin(t, 604.6, 0.5)), SERIF);
+    return { x: f.x, y: PY - 6 };
   });
   // 记忆线：男孩—军官（594），军官—将军（599.6）
   const link = (i: number, j: number, at: number, hiAt: number, mark: string) => {
@@ -62,8 +69,8 @@ const drawReid = (ctx: CanvasRenderingContext2D, t: number) => {
     const A = heads[0], B = heads[2];
     const flick = t > 611.6 ? 0.5 + 0.5 * Math.sin((t - 611.6) * 16) : 1;
     ctx.save(); ctx.setLineDash([16, 14]); ctx.strokeStyle = `rgba(255,${t > 611.6 ? 120 : 205},${t > 611.6 ? 100 : 150},${0.6 * a * br * flick})`; ctx.lineWidth = 3;
-    ctx.beginPath(); ctx.moveTo(A.x, A.y); ctx.quadraticCurveTo(960, 120, B.x, B.y); ctx.stroke(); ctx.restore();
-    if (t > 611.6) label(ctx, "≠", 960, 190, 72, a * fin(t, 611.8, 0.4) * (1 - fin(t, 617.0, 0.4)), DISPLAY, "255,150,120");
+    ctx.beginPath(); ctx.moveTo(A.x, A.y); ctx.quadraticCurveTo(960, 80, B.x, B.y); ctx.stroke(); ctx.restore();
+    if (t > 611.6) label(ctx, "≠", 960, 170, 72, a * fin(t, 611.8, 0.4) * (1 - fin(t, 617.0, 0.4)), DISPLAY, "255,150,120");
   }
 };
 
@@ -95,8 +102,7 @@ const drawChariot = (ctx: CanvasRenderingContext2D, t: number) => {
 const drawSelf = (ctx: CanvasRenderingContext2D, t: number) => {
   const a = fin(t, 640.6, 0.7) * (1 - fin(t, 650.8, 0.5));
   if (a <= 0) return;
-  const p = { x: 960, y: 700 - 175, s: 1.0, alpha: a * (1 - 0.75 * fin(t, 645.5, 1.5)) };
-  person(ctx, p);
+
   const parts: [string, number, number, number][] = [["记忆", 641.0, -330, -260], ["细胞", 642.6, 330, -120], ["性格", 644.0, -300, 60]];
   parts.forEach(([s, at, dx, dy]) => {
     const on = fin(t, at, 0.4), off = fin(t, at + 1.6, 1.8);
@@ -105,16 +111,6 @@ const drawSelf = (ctx: CanvasRenderingContext2D, t: number) => {
   label(ctx, "这就是我？", 960, 200, 84, a * fin(t, 648.8, 0.5), DISPLAY, "255,225,190");
 };
 
-// ---------- 场 25：线断了 ----------
-const drawBroken = (ctx: CanvasRenderingContext2D, t: number) => {
-  const a = fin(t, 650.9, 0.4) * (1 - fin(t, 653.8, 0.4));
-  if (a <= 0) return;
-  drawClueMap(ctx, t, { vis: (id) => (ALL7.includes(id) ? a : 0), bright: () => 0.6, label: (id) => (id === "parfit" ? 1 : 0) });
-  const p = clueById("parfit"), q = clueById("found2");
-  const off = fin(t, 651.6, 0.8);
-  ctx.save(); ctx.setLineDash([12, 10]); ctx.strokeStyle = `rgba(255,205,140,${0.6 * a * (1 - off)})`; ctx.lineWidth = 2.2;
-  ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(q.x, q.y); ctx.stroke(); ctx.restore();
-};
 
 // ---------- 场 26：同一段经历，两种讲法 ----------
 const drawStory = (ctx: CanvasRenderingContext2D, t: number) => {
@@ -158,41 +154,41 @@ const drawStory = (ctx: CanvasRenderingContext2D, t: number) => {
     ctx.beginPath(); ctx.moveTo(1270, 600); ctx.quadraticCurveTo(1410, 520, lerp(1270, 1550, k), lerp(600, 600, k)); ctx.stroke();
   }
 };
-const drawFound2 = (ctx: CanvasRenderingContext2D, t: number) => {
-  const a = fin(t, 690.4, 0.6);
-  if (a <= 0) return;
-  const stop = fin(t, 699.4, 2.5);
-  drawClueMap(ctx, t, {
-    vis: (id) => (ALL7.includes(id) ? a : id === "found2" ? clueOn("found2", t) : 0),
-    bright: (id) => (id === "found2" ? 1.25 * (1 - 0.7 * stop) : id === "found1" ? 0.8 : 0.35),
-    label: (id) => (id === "found2" || id === "found1" ? 1 : 0),
-  });
-  // 笔尖的光：在发现二旁边写字，「连书写都做不到」时停住、熄灭
-  const f = clueById("found2");
-  const tt = Math.min(t, 699.4);
-  const x = f.x + 60 + ((tt * 70) % 120), y = f.y - 10 + Math.sin(tt * 8) * 14;
-  glow(ctx, x, y, 22, 0.9 * a * fin(t, 691.0, 0.5) * (1 - stop));
-};
 
 export const Seg06: React.FC = () => {
   const ready = useFonts([`"Source Han Serif CN for Display"`, `"Noto Serif SC"`, `"Noto Sans SC"`, `"hongleixingshu"`],
-    "小男孩军官老将军偷果子，挨了一顿打夺下敌人的旗记得当年＝≠车轴轮厢在哪里？记忆细胞性格变这就是我同一段经历「我被打败了」从那走出来讲的人皮亚杰活十几年今天怎么明天发现二：你书写过去既又不托马斯·里德1710–1796苏格兰哲学家常识：＝能复制录");
+    "06第二个发现：讲故事的人线索清单→？★发现一：记忆，更像是一份记录二：你是正在书写过去的人如果一个连都做不到了呢小男孩军官老将军偷果子，挨了一顿打夺下敌人的旗记得当年＝≠车轴轮厢在哪里？记忆细胞性格变这就是我同一段经历「我被打败了」从那走出来讲的人皮亚杰活十几年今天怎么明天发现二：你书写过去既又不托马斯·里德1710–1796苏格兰哲学家常识：＝能复制录");
   const t = useT(T06);
   const draw = useCallback((ctx: CanvasRenderingContext2D, tt: number) => {
-    drawOpen(ctx, tt); drawReid(ctx, tt); drawChariot(ctx, tt); drawSelf(ctx, tt); drawBroken(ctx, tt); drawStory(ctx, tt); drawFound2(ctx, tt);
+    drawReid(ctx, tt); drawChariot(ctx, tt); drawSelf(ctx, tt); drawStory(ctx, tt);
   }, []);
   return (
     <AbsoluteFill style={{ background: "#08080b" }}>
-      <Atmos t={t} />
-      <Still src="ep01/raw/reid.jpg" from={T06} a={580.5} b={584.4} zoom={[1.0, 1.06]} height={900} x={300} fade={0.4} />
+      {/* 打底：书库（里德）→ 三个小窗（男孩/士兵/老人）→ 古代遗迹（那先的车）→ 细胞 → 碎镜子里的人 → 写字的手 → 侦探的案头 */}
+      <Bed from={T06} clips={[
+        { src: "ep01/clips/b_oldlib.mp4", a: T06, b: 584.4, dim: 0.32, blur: 2 },
+        { src: "ep01/clips/b_books.mp4", a: 584.0, b: 621.2, dim: 0.26, blur: 4 },
+        { src: "ep01/clips/b_ruins.mp4", a: 620.8, b: 640.9, dim: 0.3, blur: 2 },
+        { src: "ep01/clips/b_cells.mp4", a: 640.5, b: 645.8, dim: 0.55 },
+        { src: "ep01/clips/b_brokenmirror.mp4", a: 645.4, b: 654.3, dim: 0.62 },
+        { src: "ep01/clips/writing.mp4", a: 654.0, b: 690.8, rate: 0.22, dim: 0.85 },
+        { src: DESK, a: 690.4, b: E06, dim: 0.32, blur: 4 },
+      ]} />
+      <Veil t={t} a={660.4} b={690.6} k={0.62} />
+      <Still src="ep01/raw/reid.jpg" from={T06} a={580.5} b={584.4} zoom={[1.0, 1.06]} height={860} x={300} fade={0.4} bg="transparent" />
+      <ReidPanels t={t} />
       <NameBar name="托马斯·里德" years="1710–1796  苏格兰哲学家" t={t} a={580.8} b={584.2} />
-      <Clip src="ep01/clips/writing.mp4" from={T06} a={654.0} b={660.6} zoom={[1.0, 1.06]} fi={0.4} fo={0.4} />
       {ready ? <Canvas t={t} draw={draw} /> : null}
       <KeyText text="既是他，又不是他" t={t} a={617.4} b={620.8} size={100} font={DISPLAY} y={-330} />
       <KeyText text="一个人是谁，取决于他怎么讲自己的故事" t={t} a={660.8} b={667.0} size={64} font={DISPLAY} y={-330} />
-      <KeyText text="你是正在书写过去的人" t={t} a={694.0} b={699.0} size={96} font={DISPLAY} y={-330} />
+      <ClueList t={t} a={690.4} b={E06 + 0.6} items={[
+        { text: CL.find1, at: 690.6, kind: "find" },
+        { text: CL.find2, at: 691.2, kind: "find" },
+        { text: "如果一个人，连书写都做不到了呢？", at: 699.2, kind: "ask" },
+      ]} top={250} />
+      <Chapter t={t} no="06" title="第二个发现：讲故事的人" at={575.9} end={E06 + 1} />
       <Film t={t} />
-      <Subtitles t={t} hide={(x) => (x > 617.4 && x < 620.8) || (x > 694.0 && x < 699.0)} />
+      <Subtitles t={t} hide={(x) => x > 617.4 && x < 620.8} />
     </AbsoluteFill>
   );
 };

@@ -6,7 +6,7 @@ import { AbsoluteFill } from "remotion";
 import { useCallback } from "react";
 import { Canvas, Clip, Film, KeyText, Still, Subtitles, sec, smooth, useFonts, useT, DISPLAY, SERIF, SANS, GOLD } from "./common";
 import { crown, memoryOrb, label, chip } from "./figures";
-import { Bed, Chapter, ClueList, Veil } from "./kit";
+import { Bed, Chapter, ClueList, Veil, DESK, CL } from "./kit";
 
 export const T01 = 73.4, E01 = 137.9;
 export const SEG01_FRAMES = sec(E01 - T01);
@@ -113,7 +113,7 @@ export const Seg01: React.FC = () => {
         { src: "ep01/clips/b_wake.mp4", a: 84.9, b: 105.5, rate: 0.62, dim: 0.62 },
         { src: "ep01/clips/b_oldlib.mp4", a: 105.0, b: 120.4, dim: 0.42 },
         { src: "ep01/clips/b_mirror.mp4", a: 120.0, b: 130.6, dim: 0.5 },
-        { src: "ep01/clips/album.mp4", a: 130.1, b: 137.9, dim: 0.4, blur: 3 },
+        { src: DESK, a: 130.1, b: 137.9, dim: 0.32, blur: 4 },
       ]} />
       <Split t={t} />
       <Veil t={t} a={97.0} b={105.3} k={0.5} />
@@ -134,7 +134,7 @@ export const Seg01: React.FC = () => {
       <KeyText text="我之所以是我，" t={t} a={123.4} b={128.3} size={76} font={SERIF} y={-70} />
       <KeyText text="是因为我记得我的一生" t={t} a={125.0} b={128.3} size={76} font={SERIF} y={40} />
       <KeyText text="我，就是我的记忆" t={t} a={128.4} b={130.6} size={124} font={DISPLAY} />
-      <ClueList t={t} a={130.3} b={E01 + 0.6} items={[{ text: "常识：我，就是我的记忆", at: 130.6, crackAt: 135.3 }]} top={300} />
+      <ClueList t={t} a={130.3} b={E01 + 0.6} items={[{ text: CL.common, at: 130.6, crackAt: 135.3 }]} top={300} />
       <Chapter t={t} no="01" title="先立一个常识" at={73.6} end={E01 + 1} />
       <Film t={t} />
       <Subtitles t={t} hide={(x) => (x > 97.0 && x < 100.6) || (x > 123.4 && x < 130.1)} />

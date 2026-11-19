@@ -1,8 +1,8 @@
 // 第 01 期 · S83–S88 三条线索 → 三魂 → 薪火（录音 759.6–820.2 秒）
 import { AbsoluteFill, Audio, staticFile } from "remotion";
 import { useCallback } from "react";
-import { Atmos, Canvas, Clip, Film, Subtitles, clamp, glow, rand, sec, smooth, useFonts, useT, KAI, SERIF, GOLD } from "./common";
-import { drawClueMap, clueById } from "./clue";
+import { Canvas, Clip, Film, Subtitles, glow, rand, sec, smooth, useFonts, useT, KAI, SERIF, GOLD } from "./common";
+import { Bed, Chapter } from "./kit";
 
 export const S0 = 759.6;
 export const S_END = 820.2;
@@ -11,7 +11,6 @@ export const SOULS_FRAMES = sec(S_END - S0);
 // 三颗光：天在上，人在中，地在下
 const COL = 960;
 const ROW = { tian: 250, ren: 500, di: 750 };
-const KEYMAP: Record<string, keyof typeof ROW> = { found1: "di", found2: "ren", found3: "tian" };
 
 // 每颗光的亮度曲线
 const env = (t: number, pts: [number, number][]) => {
@@ -93,25 +92,12 @@ const drawLabel = (ctx: CanvasRenderingContext2D, text: string, x: number, y: nu
 };
 
 const drawSouls = (ctx: CanvasRenderingContext2D, t: number) => {
-  // 1 线索图全景 → 三个发现亮起，其余退去
-  const gather = smooth((t - 762.9) / 1.4);
-  if (gather < 1) {
-    const sc = 0.92 - 0.06 * clamp((t - S0) / 3.3);
-    drawClueMap(ctx, t, {
-      vis: (id) => (clueById(id).key ? 1 - gather : (1 - gather) * (1 - 0.6 * smooth((t - 761.27) / 0.8))),
-      bright: (id) => (clueById(id).key ? 1 + 0.4 * smooth((t - 761.27) / 0.6) : 1),
-      label: (id) => (clueById(id).key ? 1 : 0),
-      scale: sc,
-    });
-  }
-  // 2 三个发现移到中间，排成一列
+  // 三个发现在银河里排成一列：地在下，人在中，天在上（标题卡退去后亮起）
+  const gather = smooth((t - 762.4) / 1.0);
   const push = 1 + 0.05 * smooth((t - 800.4) / 8);
   ctx.save(); ctx.translate(960, 500); ctx.scale(push, push); ctx.translate(-960, -500);
-  (["found1", "found2", "found3"] as const).forEach((id) => {
-    const n = clueById(id), row = KEYMAP[id];
-    const sc = 0.89;
-    const fx = 960 + (n.x - 960) * sc, fy = 540 + (n.y - 540) * sc;
-    const x = fx + (COL - fx) * gather, y = fy + (ROW[row] - fy) * gather;
+  (["di", "ren", "tian"] as const).forEach((row) => {
+    const x = COL, y = ROW[row] + 30 * (1 - gather);
     if (gather <= 0) return;
     const lv = level(t, row) * smooth(gather * 1.5) * (1 - smooth((t - 808.2) / 0.8));
     const fl = row === "di" ? flare(t, 791.64) : row === "ren" ? flare(t, 795.26) : flare(t, 799.06);
@@ -158,18 +144,20 @@ const Zhuangzi: React.FC<{ t: number }> = ({ t }) => {
 };
 
 export const Souls: React.FC = () => {
-  const ready = useFonts([`"XuandongKaishu"`, `"Noto Serif SC"`, `"Noto Sans SC"`], "记录书写看着的地魂人魂天魂指穷于为薪火传也不知其尽《庄子·养生主》发现一：记忆是一份记录二你在书写三看着的那一个");
+  const ready = useFonts([`"Source Han Serif CN for Display"`, `"XuandongKaishu"`, `"Noto Serif SC"`, `"Noto Sans SC"`], "08回到开头的那句话记录书写看着的地魂人魂天魂指穷于为薪火传也不知其尽《庄子·养生主》发现一：记忆是一份记录二你在书写三看着的那一个");
   const t = useT(S0);
   const draw = useCallback((ctx: CanvasRenderingContext2D, tt: number) => drawSouls(ctx, tt), []);
   return (
     <AbsoluteFill style={{ background: "#050507" }}>
-      <Atmos t={t} />
+      {/* 打底：银河（三颗光像三颗星）→ 燃烧的柴（庄子）→ 烛火 */}
+      <Bed from={S0} clips={[{ src: "ep01/clips/b_milky.mp4", a: S0, b: 809.0, dim: 0.78, sat: 0.9, zoom: [1.0, 1.1] }]} />
       {ready && t < 809.05 ? <Canvas t={t} draw={draw} /> : null}
       {/* 场 31 薪火：燃烧的木柴压暗，庄子原文浮在上面；「柴会烧完」时字淡去、火变亮；「火，传下去了」叠化成烛火 */}
       <Clip src="ep01/clips/fire.mp4" from={S0} a={808.3} b={817.5} start={0} zoom={[1.0, 1.08]} fi={0.9} fo={0.7}
         style={{ filter: `brightness(${0.38 + 0.62 * smooth((t - 814.6) / 0.9)})` }} />
       <Zhuangzi t={t} />
       <Clip src="ep01/clips/candle.mp4" from={S0} a={816.8} b={S_END} start={0} zoom={[1.0, 1.05]} fi={0.7} fo={0.8} />
+      <Chapter t={t} no="08" title="回到开头的那句话" at={759.8} end={S_END + 1} />
       <Film t={t} />
       <Subtitles t={t} hide={(x) => (x > 808.5 && x < 814.85) || x > 819.3} />
     </AbsoluteFill>

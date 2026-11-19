@@ -2,8 +2,8 @@
 // 场 20 AI 里的亲人、场 21 传送机、场 22 不可能就是你
 import { AbsoluteFill } from "remotion";
 import { useCallback } from "react";
-import { Atmos, Canvas, Clip, Film, NameBar, Still, Subtitles, clamp, glow, rand, sec, smooth, useFonts, useT, DISPLAY, SERIF, SANS } from "./common";
-import { drawClueMap, clueById, clueOn } from "./clue";
+import { Bed, Chapter, ClueList, CL, DESK } from "./kit";
+import { Canvas, Clip, Film, NameBar, Still, Subtitles, clamp, glow, rand, sec, smooth, useFonts, useT, DISPLAY, SERIF, SANS } from "./common";
 import { person, headPos, memoryOrb, label, chip } from "./figures";
 
 export const T05 = 496.5, E05 = 575.8;
@@ -12,15 +12,6 @@ const fin = (t: number, a: number, d = 0.5) => smooth((t - a) / d);
 const lerp = (a: number, b: number, k: number) => a + (b - a) * k;
 const GOLD_RGB = "255,200,130", BLUE_RGB = "140,185,255";
 
-// 开头：接上一段，发现一的光分出一份影子
-const drawCarry = (ctx: CanvasRenderingContext2D, t: number) => {
-  const a = 1 - fin(t, 498.2, 0.6);
-  if (a <= 0) return;
-  const f = clueById("found1");
-  const P = (x: number, y: number) => ({ x: 960 + (x - 760) * 1.12, y: 540 + (y - 700) * 1.12 });
-  const p = P(f.x, f.y);
-  glow(ctx, p.x, p.y, 64, 0.9 * a); glow(ctx, p.x + 360, p.y - 60, 60, 0.45 * a, "160,200,255");
-};
 
 // ---------- 场 20：聊天气泡聚成一个空心的人形 ----------
 const BUBBLES = ["在吗？", "吃饭了没有", "早点睡，别熬夜", "降温了，记得加衣服", "到家了吗", "妈妈想你了", "周末回来吗", "路上慢点"];
@@ -107,11 +98,9 @@ const drawTeleport = (ctx: CanvasRenderingContext2D, t: number) => {
 const drawSwapBack = (ctx: CanvasRenderingContext2D, t: number) => {
   const a = fin(t, 554.5, 0.6) * (1 - fin(t, 562.8, 0.5));
   if (a <= 0) return;
-  const you = { x: 600, y: 640, s: 1.2, upper: Math.PI * 1.5, legs: 0, alpha: a };
-  const fr = { x: 1280, y: 640, s: 1.2, upper: Math.PI, legs: 0, alpha: a };
-  person(ctx, you); person(ctx, fr);
-  memoryOrb(ctx, headPos(you, 80).x, headPos(you, 80).y, 50, a, BLUE_RGB, t);
-  memoryOrb(ctx, headPos(fr, 80).x, headPos(fr, 80).y, 50, a, GOLD_RGB, t + 1);
+  // 回到第 01 段那两个熟睡的人：头顶的光已经互换（你的是蓝色，她的是金色）
+  memoryOrb(ctx, 672, 250, 52, a, BLUE_RGB, t);
+  memoryOrb(ctx, 1344, 330, 52, a, GOLD_RGB, t + 1);
   label(ctx, "？", 960, 330, 200, a * fin(t, 559.0, 0.6), DISPLAY, "255,225,190");
 };
 const drawList = (ctx: CanvasRenderingContext2D, t: number) => {
@@ -125,39 +114,52 @@ const drawList = (ctx: CanvasRenderingContext2D, t: number) => {
   });
   label(ctx, "不可能就是你", 960, 690, 110, a * fin(t, 567.6, 0.5), DISPLAY, "255,225,190");
 };
-const drawNext = (ctx: CanvasRenderingContext2D, t: number) => {
-  const a = fin(t, 570.0, 0.6);
-  if (a <= 0) return;
-  drawClueMap(ctx, t, {
-    vis: (id) => (["common", "piaget", "loftus", "mall", "challenger", "rat", "found1"].includes(id) ? a : id === "parfit" ? a * clueOn("parfit", t) : 0),
-    bright: (id) => (id === "found1" || id === "parfit" ? 1 : 0.45),
-    label: (id) => (id === "found1" || id === "parfit" ? 1 : 0),
-  });
-  // 一根光线伸向下一个空位
-  const p = clueById("parfit"), q = clueById("found2");
-  const k = fin(t, 573.4, 1.2);
-  if (k > 0) {
-    ctx.strokeStyle = `rgba(255,205,140,${0.5 * a})`; ctx.lineWidth = 2.2; ctx.setLineDash([12, 10]);
-    ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(lerp(p.x, q.x, k), lerp(p.y, q.y, k)); ctx.stroke(); ctx.setLineDash([]);
-    ctx.strokeStyle = `rgba(255,205,140,${0.6 * k})`; ctx.beginPath(); ctx.arc(q.x, q.y, 34, 0, Math.PI * 2); ctx.stroke();
-    label(ctx, "？", q.x, q.y, 52, k, DISPLAY, "255,225,190");
-  }
+
+// 左右两半各放一段素材（地球｜火星，熟睡的你｜好朋友）
+const Halves: React.FC<{ t: number; a: number; b: number; left: string; right: string; dim: number }> = ({ t, a, b, left, right, dim }) => {
+  const o = fin(t, a, 0.5) * (1 - fin(t, b - 0.5, 0.5));
+  if (o <= 0) return null;
+  const half = (isLeft: boolean, src: string) => (
+    <div style={{ position: "absolute", top: 0, bottom: 0, left: isLeft ? 0 : 966, width: 954, overflow: "hidden" }}>
+      <Clip src={src} from={T05} a={a} b={b} zoom={[1.02, 1.08]} style={{ filter: `brightness(${dim}) saturate(0.85)` }} />
+    </div>
+  );
+  return (
+    <AbsoluteFill style={{ opacity: o }}>
+      {half(true, left)}{half(false, right)}
+      <div style={{ position: "absolute", left: 957, width: 6, top: 0, bottom: 0, background: "#0b0a09" }} />
+    </AbsoluteFill>
+  );
 };
 
 export const Seg05: React.FC = () => {
   const ready = useFonts([`"Source Han Serif CN for Display"`, `"Noto Serif SC"`, `"Noto Sans SC"`],
-    "在吗？吃饭了没有早点睡，别熬夜降温了记得加衣服到家妈想你周末回来路上慢它不是他地球火星只坐一趟车机器故障哪个才你会被写进去自己改变还能复制✓可能就德里克·帕菲特1942–2017英国哲学家发现：记忆份记录能的常识");
+    "05测试二：把记录复制线索清单→？★0123456789发现一：记忆，更像是一份记录AI、传送机：录能被复制，出来的却不是你那谁在用这在吗？吃饭了没有早点睡，别熬夜降温了记得加衣服到家妈想你周末回来路上慢它不是他地球火星只坐一趟车机器故障哪个才你会被写进去自己改变还能复制✓可能就德里克·帕菲特1942–2017英国哲学家发现：记忆份记录能的常识");
   const t = useT(T05);
   const draw = useCallback((ctx: CanvasRenderingContext2D, tt: number) => {
-    drawCarry(ctx, tt); drawChat(ctx, tt); drawTeleport(ctx, tt); drawSwapBack(ctx, tt); drawList(ctx, tt); drawNext(ctx, tt);
+    drawChat(ctx, tt); drawTeleport(ctx, tt); drawSwapBack(ctx, tt); drawList(ctx, tt);
   }, []);
   return (
     <AbsoluteFill style={{ background: "#08080b" }}>
-      <Atmos t={t} />
-      <Clip src="ep01/clips/phone.mp4" from={T05} a={498.6} b={506.2} zoom={[1.0, 1.07]} fi={0.5} fo={0.4} />
-      <Still src="ep01/raw/parfit.jpg" from={T05} a={516.9} b={521.3} zoom={[1.0, 1.06]} height={900} x={300} fade={0.4} />
+      {/* 打底：手机 → 深夜床上看手机（聊天气泡）→ 书库（帕菲特）→ 地球｜火星分屏（传送机）→ 熟睡的两个人 → 侦探的案头 */}
+      <Bed from={T05} clips={[
+        { src: DESK, a: 496.5, b: 499.0, dim: 0.32, blur: 4 },
+        { src: "ep01/clips/phone.mp4", a: 498.6, b: 506.2, dim: 0.85, sat: 1 },
+        { src: "ep01/clips/b_phonebed.mp4", a: 505.8, b: 517.2, dim: 0.35, blur: 2 },
+        { src: "ep01/clips/b_oldlib.mp4", a: 516.8, b: 521.5, dim: 0.35 },
+      ]} />
+      <Halves t={t} a={520.9} b={554.6} left="ep01/clips/b_earth.mp4" right="ep01/clips/b_mars.mp4" dim={0.5} />
+      <Halves t={t} a={554.3} b={563.2} left="ep01/clips/b_sleep_a.mp4" right="ep01/clips/b_sleep_b.mp4" dim={0.62} />
+      <Bed from={T05} clips={[{ src: DESK, a: 562.9, b: E05, dim: 0.3, blur: 4 }]} />
+      <Still src="ep01/raw/parfit.jpg" from={T05} a={516.9} b={521.3} zoom={[1.0, 1.06]} height={860} x={300} fade={0.4} bg="transparent" />
       <NameBar name="德里克·帕菲特" years="1942–2017  英国哲学家" t={t} a={517.2} b={521.0} />
       {ready ? <Canvas t={t} draw={draw} /> : null}
+      <ClueList t={t} a={569.9} b={E05 + 0.6} items={[
+        { text: CL.find1, at: 570.0, kind: "find" },
+        { text: CL.copy, at: 570.6 },
+        { text: "那，是谁在用这份记录？", at: 573.4, kind: "ask" },
+      ]} top={250} />
+      <Chapter t={t} no="05" title="测试二：把记录复制" at={496.6} end={E05 + 1} />
       <Film t={t} />
       <Subtitles t={t} hide={(x) => (x > 552.1 && x < 554.4) || (x > 563.1 && x < 570.0)} />
     </AbsoluteFill>

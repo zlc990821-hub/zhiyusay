@@ -2,8 +2,8 @@
 // 场 16 亨利·莫莱森（一张讲解板）、场 17 克莱夫的音乐、场 18 外婆的糖、场 19 第一个发现
 import { AbsoluteFill } from "remotion";
 import { useCallback } from "react";
-import { Atmos, Canvas, Clip, Corner, Film, KeyText, NameBar, Subtitles, clamp, glow, rand, sec, smooth, useFonts, useT, DISPLAY, HAND, SERIF, SANS } from "./common";
-import { drawClueMap, clueById, clueOn } from "./clue";
+import { Bed, Chapter, ClueList, CL, DESK } from "./kit";
+import { Canvas, Clip, Corner, Film, KeyText, NameBar, Subtitles, clamp, glow, rand, sec, smooth, useFonts, useT, DISPLAY, HAND, SERIF, SANS } from "./common";
 import { chip, label } from "./figures";
 
 export const T04 = 397.5, E04 = 496.5;
@@ -93,42 +93,20 @@ const drawStars = (ctx: CanvasRenderingContext2D, t: number) => {
   });
 };
 
-// ---------- 场 19：三个光点聚成第一个发现 ----------
-const drawFound1 = (ctx: CanvasRenderingContext2D, t: number) => {
-  const a = fin(t, 475.4, 0.6);
-  if (a <= 0) return;
-  const f1 = clueById("found1");
-  const opt = { scale: 1.12, cx: 760, cy: 700 };
-  drawClueMap(ctx, t, {
-    vis: (id) => (["common", "piaget", "loftus", "mall", "challenger", "rat"].includes(id) ? a : id === "found1" ? clueOn("found1", t) : 0),
-    bright: (id) => (id === "found1" ? 1.2 : 0.2),
-    label: (id) => (id === "found1" ? 1 : 0),
-    ...opt,
-  });
-  // 屏幕坐标
-  const P = (x: number, y: number) => ({ x: 960 + (x - opt.cx) * opt.scale, y: 540 + (y - opt.cy) * opt.scale });
-  const fp = P(f1.x, f1.y);
-  const merge = fin(t, 480.6, 1.0);
-  const three: [string, number, number, number][] = [["亨利", 475.8, -260, -160], ["克莱夫", 476.6, 0, -230], ["外婆", 477.4, 260, -160]];
-  three.forEach(([name, at, dx, dy]) => {
-    const on = fin(t, at, 0.5) * (1 - merge * 0.999);
-    const x = fp.x + dx * (1 - merge), y = fp.y + dy * (1 - merge);
-    glow(ctx, x, y, 40, 0.85 * on);
-    label(ctx, name, x, y - 52, 52, on * (1 - merge), SERIF);
-  });
-  // 「能不能被复制？」：分出一份淡淡的影子，飘向右边
-  const cp = fin(t, 492.6, 1.6);
-  if (cp > 0) glow(ctx, fp.x + cp * 360, fp.y - cp * 60, 60, 0.45 * cp, "160,200,255");
-};
-
 export const Seg04: React.FC = () => {
   const ready = useFonts([`"Source Han Serif CN for Display"`, `"Noto Serif SC"`, `"Noto Sans SC"`, `"hongleixingshu"`],
-    "海马体1953年以后新认识的人刚吃完饭看着镜子里图形，描一颗星星第123天「我从来没做过这个」亨利克莱夫外婆发现：记忆是一份记录他手得不·莫莱森（H.M.）1926–2008美国患者韦尔林1938–英国音乐家资料BBC Four一人和可以分开");
+    "04测试一：把记忆拿掉线索清单→？★0123456789亨利、克莱夫、外婆：没了，人还在发现一：记忆更像是一份记录这那它能不被走复制海马体1953年以后新认识的人刚吃完饭看着镜子里图形，描一颗星星第123天「我从来没做过这个」亨利克莱夫外婆发现：记忆是一份记录他手得不·莫莱森（H.M.）1926–2008美国患者韦尔林1938–英国音乐家资料BBC Four一人和可以分开");
   const t = useT(T04);
-  const draw = useCallback((ctx: CanvasRenderingContext2D, tt: number) => { drawBrain(ctx, tt); drawForget(ctx, tt); drawStars(ctx, tt); drawFound1(ctx, tt); }, []);
+  const draw = useCallback((ctx: CanvasRenderingContext2D, tt: number) => { drawBrain(ctx, tt); drawForget(ctx, tt); drawStars(ctx, tt); }, []);
   return (
     <AbsoluteFill style={{ background: "#08080b" }}>
-      <Atmos t={t} />
+      {/* 打底：屏幕上的脑部扫描（H.M. 的大脑线稿叠在上面）→ 写字的手（描星星）→ 侦探的案头（线索清单） */}
+      <Bed from={T04} clips={[
+        { src: "ep01/clips/b_brainscreen.mp4", a: 397.5, b: 412.2, dim: 0.3, blur: 2 },
+        { src: "ep01/clips/b_brainscan.mp4", a: 411.8, b: 423.2, dim: 0.3, blur: 2 },
+        { src: "ep01/clips/writing.mp4", a: 422.8, b: 442.3, rate: 0.42, dim: 0.28, blur: 3 },
+        { src: DESK, a: 475.4, b: E04, dim: 0.32, blur: 4 },
+      ]} />
       {/* 场 17、18 的真实影像 */}
       <Clip src="ep01/clips/clive_piano.mp4" from={T04} a={442.0} b={446.6} zoom={[1.0, 1.04]} fi={0.4} />
       <Clip src="ep01/clips/piano_back.mp4" from={T04} a={446.6} b={452.8} zoom={[1.0, 1.06]} />
@@ -138,11 +116,17 @@ export const Seg04: React.FC = () => {
       <NameBar name="克莱夫·韦尔林" years="1938–  英国音乐家" t={t} a={442.4} b={449.0} />
       <Corner text="资料：BBC Four" t={t} a={442.2} b={446.5} />
       {ready ? <Canvas t={t} draw={draw} /> : null}
-      <NameBar name="亨利·莫莱森（H.M.）" years="1926–2008  美国" t={t} a={399.8} b={407.0} />
+      <NameBar name="亨利·莫莱森（H.M.）" years="1926–2008  美国" t={t} a={400.8} b={407.4} />
       <KeyText text="他的手记得，他不记得" t={t} a={438.7} b={442.0} size={110} font={DISPLAY} />
-      <KeyText text="一个人，和他的记录，可以分开" t={t} a={486.4} b={489.6} size={80} font={DISPLAY} y={-330} />
+      <ClueList t={t} a={475.5} b={E04 + 0.6} items={[
+        { text: CL.three, at: 476.6 },
+        { text: CL.find1, at: 481.0, kind: "find" },
+        { text: "一个人，和他的这份记录，是可以分开的", at: 486.5, kind: "sum" },
+        { text: "那它能不能被拿走？能不能，被复制？", at: 492.6, kind: "ask" },
+      ]} top={210} />
+      <Chapter t={t} no="04" title="测试一：把记忆拿掉" at={397.6} end={E04 + 1} />
       <Film t={t} />
-      <Subtitles t={t} hide={(x) => (x > 438.7 && x < 441.9) || (x > 486.4 && x < 489.4)} />
+      <Subtitles t={t} hide={(x) => x > 438.7 && x < 441.9} />
     </AbsoluteFill>
   );
 };

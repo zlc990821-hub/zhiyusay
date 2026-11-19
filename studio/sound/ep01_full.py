@@ -38,6 +38,24 @@ def keyline(v):
     ev(thump(1.4, 50, 34, 0.6), v, 0.16, wet=0.3)
 
 
+def chapter(v):
+    """段首标题卡：一阵轻风 + 一声低沉的钟，像翻开新的一页卷宗。"""
+    ev("whoosh_air", v - 0.15, 0.06, wet=0.35); ev(bell(196, 2.6, decay=1.3), v + 0.15, 0.045, wet=0.65)
+
+
+def row(v, pan=0.0):
+    """清单新增一行：一声干净的轻响。"""
+    ev("pop_dry", v, 0.09, pan=pan, wet=0.2)
+
+
+def ask_row(v):
+    """清单最后的问题行：一声上扬的轻音。"""
+    ev(soft_tone(392, 1.6, attack=0.05, release=1.3), v, 0.035, wet=0.6); ev("sparkle_touch", v, 0.05, wet=0.5)
+
+
+for v in (73.6, 138.0, 271.0, 397.6, 496.6, 575.9, 703.2, 759.8, 819.5): chapter(v)
+
+
 def load(path):
     w = wave.open(path); x = np.frombuffer(w.readframes(w.getnframes()), np.int16).astype(np.float64) / 32768
     return x.reshape(-1, w.getnchannels()) if w.getnchannels() == 2 else np.stack([x, x], 1)
@@ -76,7 +94,7 @@ ev("sparkle_touch", 111.1, 0.06, pan=0.2, wet=0.5); ev("whoosh_air", 114.4, 0.07
 ev("bell_chime", 117.4, 0.08, pan=0.5, wet=0.5)
 ev(soft_tone(220, 3.0, attack=1.0, release=1.5), 120.3, 0.04, wet=0.7)                     # 「默认了一件事」那团光
 ev("pop_dry", 123.4, 0.07, wet=0.3); ev("pop_dry", 125.0, 0.07, wet=0.3)                  # 两行字浮现
-keyline(128.4); new_clue(130.1)
+keyline(128.4); ev("whoosh_air", 130.4, 0.05, wet=0.3); new_clue(130.6)
 ev("glass_break", 135.3, 0.06, pan=-0.4, wet=0.4); ev(tinkles(0.8, n=8, seed=31), 135.4, 0.03, wet=0.5)
 
 # ---------- 02 皮亚杰 ----------
@@ -87,7 +105,7 @@ ev("shutter_vintage", 169.6, 0.12, wet=0.2)                 # 定格
 ev("paper_slide", 175.6, 0.14, pan=0.5, wet=0.2)             # 信滑进来
 chain("pen_write", 176.2, 182.4, 0.06)
 ev("paper_slice", 184.3, 0.25, wet=0.2); ev("whoosh_air", 184.4, 0.06, wet=0.3)   # 撕开
-ev("whoosh_air", 186.6, 0.05, wet=0.3); new_clue(189.4)
+ev("whoosh_air", 186.6, 0.05, wet=0.3)
 
 # ---------- 02 商场 ----------
 proj2 = lib("projector", start=4.0, seconds=259.3 - 240.2); proj2[:9600] *= np.linspace(0, 1, 9600)[:, None]
@@ -95,8 +113,9 @@ tr.add(proj2, V(240.2), gain=0.03, wet=0.1)
 ev("pop_whoosh", 246.4, 0.14, pan=-0.5, wet=0.15); ev("reveal_ding", 249.9, 0.10, pan=-0.4, wet=0.3)
 ev("pencil_write", 253.2, 0.07, wet=0.3, seconds=1.0); ev("pencil_write", 255.4, 0.07, wet=0.3, seconds=1.2)
 ev(shimmer(1.6, 1320, seed=5), 253.3, 0.02, wet=0.8)
-ev("whoosh_air", 259.0, 0.06, wet=0.3); new_clue(259.3); keyline(259.4)
-ev("whoosh_tunnel", 264.6, 0.05, wet=0.3)
+ev("whoosh_air", 259.1, 0.06, wet=0.3); ev("glass_break", 259.6, 0.04, pan=-0.3, wet=0.4)
+for k, v in enumerate((260.2, 260.8, 261.4)): row(v, pan=-0.2 + k * 0.2)
+keyline(262.3); ask_row(265.2)
 
 # ---------- 03 挑战者号、巴特莱特、老鼠、日志 ----------
 rumble = thump(5.5, 45, 30, 4.0) * 0.6 + whoosh(5.5, 80, 300, q=0.8) * 0.4
@@ -117,7 +136,9 @@ ev(shimmer(2.0, 1500, seed=9), 357.4, 0.03, wet=0.7); ev("whoosh_air", 357.4, 0.
 ev("page_big", 364.4, 0.13, wet=0.15)
 for v in (368.0, 370.0): ev("page_turn", v, 0.13, wet=0.15); ev("scribble", v + 0.4, 0.08, wet=0.2)
 ev("whoosh_air", 372.5, 0.05, wet=0.3); keyline(379.6)
-ev("whoosh_air", 384.2, 0.06, wet=0.3); new_clue(384.4); ev("sparkle_touch", 385.2, 0.07, pan=0.4, wet=0.5)
+ev("whoosh_air", 384.1, 0.06, wet=0.3)
+for k, v in enumerate((385.0, 385.6, 386.2)): row(v, pan=-0.2 + k * 0.2)
+keyline(387.2); ask_row(393.8)
 for k in range(6): ev(soft_tone(330 * 0.9 ** k, 0.9, attack=0.02, release=0.8), 394.0 + k * 0.38, 0.04, pan=-0.5 + k * 0.2, wet=0.5)
 
 # ---------- 04 H.M.、克莱夫、外婆、发现一 ----------
@@ -129,7 +150,7 @@ chain("pencil_write", 426.4, 429.8, 0.06); chain("pencil_write", 430.8, 432.6, 0
 for k in range(3): ev("pop_dry", 434.5 + k * 0.25, 0.10, pan=-0.5 + k * 0.5)
 keyline(438.7); types(442.4, 8)
 ev("whoosh_air", 475.4, 0.05, wet=0.3)
-for k, v in enumerate((475.8, 476.6, 477.4)): ev("sparkle_touch", v, 0.06, pan=-0.4 + k * 0.4, wet=0.5)
+row(476.6)
 ev("sparkle_sweep", 480.6, 0.08, wet=0.4); new_clue(481.0); keyline(486.4)
 ev("whoosh_air", 492.6, 0.06, pan=0.4, wet=0.3); ev(shimmer(1.6, 1320, seed=13), 492.8, 0.025, wet=0.8)
 
@@ -148,10 +169,9 @@ for k in range(4): ev(beep, 543.7 + k * 0.62, 0.05, pan=-0.5, wet=0.2)          
 ev("sparkle_touch", 547.8, 0.06, pan=-0.5, wet=0.5); keyline(549.5)
 ev("whoosh_air", 554.5, 0.06, wet=0.3); ev("pop_long", 559.0, 0.09, wet=0.2)
 for v in (563.2, 564.8, 566.0): ev("pop_dry", v, 0.11); ev("clock_tick", v + 0.35, 0.09)
-keyline(567.6); ev("whoosh_air", 570.0, 0.05, wet=0.3); ev("sparkle_touch", 573.6, 0.06, pan=0.3, wet=0.5)
+keyline(567.6); ev("whoosh_air", 569.8, 0.05, wet=0.3); row(570.0); row(570.6, 0.2); ask_row(573.4)
 
 # ---------- 06 里德、那先、讲故事的人 ----------
-ev(tinkles(0.8, n=8, seed=41), 575.9, 0.03, wet=0.5)
 ev("shutter_vintage", 580.5, 0.15, pan=0.4, wet=0.15); types(580.8, 8)
 for v, p in ((584.0, -0.5), (588.0, 0.0), (598.6, 0.5)): ev("pop_whoosh", v, 0.13, pan=p)
 for v, p in ((585.0, -0.5), (590.0, 0.0), (599.0, 0.5)): ev("pop_dry", v, 0.10, pan=p)
@@ -171,11 +191,11 @@ keyline(660.8); ev("sparkle_touch", 667.4, 0.06, wet=0.5)
 ev("pencil_write", 669.3, 0.07, pan=-0.4, wet=0.3, seconds=1.2); ev("pencil_write", 672.1, 0.07, pan=0.3, wet=0.3, seconds=1.5)
 ev("sparkle_touch", 675.0, 0.06, wet=0.5); ev("shutter_vintage", 678.2, 0.12, pan=-0.6, wet=0.2)
 ev("whoosh_air", 680.6, 0.05, wet=0.3); ev("sparkle_touch", 683.8, 0.06, pan=0.4, wet=0.5); ev("whoosh_air", 688.0, 0.05, pan=0.5, wet=0.3)
-ev("whoosh_air", 690.4, 0.05, wet=0.3); new_clue(690.6); keyline(694.0)
-ev(soft_tone(330, 2.4, attack=0.02, release=2.2) * np.linspace(1, 0.1, int(2.4 * SR)), 699.4, 0.05, wet=0.5)
+ev("whoosh_air", 690.3, 0.05, wet=0.3); row(690.6); new_clue(691.2)
+ask_row(699.2)
 
 # ---------- 07 日记重现、此刻 ----------
-ev("page_big", 703.2, 0.13, wet=0.15)
+ev("page_big", 705.8, 0.13, wet=0.15)
 chain("pen_write", 708.6, 710.4, 0.12); ev("marker_line", 713.4, 0.18)
 chain("pen_write", 714.6, 716.4, 0.12); ev("marker_line", 716.4, 0.15)
 for k in range(18):
@@ -185,15 +205,16 @@ ev(soft_tone(220, 2.8, attack=0.4, release=2.0) * np.linspace(1, 0.2, int(2.8 * 
 ev(pad([220, 277.2, 329.6], 10.0, cutoff=1800) * np.sin(np.linspace(0, np.pi, int(10 * SR))), 727.4, 0.04, wet=0.5)
 ev(tinkles(9.5, n=120, seed=51, fmin=2500, fmax=7000), 737.0, 0.025, wet=0.7)
 ev("pop_dry", 740.4, 0.09); ev("whoosh_tunnel", 746.6, 0.06, wet=0.3); ev("sparkle_touch", 749.0, 0.07, wet=0.5)
-new_clue(751.1); ev("whoosh_air", 756.8, 0.05, wet=0.3); keyline(757.4)
+ev("whoosh_air", 750.5, 0.05, wet=0.3); row(750.8); row(751.0, 0.2); new_clue(752.4); keyline(757.5)
 
 # ---------- 09 最后一条线索 ----------
 ev(bowl(196, 7.0), 824.2, 0.08, wet=0.6); ev("bell_chime", 824.0, 0.05, wet=0.5)
 ev("paper_slide", 831.2, 0.10, wet=0.2); ev(shimmer(4.0, 990, seed=61)[::-1], 832.6, 0.02, wet=0.8)
 for k, f in enumerate((196, 294, 440)): ev(bell(f, 3.0, decay=1.5), 838.0 + k * 0.7, 0.05, wet=0.7)
 ev("whoosh_tunnel", 841.6, 0.05, wet=0.4)
-for k in range(5): ev(soft_tone(294 * 0.9 ** k, 1.0, attack=0.02, release=0.9), 849.0 + k * 0.5, 0.035, pan=-0.4 + k * 0.2, wet=0.6)
-ev("sparkle_touch", 851.9, 0.06, wet=0.5); keyline(867.6)
+ev("whoosh_air", 847.5, 0.05, wet=0.3)
+for k, v in enumerate((848.0, 848.3, 848.6)): row(v, pan=-0.2 + k * 0.2)
+ask_row(852.0); ev(shimmer(2.0, 1320, seed=71), 855.4, 0.025, wet=0.8); keyline(867.6)
 ev(riser(3.0, 160, 420), 872.8, 0.04, wet=0.4)
 
 tr.write(f"{out}/sfx_full.wav", fade_out=0.5)

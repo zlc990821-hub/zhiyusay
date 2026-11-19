@@ -2,8 +2,8 @@
 // 场 12 挑战者号、场 13 巴特莱特的故事、场 14 老鼠与蛋白质、场 15 日志
 import { AbsoluteFill } from "remotion";
 import { useCallback } from "react";
-import { Atmos, Canvas, Clip, Corner, Film, KeyText, NameBar, Subtitles, clamp, glow, rand, sec, smooth, useFonts, useT, DISPLAY, HAND, SERIF, SANS, GOLD } from "./common";
-import { drawClueMap, clueOn } from "./clue";
+import { Bed, Chapter, ClueList, CL, DESK } from "./kit";
+import { Canvas, Clip, Corner, Film, KeyText, NameBar, Subtitles, clamp, glow, rand, sec, smooth, useFonts, useT, DISPLAY, HAND, SERIF, SANS, GOLD } from "./common";
 import { chip } from "./figures";
 
 export const T03 = 270.9, E03 = 397.5;
@@ -131,18 +131,6 @@ const drawBook = (ctx: CanvasRenderingContext2D, t: number) => {
   ctx.restore();
 };
 
-// ---------- 场 15 末：线索图，「整个拿掉」时光点一个个熄灭 ----------
-const ORDER = ["common", "piaget", "loftus", "mall", "challenger", "rat"];
-const drawMap = (ctx: CanvasRenderingContext2D, t: number) => {
-  const a = fin(t, 384.2, 0.6);
-  if (a <= 0) return;
-  drawClueMap(ctx, t, {
-    vis: (id) => (ORDER.slice(0, 4).includes(id) ? a : id === "challenger" || id === "rat" ? clueOn(id, t) : 0),
-    bright: (id) => { const k = ORDER.indexOf(id); return k < 0 ? 1 : 1 - 0.85 * fin(t, 394.0 + k * 0.38, 0.4); },
-    scale: 0.92, cy: 520,
-  });
-};
-
 const drawQ = (ctx: CanvasRenderingContext2D, t: number) => {
   const a = fin(t, 331.0, 0.5) * (1 - fin(t, 334.8, 0.4));
   if (a <= 0) return;
@@ -153,13 +141,20 @@ const drawQ = (ctx: CanvasRenderingContext2D, t: number) => {
 
 export const Seg03: React.FC = () => {
   const ready = useFonts([`"Source Han Serif CN for Display"`, `"Noto Serif SC"`, `"Noto Sans SC"`, `"hongleixingshu"`],
-    "弗雷德里克·巴特莱特1886–1969英国心理学家我在宗教课上，有几个人走进来说起这件事。下课后回到宿舍看电视新闻才知道细节第一次听说是和室友一起插播了一条快讯们都惊呆非常确定1986年1月29日事发第二天1988两半以后原文复述再一一天夜里两个年轻人到河边去猎海豹忽然听见战斗的呼喊五只独木舟朝他划来打仗吧一半说幽灵群船叫后才知道那些兄弟钓鱼遇受伤回家死阻止蛋白质合成药想起来刻松动存那年夏秋天外婆妈带湖第翻开奈瑟示意据巴特莱特NASA？最珍贵的记忆也可能被改写得最多常识＝皮亚杰假童年词撒下地碎玻璃商场走丢过挑战者号成了另样子时记忆会");
+    "03第二道裂缝：自己也在变线索清单→？★0123456789如果把整个拿掉，人还在吗记成了另一样子很确定每复述次就改想起重写弗雷德里克·巴特莱特1886–1969英国心理学家我在宗教课上，有几个人走进来说起这件事。下课后回到宿舍看电视新闻才知道细节第一次听说是和室友一起插播了一条快讯们都惊呆非常确定1986年1月29日事发第二天1988两半以后原文复述再一一天夜里两个年轻人到河边去猎海豹忽然听见战斗的呼喊五只独木舟朝他划来打仗吧一半说幽灵群船叫后才知道那些兄弟钓鱼遇受伤回家死阻止蛋白质合成药想起来刻松动存那年夏秋天外婆妈带湖第翻开奈瑟示意据巴特莱特NASA？最珍贵的记忆也可能被改写得最多常识＝皮亚杰假童年词撒下地碎玻璃商场走丢过挑战者号成了另样子时记忆会");
   const t = useT(T03);
-  const draw = useCallback((ctx: CanvasRenderingContext2D, tt: number) => { drawQ(ctx, tt); drawRat(ctx, tt); drawBook(ctx, tt); drawMap(ctx, tt); }, []);
+  const draw = useCallback((ctx: CanvasRenderingContext2D, tt: number) => { drawQ(ctx, tt); drawRat(ctx, tt); drawBook(ctx, tt); }, []);
   const ratDim = 1 - 0.5 * fin(t, 353.7, 1.0);
   return (
     <AbsoluteFill style={{ background: "#0b0a09" }}>
-      <Atmos t={t} />
+      {/* 打底：写字的学生（奈瑟的卡片）→ 摊开的书（巴特莱特）→ 雾（为什么会变）→ 读书的人（日志）→ 侦探的案头（线索清单） */}
+      <Bed from={T03} clips={[
+        { src: "ep01/clips/b_student.mp4", a: 277.2, b: 308.0, rate: 0.5, dim: 0.3, blur: 3 },
+        { src: "ep01/clips/b_books.mp4", a: 307.6, b: 331.3, rate: 0.75, dim: 0.32, blur: 3 },
+        { src: "ep01/clips/b_mist.mp4", a: 330.9, b: 335.4, dim: 0.5 },
+        { src: "ep01/clips/b_reader.mp4", a: 364.0, b: 373.0, dim: 0.35, blur: 3 },
+        { src: DESK, a: 384.0, b: E03, dim: 0.32, blur: 4 },
+      ]} />
       {/* 场 12 */}
       <Clip src="ep01/clips/challenger.mp4" from={T03} a={270.9} b={276.4} zoom={[1.0, 1.05]} fi={0.3} />
       <Corner text="NASA，1986" t={t} a={271.1} b={276.3} />
@@ -180,6 +175,15 @@ export const Seg03: React.FC = () => {
       <Clip src="ep01/clips/album.mp4" from={T03} a={372.6} b={384.4} zoom={[1.0, 1.08]} fi={0.5} fo={0.5} />
       {ready ? <Canvas t={t} draw={draw} /> : null}
       <KeyText text="最珍贵的记忆，也可能被改写得最多" t={t} a={379.6} b={384.2} size={76} font={DISPLAY} y={290} />
+      <ClueList t={t} a={384.2} b={E03 + 0.6} items={[
+        { text: CL.common, at: 384.5, crackAt: 384.5, dimAt: 394.0 },
+        { text: CL.challenger, at: 385.0, dimAt: 394.4 },
+        { text: CL.bartlett, at: 385.6, dimAt: 394.8 },
+        { text: CL.rat, at: 386.2, dimAt: 395.2 },
+        { text: CL.sumSelf, at: 387.2, kind: "sum", dimAt: 395.6 },
+        { text: "如果把记忆整个拿掉，人，还在吗？", at: 393.8, kind: "ask" },
+      ]} />
+      <Chapter t={t} no="03" title="第二道裂缝：记忆自己也在变" at={271.0} end={E03 + 1} />
       <Film t={t} />
       <Subtitles t={t} hide={(x) => x > 379.6 && x < 384.2} />
     </AbsoluteFill>
