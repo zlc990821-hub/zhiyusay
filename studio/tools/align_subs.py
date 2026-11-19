@@ -95,7 +95,8 @@ def wrap(d):
     cand = [m.end() for m in re.finditer(r"[，、；：」]", d) if 2 < m.end() < len(d) - 1 and d[m.end()] not in "，、；：。」！？"]
     if cand:
         k = min(cand, key=lambda x: abs(x - mid))
-        if abs(k - mid) <= len(d) * 0.3: return d[:k] + "\n" + d[k:]
+        # 标点离中间不远，且第一行不少于三成，才在标点处换行（避免「1974 年，」独占一行；第二行短没关系）
+        if abs(k - mid) <= len(d) * 0.3 and k >= len(d) * 0.3: return d[:k] + "\n" + d[k:]
     banned = set()
     for w in PROTECT + re.findall(r"[0-9A-Za-z.]+", d):
         j = d.find(w)

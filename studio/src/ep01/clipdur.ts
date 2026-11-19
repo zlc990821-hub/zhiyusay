@@ -28,6 +28,7 @@ export const CLIPDUR: Record<string, number> = {
   "ep01/clips/b_oldlib.mp4": 15.00,
   "ep01/clips/b_oldman.mp4": 16.50,
   "ep01/clips/b_phonebed.mp4": 13.00,
+  "ep01/clips/b_projector.mp4": 21.53,
   "ep01/clips/b_reader.mp4": 10.43,
   "ep01/clips/b_ruins.mp4": 19.60,
   "ep01/clips/b_sleep_a.mp4": 10.00,

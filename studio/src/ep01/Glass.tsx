@@ -20,18 +20,18 @@ const CARD_B = { x: 980, y: 420, w: 880, h: 140 };
 // 镜头：在板上推拉，把视线引到正在讲的地方
 type Cam = { t: number; s: number; x: number; y: number };
 const CAM: Cam[] = [
-  { t: 200.55, s: 1.25, x: 960, y: 210 },
-  { t: 202.2, s: 1.25, x: 960, y: 210 },
+  { t: 200.55, s: 1.2, x: 960, y: 230 },
+  { t: 202.2, s: 1.2, x: 960, y: 230 },
   { t: 203.2, s: 1.0, x: 960, y: 540 },
   { t: 204.0, s: 1.0, x: 960, y: 540 },
-  { t: 205.5, s: 1.08, x: 760, y: 520 },
-  { t: 209.3, s: 1.08, x: 760, y: 520 },
-  { t: 210.6, s: 1.08, x: 1160, y: 520 },
-  { t: 214.9, s: 1.08, x: 1160, y: 520 },
+  { t: 205.5, s: 1.04, x: 900, y: 520 },
+  { t: 209.3, s: 1.04, x: 900, y: 520 },
+  { t: 210.6, s: 1.04, x: 1000, y: 520 },
+  { t: 214.9, s: 1.04, x: 1000, y: 520 },
   { t: 215.9, s: 1.0, x: 960, y: 540 },
   { t: 218.8, s: 1.0, x: 960, y: 540 },
-  { t: 219.8, s: 1.12, x: 960, y: 300 },
-  { t: 223.8, s: 1.12, x: 960, y: 300 },
+  { t: 219.8, s: 1.04, x: 960, y: 420 },
+  { t: 223.8, s: 1.04, x: 960, y: 420 },
   { t: 224.6, s: 1.0, x: 960, y: 540 },
   { t: 228.4, s: 1.0, x: 960, y: 540 },
   { t: 229.8, s: 2.9, x: 960, y: 210 },
@@ -158,7 +158,7 @@ const Board: React.FC<{ t: number; ready: boolean }> = ({ t, ready }) => {
             </div>
           ) : null}
         </div>
-        <div style={{ position: "absolute", left: SCR.x + SCR.w + 28, top: SCR.y + 8, fontFamily: SANS, fontSize: 46, lineHeight: 1.5, color: "rgba(240,225,200,0.5)", whiteSpace: "nowrap" }}>
+        <div style={{ position: "absolute", left: SCR.x + SCR.w + 28, top: SCR.y + 8, fontFamily: SANS, fontSize: 36, lineHeight: 1.5, color: "rgba(240,225,200,0.5)", whiteSpace: "nowrap" }}>
           Loftus &amp; Palmer, 1974<br />录像：1963 年交通安全片
         </div>
         <div style={{ opacity: 1 - smooth((t - 228.25) / 0.5) }}>
@@ -252,7 +252,7 @@ export const Glass: React.FC = () => {
     <AbsoluteFill style={{ background: "#0b0a09" }}>
       {/* 打底：给人看录像的观众（虚化压暗）→「撞毁」碎掉时：慢动作碎裂的玻璃瓶 →「一地玻璃碴」：扫碎玻璃 */}
       <Bed from={G0} clips={[
-        { src: "ep01/clips/b_audience.mp4", a: G0, b: 231.3, rate: 0.42, dim: 0.3, blur: 3 },
+        { src: "ep01/clips/b_projector.mp4", a: G0, b: 231.3, dim: 0.42 },
         { src: "ep01/clips/b_bottle.mp4", a: 231.0, b: 234.6, start: 0.5, dim: 0.45 },
         { src: "ep01/clips/b_sweep.mp4", a: 234.2, b: G_END, dim: 0.55 },
       ]} />
