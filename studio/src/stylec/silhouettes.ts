@@ -47,6 +47,30 @@ export const SIL: Record<string, string> = {
     <path d="M 360 300 L 390 325" fill="none" stroke-width="12"/>
     <rect x="236" y="370" width="36" height="140" rx="16"/><rect x="290" y="364" width="36" height="146" rx="16"/>`),
   egg: g(`<circle cx="300" cy="300" r="190"/>`),
+  eyeSide: g(`
+    <circle cx="300" cy="300" r="170"/>
+    <ellipse cx="135" cy="300" rx="40" ry="95"/>
+    <path d="M 450 300 C 500 300 540 320 590 330 L 590 370 C 540 360 500 340 455 335 Z"/>`),
+  eyeLids: g(`<path d="M 40 300 Q 300 90 560 300 Q 300 510 40 300 Z" fill="none" stroke-width="16"/>`),
+  eyeIris: g(`<circle cx="300" cy="300" r="105"/>`),
+  brain: g(`
+    <path d="M 120 330 C 90 240 150 150 250 130 C 320 90 430 100 490 160 C 550 190 570 270 540 330 C 528 372 480 392 440 384 C 410 420 350 424 326 396 L 306 440 C 298 462 274 462 270 440 L 276 394 C 220 404 150 390 120 330 Z"/>`),
+  camera: g(`
+    <rect x="90" y="190" width="420" height="260" rx="40"/>
+    <rect x="160" y="150" width="120" height="60" rx="16"/>
+    <circle cx="300" cy="320" r="115"/>
+    <rect x="420" y="215" width="50" height="34" rx="8"/>`),
+  dress: g(`
+    <path d="M 245 70 L 262 70 L 270 130 L 330 130 L 338 70 L 355 70 L 360 150 C 380 200 372 240 352 262 L 470 560 L 130 560 L 248 262 C 228 240 220 200 240 150 Z"/>`),
+  flower: g(`
+    ${Array.from({ length: 7 }, (_, i) => {
+      const a = (i / 7) * 360;
+      return `<ellipse cx="300" cy="175" rx="58" ry="110" transform="rotate(${a} 300 270)"/>`;
+    }).join("")}
+    <circle cx="300" cy="270" r="62"/>
+    <path d="M 300 330 C 296 420 306 500 300 590" fill="none" stroke-width="16"/>
+    <path d="M 302 470 C 350 430 410 430 440 450 C 400 480 350 490 302 480 Z"/>`),
+
 };
 
 /** Where each silhouette sits on screen (pixel centre + box size). */
