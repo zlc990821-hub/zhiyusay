@@ -5,3 +5,4 @@ __pycache__/
 episodes/*/audio/bgm_src.*
 episodes/*/audio/bgm.wav
 deliver/
+episodes/*/assets/NONFREE_*
