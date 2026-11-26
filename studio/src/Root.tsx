@@ -7,6 +7,7 @@ import { Cover01 } from "./ep01/Cover";
 import { EP01StyleB, STYLEB_DURATION } from "./styleb/EP01StyleB";
 import { EP01StyleC, STYLEC_DURATION } from "./stylec/EP01StyleC";
 import { CoverC, CoverC2 } from "./stylec/CoverC";
+import { ImgTest } from "./stylec/ImgTest";
 import { EP02, EP02_DURATION } from "./stylec/EP02";
 import tl01 from "../../episodes/EP01_存在/timeline.json";
 import timeline from "../../episodes/EP00_人类/timeline.json";
@@ -34,5 +35,6 @@ export const Root: React.FC = () => (
     <Composition id="EP02-Cover-4x3" component={CoverC2} durationInFrames={1} fps={30} width={1440} height={1080} />
     <Composition id="EP02-Cover-3x4" component={CoverC2} durationInFrames={1} fps={30} width={1080} height={1440} />
     <Composition id="EP02-Cover-9x16" component={CoverC2} durationInFrames={1} fps={30} width={1080} height={1920} />
+    <Composition id="ImgTest" component={ImgTest} durationInFrames={150} fps={30} width={1920} height={1080} />
   </>
 );

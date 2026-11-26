@@ -82,3 +82,33 @@ export const landMask = async () => {
     return a[(y * w + x) * 4 + 3] > 128;
   };
 };
+
+// ───────── real images → particles (positions + colours from pixels) ─────────
+export type ImgSample = { pos: Float32Array; col: Float32Array; aspect: number };
+/** Load an image (served URL), sample N pixels into a placed box (box keeps the image aspect, width = p.size). */
+export const sampleImage = async (url: string, N: number, p: Place, seed: number): Promise<ImgSample> => {
+  const img = await new Promise<HTMLImageElement>((res, rej) => {
+    const im = new Image();
+    im.crossOrigin = "anonymous";
+    im.onload = () => res(im);
+    im.onerror = rej;
+    im.src = url;
+  });
+  const aspect = img.naturalHeight / img.naturalWidth;
+  const w = 320, h = Math.max(1, Math.round(w * aspect));
+  const c = document.createElement("canvas");
+  c.width = w; c.height = h;
+  const ctx = c.getContext("2d")!;
+  ctx.drawImage(img, 0, 0, w, h);
+  const d = ctx.getImageData(0, 0, w, h).data;
+  const r = rng(seed);
+  const pos = new Float32Array(N * 2), col = new Float32Array(N * 3);
+  const bw = p.size, bh = p.size * aspect;
+  for (let i = 0; i < N; i++) {
+    const x = Math.floor(r() * w), y = Math.floor(r() * h), k = (y * w + x) * 4;
+    pos[i * 2] = p.cx - bw / 2 + ((x + r()) / w) * bw;
+    pos[i * 2 + 1] = p.cy - bh / 2 + ((y + r()) / h) * bh;
+    col[i * 3] = d[k] / 255; col[i * 3 + 1] = d[k + 1] / 255; col[i * 3 + 2] = d[k + 2] / 255;
+  }
+  return { pos, col, aspect };
+};

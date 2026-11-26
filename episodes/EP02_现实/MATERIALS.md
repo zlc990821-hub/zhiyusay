@@ -23,7 +23,11 @@
 | 9 | 3:09 蜜蜂眼里的花 | 猴面花：可见光 vs 紫外光对比照（紫外下出现蜜导） | [Mimulus_nectar_guide_UV_VIS.jpg](https://commons.wikimedia.org/wiki/File:Mimulus_nectar_guide_UV_VIS.jpg) | CC BY-SA 3.0（可选） | Plantsurfer | 待下载 |
 | 10 | 3:27 康德 | 康德肖像（贝克尔，1768） | [Immanuel_Kant_-_Gemaelde_1.jpg](https://commons.wikimedia.org/wiki/File:Immanuel_Kant_-_Gemaelde_1.jpg) | 公有领域 | Johann Gottlieb Becker | 待下载 |
 
-**下载受阻说明**：维基共享资源对本容器的批量下载返回了限速（HTTP 429）。第 7 项已下载，其余待限速解除后重试，或由用户在浏览器里点开链接另存后上传给我。
+**下载受阻说明**：维基共享资源对本容器 IP 返回限速（HTTP 429，缩略图地址也被限）。第 7 项已下载；已设 2 小时后自动重试（低频、合规请求，不伪装浏览器），或由用户在浏览器里另存后发来。
+
+**已定（用户授权由我决定，2026-11-26）**：展示形式采用 A+B 结合——需要观众亲自验证的实验图（盲点、棋盘、裙子）全屏（B），其余原图用“粒子显影”（A）。裙子照片照用原图并署名摄影者，风险写入发布文案。
+
+**组件已就绪**：`studio/src/stylec/sampler.ts` 的 `sampleImage`（按原图像素取位置和颜色）+ `ImageCard.tsx`（显影 + 金框 + 署名），已用棋盘原图测试通过（合成 `ImgTest`）。
 
 ## 二、展示形式（待用户选定）
 
