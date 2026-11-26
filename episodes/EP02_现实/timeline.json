@@ -234,23 +234,23 @@
  "cards": [
   {
    "id": "bs",
-   "src": "assets/blindspot_test_cross.png",
+   "src": "assets/blindspot_test.png",
    "cx": 1360,
    "cy": 540,
    "w": 1700,
-   "aspect": 0.1726,
+   "aspect": 0.1729,
    "develop": 0.8,
    "out": 17.0,
    "mode": "B",
    "fallback": "dust",
-   "credit": "盲点测试图 · Dominique222 · CC BY-SA 4.0"
+   "credit": "盲点测试图（用户提供，水平翻转）"
   },
   {
    "id": "eye",
    "src": "assets/eye_diagram.svg",
    "cx": 1360,
    "cy": 520,
-   "w": 600,
+   "w": 520,
    "aspect": 1.0168,
    "develop": 18.6,
    "out": 23.4,
@@ -262,9 +262,9 @@
    "id": "repin",
    "src": "assets/repin_unexpected.jpg",
    "cx": 1360,
-   "cy": 500,
-   "w": 760,
-   "aspect": 0.9599,
+   "cy": 570,
+   "w": 600,
+   "aspect": 0.9602,
    "develop": 66.6,
    "out": 72.8,
    "mode": "A",
@@ -275,9 +275,9 @@
    "id": "yarbus",
    "src": "assets/yarbus_visitor.jpg",
    "cx": 1360,
-   "cy": 500,
-   "w": 760,
-   "aspect": 0.854,
+   "cy": 570,
+   "w": 600,
+   "aspect": 0.8545,
    "develop": 72.4,
    "out": 82.4,
    "mode": "A",
@@ -286,7 +286,7 @@
   },
   {
    "id": "spec",
-   "src": "assets/spectrum.svg",
+   "src": "assets/spectrum.png",
    "cx": 1360,
    "cy": 600,
    "w": 1300,
@@ -295,20 +295,22 @@
    "out": 100.2,
    "mode": "A",
    "fallback": "spectrum",
-   "credit": "可见光谱 · Gringer · 公有领域"
+   "credit": "可见光谱 · Gringer · 公有领域",
+   "bg": "#ffffff"
   },
   {
    "id": "cie",
-   "src": "assets/cie1931.svg",
+   "src": "assets/cie1931.png",
    "cx": 1360,
    "cy": 500,
    "w": 560,
-   "aspect": 1.0626,
+   "aspect": 1.0633,
    "develop": 100.8,
    "out": 112.8,
    "mode": "A",
    "fallback": "merge",
-   "credit": "CIE 1931 色度图 · BenRG · 公有领域"
+   "credit": "CIE 1931 色度图 · BenRG · 公有领域",
+   "bg": "#ffffff"
   },
   {
    "id": "dress",
@@ -355,7 +357,7 @@
    "cx": 760,
    "cy": 470,
    "w": 340,
-   "aspect": 0.9372,
+   "aspect": 0.9375,
    "develop": 162.4,
    "out": 171.0,
    "mode": "A",
@@ -368,12 +370,16 @@
    "cx": 1360,
    "cy": 520,
    "w": 1100,
-   "aspect": 0.6029,
+   "aspect": 0.603,
    "develop": 188.0,
    "out": 201.6,
    "mode": "A",
    "fallback": "flower",
-   "credit": "猴面花：可见光 / 紫外光 · Plantsurfer · CC BY-SA 3.0"
+   "credit": "猴面花：可见光 / 紫外光 · Plantsurfer · CC BY-SA 3.0",
+   "hideRight": {
+    "from": 0.5,
+    "until": 190.6
+   }
   },
   {
    "id": "kant",
@@ -381,12 +387,46 @@
    "cx": 2260,
    "cy": 520,
    "w": 420,
-   "aspect": 1.3053,
+   "aspect": 1.306,
    "develop": 207.9,
    "out": 222.6,
    "mode": "A",
    "fallback": "",
    "credit": "康德像 · 贝克尔 1768 · 公有领域"
+  },
+  {
+   "id": "mimVis",
+   "src": "assets/mimulus_uv_vis.jpg",
+   "cx": 1360,
+   "cy": 520,
+   "w": 540,
+   "aspect": 1.206,
+   "crop": [
+    0,
+    0.5
+   ],
+   "develop": 201.8,
+   "out": 222.6,
+   "mode": "A",
+   "fallback": "",
+   "credit": "人眼看到的"
+  },
+  {
+   "id": "mimUV",
+   "src": "assets/mimulus_uv_vis.jpg",
+   "cx": 460,
+   "cy": 520,
+   "w": 540,
+   "aspect": 1.206,
+   "crop": [
+    0.5,
+    1
+   ],
+   "develop": 202.2,
+   "out": 222.6,
+   "mode": "A",
+   "fallback": "",
+   "credit": "蜜蜂看到的（紫外）"
   }
  ],
  "cam_note": "v2 镜头：0–17 秒也以 C 为中心"

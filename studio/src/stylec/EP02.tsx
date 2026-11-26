@@ -49,7 +49,7 @@ const camTf = (c: Cam) => `translate(${W / 2},${H / 2}) scale(${c.z}) translate(
 const KEYS = tl.particles as Key[];
 
 // ───────── original images (MATERIALS.md) ─────────
-type Card = { id: string; src: string; cx: number; cy: number; w: number; aspect: number; develop: number; out: number; mode: string; fallback: string; credit: string };
+type Card = { id: string; src: string; cx: number; cy: number; w: number; aspect: number; develop: number; out: number; mode: string; fallback: string; credit: string; bg?: string; crop?: [number, number]; hideRight?: { from: number; until: number } };
 const CARDS = (tl as unknown as { cards: Card[] }).cards;
 /** ids of cards whose image actually loaded (missing files fall back to the older particle states) */
 const LOADED = new Set<string>();
@@ -344,9 +344,9 @@ const World: React.FC<{ t: number }> = ({ t }) => {
       {mirror > 0 && <rect x={C.x - 460} y={150} width={920} height={700} rx={340} fill="none" stroke="#9fc4ff" strokeOpacity={0.45 * mirror} strokeWidth={3} />}
       {specO > 0 && (
         <g opacity={specO}>
-          <text x={SPEC.x0} y={SPEC.y + 90} fontFamily={FONT_SANS} fontSize={28} fill="rgba(244,241,234,0.7)">短 · 约 400 纳米</text>
-          <text x={SPEC.x1} y={SPEC.y + 90} textAnchor="end" fontFamily={FONT_SANS} fontSize={28} fill="rgba(244,241,234,0.7)">长 · 约 700 纳米</text>
-          <line x1={SPEC.x0} y1={SPEC.y + 56} x2={SPEC.x1} y2={SPEC.y + 56} stroke="rgba(244,241,234,0.35)" strokeWidth={2} />
+          {!has("spec") && <text x={SPEC.x0} y={SPEC.y + 90} fontFamily={FONT_SANS} fontSize={28} fill="rgba(244,241,234,0.7)">短 · 约 400 纳米</text>}
+          {!has("spec") && <text x={SPEC.x1} y={SPEC.y + 90} textAnchor="end" fontFamily={FONT_SANS} fontSize={28} fill="rgba(244,241,234,0.7)">长 · 约 700 纳米</text>}
+          {!has("spec") && <line x1={SPEC.x0} y1={SPEC.y + 56} x2={SPEC.x1} y2={SPEC.y + 56} stroke="rgba(244,241,234,0.35)" strokeWidth={2} />}
           {swatch > 0 && (
             <g opacity={swatch}>
               <rect x={swX - 55} y={300} width={110} height={110} rx={10} fill="#ff2fd6" style={{ filter: "drop-shadow(0 0 18px #ff2fd6)" }} />
@@ -392,7 +392,7 @@ const World: React.FC<{ t: number }> = ({ t }) => {
           <rect x={C.x - 330} y={170} width={660} height={700} pathLength={1} strokeDasharray={`${draw} 1`} />
           <rect x={C.x - 330 - 900} y={170} width={660} height={700} strokeOpacity={0.5} pathLength={1} strokeDasharray={`${draw} 1`} />
           <rect x={C.x - 330 + 900} y={170} width={660} height={700} strokeOpacity={0.5} pathLength={1} strokeDasharray={`${draw} 1`} />
-          <g opacity={draw * 0.6} transform={`translate(${C.x - 900},500)`}>
+          <g opacity={has("mim") ? 0 : draw * 0.6} transform={`translate(${C.x - 900},500)`}>
             {Array.from({ length: 7 }, (_, i) => <ellipse key={i} cy={-95} rx={46} ry={88} transform={`rotate(${(i / 7) * 360})`} stroke="#b48cff" strokeWidth={3} />)}
             {Array.from({ length: 7 }, (_, i) => <line key={`g${i}`} x1={0} y1={0} x2={0} y2={-150} transform={`rotate(${(i / 7) * 360})`} stroke="#fff" strokeWidth={2} />)}
           </g>
@@ -405,7 +405,7 @@ const World: React.FC<{ t: number }> = ({ t }) => {
       <Outline id="hy" k="human" p={P.human} t={t} a={235.0} b={240.0} />
       {/* original images */}
       {CARDS.filter((c) => has(c.id)).map((c) => (
-        <ImageCard key={c.id} t={t} src={cardSrc(c)} p={{ cx: c.cx, cy: c.cy, w: c.w, aspect: c.aspect }} develop={c.develop} out={c.out} credit={c.credit} />
+        <ImageCard key={c.id} t={t} src={cardSrc(c)} p={{ cx: c.cx, cy: c.cy, w: c.w, aspect: c.aspect }} develop={c.develop} out={c.out} credit={c.credit} bg={c.bg} crop={c.crop} hideRight={c.hideRight} />
       ))}
       {has("chk") && !has("proof") && (() => {
         // proof on the original: dim everything except the A→B column, then bridge A and B with same-grey bars (rgb 111, sampled from the image)
