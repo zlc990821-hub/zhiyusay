@@ -8,7 +8,8 @@ import { COLORS, FONT_SANS, FONT_SERIF, loadFonts } from "../components/theme";
 import { Subtitles, Sub } from "../components/Subtitles";
 import { LayerTags } from "../components/LayerTag";
 import { Cam, Key, N, paint, solid, Stage, StateDef, useStates } from "./Stage";
-import { loadSilhouettes, Mask, sample } from "./sampler";
+import { loadSilhouettes, Mask, sample, sampleImage } from "./sampler";
+import { ImageCard } from "./ImageCard";
 import { Place, SIL } from "./silhouettes";
 import subs from "../../../episodes/EP02_现实/subtitles.json";
 import tl from "../../../episodes/EP02_现实/timeline.json";
@@ -29,12 +30,12 @@ const P = {
   flower: { cx: C.x, cy: 500, size: 560 },
   flowerS: { cx: C.x - 230, cy: 520, size: 470 }, human: { cx: C.x + 260, cy: 520, size: 520 },
 } satisfies Record<string, Place>;
-const DOT = { x: 1360, y: 540 }, CROSS = { x: 560, y: 540 };
+const DOT = { x: 1760, y: 540 }, CROSS = { x: 960, y: 540 };
 const BOARD = { x: C.x - 300, y: 200, s: 120, n: 5 };
 const SPEC = { x0: C.x - 640, x1: C.x + 640, y: 600 };
 
 const CAMK: [number, number, number, number][] = [
-  [0, 960, 540, 1], [15.4, 960, 540, 1], [19.6, C.x, C.y, 1.15], [23.0, C.x, C.y, 1.15], [24.4, C.x, C.y, 1.0],
+  [0, C.x, 540, 1], [15.4, C.x, 540, 1], [19.6, C.x, C.y, 1.15], [23.0, C.x, C.y, 1.15], [24.4, C.x, C.y, 1.0],
   [36.0, C.x, 520, 1.0], [42.0, C.x, 540, 1.0], [195.0, C.x, 540, 1.0], [201.5, C.x, 540, 1.0], [206.0, C.x, 540, 0.55],
   [221.0, C.x, 540, 0.55], [224.5, C.x, 540, 1.0],
 ];
@@ -46,6 +47,16 @@ const camAt = (t: number): Cam => ({
 const camTf = (c: Cam) => `translate(${W / 2},${H / 2}) scale(${c.z}) translate(${-c.x},${-c.y})`;
 
 const KEYS = tl.particles as Key[];
+
+// ───────── original images (MATERIALS.md) ─────────
+type Card = { id: string; src: string; cx: number; cy: number; w: number; aspect: number; develop: number; out: number; mode: string; fallback: string; credit: string };
+const CARDS = (tl as unknown as { cards: Card[] }).cards;
+/** ids of cards whose image actually loaded (missing files fall back to the older particle states) */
+const LOADED = new Set<string>();
+const has = (id: string) => LOADED.has(id);
+const cardSrc = (c: Card) => `EP02_现实/${c.src}`;
+/** how much of the frame is currently covered by a developed photo (particles dim underneath) */
+const cover = (t: number) => Math.max(0, ...CARDS.filter((c) => has(c.id) && c.fallback).map((c) => easeOut(clamp((t - c.develop) / 0.9)) * clamp((c.out - t) / 0.6)));
 
 // saccade: iris offset in px (slow left/right while "looking in the mirror", then 3 jumps per second)
 const irisOff = (t: number): [number, number] => {
@@ -156,6 +167,15 @@ const buildStates = async (): Promise<Record<string, StateDef>> => {
   // half flower, half you
   S.halfYou = { pos: mix2(sample(m.flower, N, P.flowerS, 13), sample(m.human, N, P.human, 14), 0.5), col: paint((i) => (i % 100 < 50 ? (i % 3 ? [1, 0.85, 0.3] : [0.35, 0.85, 0.45]) : [1, 0.85, 0.58])) };
   S.pointE = { pos: pt(C.x, 360), col: solid([1, 0.92, 0.78]), bright: new Float32Array(N).fill(0.35) };
+  for (const c of CARDS) {
+    try {
+      const im = await sampleImage(staticFile(cardSrc(c)), N, { cx: c.cx, cy: c.cy, size: c.w }, 50 + c.id.length);
+      S[`img:${c.id}`] = { pos: im.pos, col: im.col };
+      LOADED.add(c.id);
+    } catch {
+      if (c.fallback) S[`img:${c.id}`] = S[c.fallback];
+    }
+  }
   return S;
 };
 
@@ -282,7 +302,7 @@ const World: React.FC<{ t: number }> = ({ t }) => {
   const bee = fade(t, 189.2, 201.0, 0.6, 0.6);
   return (
     <g>
-      {chart > 0 && (
+      {chart > 0 && !has("bs") && (
         <g opacity={chart}>
           <g transform={`translate(${CROSS.x},${CROSS.y})`} stroke="#f2c94c" strokeWidth={10} strokeLinecap="round">
             <line x1={-32} y1={-32} x2={32} y2={32} /><line x1={32} y1={-32} x2={-32} y2={32} />
@@ -290,8 +310,8 @@ const World: React.FC<{ t: number }> = ({ t }) => {
           <circle cx={DOT.x} cy={DOT.y} r={34} fill="#f4f1ea" opacity={dotO} />
         </g>
       )}
-      <Outline id="es" k="eyeSide" p={P.eyeSide} t={t} a={19.0} b={23.4} />
-      {disc > 0 && (
+      {!has("eye") && <Outline id="es" k="eyeSide" p={P.eyeSide} t={t} a={19.0} b={23.4} />}
+      {disc > 0 && !has("eye") && (
         <g opacity={disc}>
           <circle cx={P.eyeSide.cx + 0.25 * P.eyeSide.size} cy={P.eyeSide.cy + 0.06 * P.eyeSide.size} r={26} fill="none" stroke="#ef6f5e" strokeWidth={4} style={{ filter: "drop-shadow(0 0 10px #ef6f5e)" }} />
           <line x1={P.eyeSide.cx + 0.25 * P.eyeSide.size + 26} y1={P.eyeSide.cy + 0.06 * P.eyeSide.size} x2={P.eyeSide.cx + 360} y2={P.eyeSide.cy + 180} stroke="#ef6f5e" strokeWidth={2} />
@@ -336,16 +356,16 @@ const World: React.FC<{ t: number }> = ({ t }) => {
           )}
         </g>
       )}
-      <Outline id="dl" k="dress" p={P.dressL} t={t} a={113.8} b={136.4} s={0.55} />
-      <Outline id="dr" k="dress" p={P.dressR} t={t} a={114.0} b={136.4} s={0.55} />
-      {shade > 0 && <ellipse cx={P.dressR.cx} cy={520} rx={300} ry={330} fill="rgba(90,140,255,0.12)" stroke="#9fc4ff" strokeOpacity={0.4 * shade} strokeDasharray="6 10" strokeWidth={2} opacity={shade} />}
-      {lamp > 0 && (
+      {!has("dress") && <Outline id="dl" k="dress" p={P.dressL} t={t} a={113.8} b={136.4} s={0.55} />}
+      {!has("dress") && <Outline id="dr" k="dress" p={P.dressR} t={t} a={114.0} b={136.4} s={0.55} />}
+      {shade > 0 && !has("dress") && <ellipse cx={P.dressR.cx} cy={520} rx={300} ry={330} fill="rgba(90,140,255,0.12)" stroke="#9fc4ff" strokeOpacity={0.4 * shade} strokeDasharray="6 10" strokeWidth={2} opacity={shade} />}
+      {lamp > 0 && !has("dress") && (
         <g opacity={lamp} transform={`translate(${P.dressL.cx},170)`}>
           <path d="M -60 0 L 60 0 L 36 -60 L -36 -60 Z" fill="none" stroke="#f2c94c" strokeWidth={3} />
           <path d="M -60 0 L -220 380 M 60 0 L 220 380" stroke="#f2c94c" strokeOpacity={0.35} strokeWidth={2} />
         </g>
       )}
-      <Checker t={t} />
+      {!has("chk") && <Checker t={t} />}
       <Outline id="b2" k="brain" p={P.brain} t={t} a={153.6} b={186.0} s={0.7} />
       {ch > 0 && (
         <g opacity={ch}>
@@ -359,7 +379,7 @@ const World: React.FC<{ t: number }> = ({ t }) => {
           <text x={C.x + 560} y={720} fontFamily={FONT_SANS} fontSize={26} fill="#9fc4ff" opacity={signal}>← 眼睛的信号</text>
         </g>
       )}
-      <Outline id="fl" k="flower" p={P.flower} t={t} a={186.4} b={233.6} s={0.55} />
+      {!has("mim") && <Outline id="fl" k="flower" p={P.flower} t={t} a={186.4} b={233.6} s={0.55} />}
       {bee > 0 && (
         <g opacity={bee} transform={`translate(${C.x + 360 + Math.sin(t * 2) * 20},${300 + Math.cos(t * 3) * 12})`} fill="none" stroke="#f2c94c" strokeWidth={3}>
           <ellipse rx={46} ry={28} /><line x1={-10} y1={-26} x2={-10} y2={26} /><line x1={12} y1={-26} x2={12} y2={26} />
@@ -376,13 +396,38 @@ const World: React.FC<{ t: number }> = ({ t }) => {
             {Array.from({ length: 7 }, (_, i) => <ellipse key={i} cy={-95} rx={46} ry={88} transform={`rotate(${(i / 7) * 360})`} stroke="#b48cff" strokeWidth={3} />)}
             {Array.from({ length: 7 }, (_, i) => <line key={`g${i}`} x1={0} y1={0} x2={0} y2={-150} transform={`rotate(${(i / 7) * 360})`} stroke="#fff" strokeWidth={2} />)}
           </g>
-          <text x={C.x + 900} y={540} textAnchor="middle" fontFamily={FONT_SERIF} fontSize={180} fill="#f2c94c" stroke="none" opacity={draw * 0.5}>?</text>
+          {!has("kant") && <text x={C.x + 900} y={540} textAnchor="middle" fontFamily={FONT_SERIF} fontSize={180} fill="#f2c94c" stroke="none" opacity={draw * 0.5}>?</text>}
           <text x={C.x} y={930} textAnchor="middle" fontFamily={FONT_SANS} fontSize={34} fill="rgba(244,241,234,0.75)" stroke="none">人眼</text>
           <text x={C.x - 900} y={930} textAnchor="middle" fontFamily={FONT_SANS} fontSize={34} fill="rgba(244,241,234,0.6)" stroke="none">蜜蜂</text>
-          <text x={C.x + 900} y={930} textAnchor="middle" fontFamily={FONT_SANS} fontSize={34} fill="rgba(244,241,234,0.6)" stroke="none">事物本身？</text>
+          <text x={C.x + 900} y={930} textAnchor="middle" fontFamily={FONT_SANS} fontSize={34} fill="rgba(244,241,234,0.6)" stroke="none">{has("kant") ? "康德：事物本身？" : "事物本身？"}</text>
         </g>
       )}
       <Outline id="hy" k="human" p={P.human} t={t} a={235.0} b={240.0} />
+      {/* original images */}
+      {CARDS.filter((c) => has(c.id)).map((c) => (
+        <ImageCard key={c.id} t={t} src={cardSrc(c)} p={{ cx: c.cx, cy: c.cy, w: c.w, aspect: c.aspect }} develop={c.develop} out={c.out} credit={c.credit} />
+      ))}
+      {has("chk") && !has("proof") && (() => {
+        // proof on the original: dim everything except the A→B column, then bridge A and B with same-grey bars (rgb 111, sampled from the image)
+        const m = fade(t, 141.0, 143.8, 0.5, 0.5);
+        if (m <= 0) return null;
+        const hx = C.x - 40, hy = 362, hw = 100, hh = 220;
+        return (
+          <g opacity={m}>
+            <path d={`M ${C.x - 1200} -200 H ${C.x + 1200} V 1300 H ${C.x - 1200} Z M ${hx} ${hy} h ${hw} v ${hh} h ${-hw} Z`} fill="rgba(5,6,10,0.88)" fillRule="evenodd" />
+            <rect x={C.x + 35} y={395} width={16} height={160} fill="rgb(111,111,111)" />
+            <rect x={C.x - 35} y={395} width={16} height={160} fill="rgb(111,111,111)" />
+          </g>
+        );
+      })()}
+      {has("dress") && (
+        <g fontFamily={FONT_SERIF} fontWeight={700} fontSize={46} fill={COLORS.text}>
+          <text x={C.x - 300} y={520} textAnchor="end" opacity={fade(t, 117.2, 136.2, 0.4, 0.5)}>蓝黑？</text>
+          <text x={C.x + 300} y={520} opacity={fade(t, 118.4, 136.2, 0.4, 0.5)}>白金？</text>
+          <text x={C.x + 300} y={590} fontFamily={FONT_SANS} fontWeight={400} fontSize={26} fill="#9fc4ff" opacity={fade(t, 130.2, 136.2, 0.4, 0.5)}>← 猜它在阴影里</text>
+          <text x={C.x - 300} y={590} textAnchor="end" fontFamily={FONT_SANS} fontWeight={400} fontSize={26} fill="#f2c94c" opacity={fade(t, 133.0, 136.2, 0.4, 0.5)}>猜它在暖光下 →</text>
+        </g>
+      )}
     </g>
   );
 };
@@ -478,7 +523,7 @@ export const EP02: React.FC = () => {
     <AbsoluteFill style={{ background: `radial-gradient(ellipse at 50% 42%, #0b0e18 0%, ${COLORS.bg} 70%)` }}>
       {states && (
         <ThreeCanvas width={W} height={H} orthographic camera={{ zoom: 1, position: [0, 0, 100], near: 0.1, far: 1000 }} gl={{ antialias: true }}>
-          <Stage t={t} states={states} keys={KEYS} gain={gain * 1.7} size={3.2} cam={cam} />
+          <Stage t={t} states={states} keys={KEYS} gain={gain * 1.7 * (1 - 0.9 * cover(t))} size={3.2} cam={cam} />
         </ThreeCanvas>
       )}
       <svg width={W} height={H} style={{ position: "absolute" }}>
