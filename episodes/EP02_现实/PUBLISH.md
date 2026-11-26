@@ -1,6 +1,8 @@
 # EP02 发布文案
 
-成片：`deliver/EP02_你看到的世界是真的吗_1080p.mp4`（约 4:09，风格 C，无配乐，配乐由用户在平台内添加）
+成片：`deliver/EP02_1080p.mp4` + 分段 `EP02_part1–4.mp4`（约 4:09，原图版 v2，无配乐，配乐由用户在平台内添加）
+
+**版权提醒**：裙子照片为摄影者 Cecilia Bleasdale 所有，不是自由许可；如被平台判定侵权，可把 1:53–2:16 段的照片换成文字讲述。CC BY-SA 图片须在简介中保留下方“图片”署名。
 标题格式（全平台统一）：`期号｜《片名》`。钩子句放在封面字和文案首句。
 
 ---
@@ -33,6 +35,11 @@ Ramachandran 关于盲点“填补”（filling-in）的研究；扫视抑制（
 Lafer-Sousa et al., Current Biology 2015 与 Wallisch, Journal of Vision 2017（裙子）；
 Edward Adelson 1995（棋盘阴影错觉，片中为重新绘制，A、B 像素值相同）；
 Anil Seth, TED 2017 / 《Being You》2021（受控的幻觉）；康德《纯粹理性批判》1781。
+
+图片：人眼结构图 Rhcastilhos & Jmarchn（CC BY-SA 3.0）；棋盘阴影错觉 Edward H. Adelson（CC BY-SA 4.0）；
+阿尼尔·赛斯照片 Carlos Figueroa Rojas（CC BY-SA 4.0）；猴面花可见光/紫外光 Plantsurfer（CC BY-SA 3.0）；
+列宾《不速之客》、雅布斯眼动记录、康德像（贝克尔 1768）、可见光谱、CIE 1931 色度图：公有领域；
+“那条裙子”照片：摄影 Cecilia Bleasdale。
 
 不知道，所以继续探索。
 ```
