@@ -32,7 +32,8 @@ js = dict(re.findall(r'"(input_i|input_tp|input_lra|input_thresh|target_offset)"
 master = f"{tmp}/master.wav"
 run(["ffmpeg", "-v", "error", "-y", "-i", mix, "-af",
      f"loudnorm=I=-14:TP=-1.0:LRA=11:measured_I={js['input_i']}:measured_TP={js['input_tp']}:measured_LRA={js['input_lra']}:"
-     f"measured_thresh={js['input_thresh']}:offset={js['target_offset']}:linear=true", "-ar", "48000", master])
+     f"measured_thresh={js['input_thresh']}:offset={js['target_offset']}:linear=true,"
+     "aresample=192000,alimiter=limit=0.87:attack=2:release=80:level=disabled:asc=1,aresample=48000", "-ar", "48000", master])   # 4 倍过采样限幅，真峰值压到 -1dB 以内
 run(["ffmpeg", "-v", "error", "-y", "-i", VIDEO, "-i", master, "-map", "0:v", "-map", "1:a", "-c:v", "copy", "-c:a", "aac", "-b:a", "256k",
      "-shortest", "-movflags", "+faststart", OUT])
 print("ok", OUT, f"人声 {vg:+.1f}dB，音效 {SFX_DB:+.1f}dB")

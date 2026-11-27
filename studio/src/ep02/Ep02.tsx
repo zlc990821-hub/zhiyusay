@@ -48,6 +48,7 @@ const GAP_ECHO = (TL.items as any[]).find((i) => i.type === "gap" && String(i.hi
 type Bg = { src: string; a: number; b: number; dim?: number; start?: number; rate?: number; gray?: boolean; zoom?: [number, number] };
 const C = (n: string) => `ep02/clips/${n}.mp4`;
 const BEDS: Bg[] = [
+  { src: C("incense_pot"), a: 0, b: S.next.start, dim: 0.3, zoom: [1.0, 1.16] },
   { src: C("guci_temple"), a: S.next.start - 0.3, b: GAP_DRUM + 0.2, dim: 0.5 },
   { src: C("guci_drum"), a: GAP_DRUM, b: S.xuan.end + 0.6, dim: 0.95 },
   { src: C("guci_temple"), a: S.look.start - 0.6, b: S.steps.start, dim: 0.62 },
@@ -67,6 +68,7 @@ const BEDS: Bg[] = [
   { src: C("buddha"), a: S.door.start - 0.3, b: S.who.start, dim: 0.55 },
   { src: C("guci_temple"), a: S.who.start - 0.3, b: GAP_ECHO, dim: 0.5, start: 1 },
   { src: C("guci_drum"), a: GAP_ECHO - 0.2, b: S.still.end + 0.3, dim: 0.85, start: 8, rate: 0.55 },
+  { src: "ep01/clips/candle.mp4", a: S.still.start - 0.6, b: TL.duration + 3.2, dim: 0.42, zoom: [1.05, 1.12] },
 ];
 const Beds: React.FC<{ t: number }> = ({ t }) => (
   <>
@@ -204,7 +206,8 @@ const Big: React.FC<{ t: number; a: number; b: number; text: string; size?: numb
   const s = stamp ? 1.25 - 0.25 * smooth((t - a) / 0.25) : 0.97 + 0.03 * o;
   return (
     <AbsoluteFill style={{ justifyContent: "center", alignItems: "center" }}>
-      <div style={{ transform: `translateY(${y}px) scale(${s})`, opacity: o, textAlign: "center", padding: "0 60px", fontFamily: font, fontSize: size, lineHeight: 1.3, color,
+      <div style={{ transform: `translateY(${y}px) scale(${s})`, opacity: o, textAlign: "center", margin: "0 40px", padding: "22px 44px 26px", borderRadius: 22,
+        background: "rgba(10,8,6,0.58)", fontFamily: font, fontSize: size, lineHeight: 1.3, color,
         letterSpacing: 4, textShadow: "0 0 30px rgba(0,0,0,0.85), 0 2px 10px rgba(0,0,0,0.9)", whiteSpace: "pre-line" }}>{text}</div>
     </AbsoluteFill>
   );
