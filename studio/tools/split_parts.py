@@ -12,20 +12,27 @@ ap.add_argument("--to", dest="b", type=float, default=None)
 ap.add_argument("--target", type=float, default=36.0)
 ap.add_argument("--max-mb", type=float, default=7.8)
 ap.add_argument("--height", type=int, default=1080)
+ap.add_argument("--timeline", default=None, help="第 02 期起：用 src/epXX/timeline.json 的句子时间找切点（不加片头偏移）")
+ap.add_argument("--width", type=int, default=None, help="指定宽度时按宽缩放（竖版用）")
 args = ap.parse_args()
 
 dur = float(subprocess.check_output(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", args.src]).decode())
 A, B = args.a, min(args.b or dur, dur)
-subs = json.load(open("src/ep01_subs.json", encoding="utf-8"))
-subs = subs if isinstance(subs, list) else subs["subs"]
-F = lambda v: v if v < 73.4 else v + 8.0
+if args.timeline:
+    subs = [{"start": i["start"], "end": i["end"] + 0.3} for i in json.load(open(args.timeline, encoding="utf-8"))["items"] if i["type"] == "line"]
+    F = lambda v: v
+else:
+    subs = json.load(open("src/ep01_subs.json", encoding="utf-8"))
+    subs = subs if isinstance(subs, list) else subs["subs"]
+    F = lambda v: v if v < 73.4 else v + 8.0
 # 可以下刀的地方：两句字幕之间至少 0.25 秒的空隙，取空隙中点
 cuts = []
 for x, y in zip(subs, subs[1:]):
     e, s = F(x["end"] - 0.3), F(y["start"])     # 字幕结束时间带了 0.35 秒余量，往回收一点
     if s - e >= 0.25: cuts.append(round((e + s) / 2, 2))
-cuts.append(73.4 + 0.02)                          # 主题片头前后也是好切点
-cuts.append(81.4 + 0.02)
+if not args.timeline:
+    cuts.append(73.4 + 0.02)                      # 第 01 期：主题片头前后也是好切点
+    cuts.append(81.4 + 0.02)
 cuts = sorted(c for c in set(cuts) if A + 1 < c < B - 1)
 
 parts, t = [], A
@@ -45,7 +52,7 @@ for i, (a, b) in enumerate(parts, 1):
     vk = int(min(6000, (budget - 128 * 1024) / 1000))
     for attempt in range(3):
         base = ["ffmpeg", "-v", "error", "-y", "-ss", f"{a:.3f}", "-i", args.src, "-t", f"{d:.3f}",
-                "-vf", f"scale=-2:{args.height}", "-c:v", "libx264", "-preset", "medium", "-b:v", f"{vk}k",
+                "-vf", (f"scale={args.width}:-2" if args.width else f"scale=-2:{args.height}"), "-c:v", "libx264", "-preset", "medium", "-b:v", f"{vk}k",
                 "-pix_fmt", "yuv420p", "-passlogfile", os.path.join(tmp, "p")]
         subprocess.run(base + ["-pass", "1", "-an", "-f", "mp4", os.devnull], check=True)
         subprocess.run(base + ["-pass", "2", "-c:a", "aac", "-b:a", "128k", "-movflags", "+faststart", out], check=True)

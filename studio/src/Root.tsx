@@ -15,6 +15,7 @@ import { Seg05, SEG05_FRAMES } from "./ep01/Seg05";
 import { Seg06, SEG06_FRAMES } from "./ep01/Seg06";
 import { Seg07, SEG07_FRAMES } from "./ep01/Seg07";
 import { Seg09, SEG09_FRAMES, Ep01Outro, OUTRO_FRAMES } from "./ep01/Seg09";
+import { Ep02, EP02_FRAMES } from "./ep02/Ep02";
 
 export const Root: React.FC = () => (
   <>
@@ -37,6 +38,7 @@ export const Root: React.FC = () => (
     <Composition id="HandTest" component={HandTest} durationInFrames={1} fps={30} width={1920} height={1080} />
     <Composition id="Ep01Opening" component={Opening} durationInFrames={OPENING_FRAMES} fps={30} width={1920} height={1080} />
     <Composition id="Ep01Glass" component={GlassRoot} durationInFrames={GLASS_FRAMES} fps={30} width={1920} height={1080} />
+    <Composition id="Ep02" component={Ep02} durationInFrames={EP02_FRAMES} fps={30} width={1080} height={1620} />
     <Composition id="Ep01Souls" component={SoulsRoot} durationInFrames={SOULS_FRAMES} fps={30} width={1920} height={1080} />
   </>
 );
