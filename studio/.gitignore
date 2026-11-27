@@ -1,6 +1,7 @@
 node_modules/
 out/
 public/ep01/
+public/ep02/
 __pycache__/
 sfx/
 media_src/
