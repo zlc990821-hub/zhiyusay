@@ -17,16 +17,18 @@ def word(l, w):
 gap = lambda key: next(i["at"] for i in TL["items"] if i["type"] == "gap" and key in i.get("hint", ""))
 
 S = {k: L(i, h) for k, (i, h) in {
-    "ask": (0, "我问我妈"), "crazy": (1, "她看了我一眼"), "next": (2, "下个月"), "superstition": (4, "你一定觉得"), "three": (5, "可这件事"),
-    "xuan": (6, "而且"), "look": (7, "先看这个场面"), "steps": (11, "先请"), "durk": (13, "一百多年前"), "quote1": (15, "神和社会"),
-    "family": (16, "一个家族"), "isgod": (17, "那就是神"), "renqing": (19, "因为在中国人心里"), "canbiz": (20, "可是，请客"), "harvard": (21, "哈佛商学院"),
+    "ask": (0, "我问我妈"), "reply": (1, "我妈说：管它"), "better": (2, "她说，上次"), "next": (3, "所以下个月"), "superstition": (4, "听起来"),
+    "three": (5, "可这件事"), "xuan": (6, "而且"), "look": (7, "先看这个场面"), "steps": (11, "先请"), "durk": (14, "一百多年前"), "quote1": (15, "神和社会"),
+    "family": (16, "一个家族"), "isgod": (17, "那就是神"), "renqing": (18, "神既然是"), "canbiz": (20, "可是，请客"), "harvard": (21, "哈佛商学院"),
     "ritual": (22, "让人上台"), "groupA": (23, "她告诉一组人"), "groupB": (24, "告诉另一组人"), "same": (25, "动作，一模一样"), "result": (26, "结果"),
-    "believe": (27, "同样的动作"), "lab": (28, "「信则灵」"), "malin": (29, "难怪人类学家"), "control": (30, "越是控制不了"), "biz": (31, "做生意"),
-    "psych": (32, "可是，「心理作用」"), "jung": (33, "1959"), "q": (34, "记者问他"), "a1": (35, "他停了一下"), "a2": (36, "我知道"), "why": (37, "一个研究了一辈子"),
-    "cu": (38, "荣格认为"), "dwell": (39, "神，就住在那里"), "centuries": (41, "几百年来"), "more": (43, "发的人越多"), "song": (44, "那唱词"), "door": (45, "而信"),
-    "who": (46, "所以，生意到底"), "mutual": (47, "也许答案是"), "feedB": (48, "人用香火"), "feedP": (49, "菩萨用一颗"), "fewer": (50, "可是，会唱鼓词"),
-    "stop": (51, "如果有一天"), "still": (52, "那些被唱了"), "yours": (53, "你家"),
+    "believe": (27, "同样的动作"), "lab": (28, "「信则灵」"), "malin": (29, "其实一百年前"), "fish": (30, "岛上的渔民"), "control": (31, "越是控制不了"),
+    "biz": (32, "做生意"), "psych": (33, "可是，「心理作用」"), "jung": (34, "1959"), "q": (35, "记者问他"), "a1": (36, "他停了一下"), "a2": (37, "我知道"),
+    "why": (38, "一个研究了一辈子"), "cu": (39, "在荣格看来"), "dwell": (40, "神，就住在那里"), "centuries": (42, "几百年来"), "more": (44, "发的人越多"),
+    "song": (45, "那唱词"), "door": (46, "而信"), "back": (47, "再回到我妈"), "who": (48, "那生意，到底"), "mutual": (49, "也许答案是"),
+    "feedB": (50, "人用香火"), "feedP": (51, "菩萨用一颗"), "fewer": (52, "只是，会唱词"), "stop": (53, "如果有一天"), "still": (54, "那些被唱了"),
+    "leave": (55, "这个问题"), "yours": (56, "也说说看"),
 }.items()}
+SEC = [i["at"] for i in TL["items"] if i["type"] == "section"]   # 段落标题卡出现的时刻（换段落那段安静的开头）
 DRUM, ECHO = gap("原声"), gap("余音")
 END = TL["duration"] + 3.2
 tr = Track(END)
@@ -46,13 +48,13 @@ def seg(x, a, d, fi=0.05, fo=0.4):
 
 # ---------- 原声 ----------
 # 开场后鼓声一响：前 3.2 秒放满，之后压到很低，垫在讲述下面直到第一层
-d = seg(drum, 0, S["xuan"]["end"] + 0.6 - DRUM, fi=0.02, fo=1.0)
+d = seg(drum, 0, SEC[0] + 0.5 - DRUM, fi=0.02, fo=1.0)
 env = np.ones(len(d)); k = int(3.2 * SR); env[k:k + int(0.8 * SR)] = np.linspace(1, 0.13, int(0.8 * SR))[: len(env[k:k + int(0.8 * SR)])]; env[k + int(0.8 * SR):] = 0.13
 tr.add(d * env[:, None], DRUM, gain=0.9, wet=0.12)
 # 庙里的现场声，很轻地垫着
 tr.add(seg(temple, 0, 10.2, fi=0.6, fo=0.8), S["next"]["start"] - 0.3, gain=0.16, wet=0.1)
-tr.add(seg(temple, 0, 10.2, fi=0.6, fo=0.8), S["look"]["start"] - 0.6, gain=0.14, wet=0.1)
-tr.add(seg(temple, 1, 9.2, fi=0.6, fo=0.8), S["who"]["start"] - 0.3, gain=0.13, wet=0.1)
+tr.add(seg(temple, 0, 10.2, fi=0.6, fo=0.8), SEC[0], gain=0.14, wet=0.1)
+tr.add(seg(temple, 1, 9.2, fi=0.6, fo=0.8), SEC[3], gain=0.13, wet=0.1)
 # 「唱词，就是跟它说话的方式」：鼓词原声冒出来一下
 tr.add(seg(drum, 12, S["door"]["start"] - S["song"]["start"] + 0.3, fi=0.3, fo=0.6), S["song"]["start"] - 0.3, gain=0.32, wet=0.25)
 # 结尾：最后一面鼓，余音拖长、慢慢散掉
@@ -67,15 +69,14 @@ tr.bed(bed, pts, wet=0.3)
 
 # ---------- 开场 ----------
 tr.add(lib("pop_whoosh"), S["ask"]["start"], gain=0.16, wet=0.1)
-tr.add(lib("pop_dry"), S["crazy"]["start"] + 1.2, gain=0.2, wet=0.1)
+tr.add(lib("pop_dry"), word(S["reply"], "管它"), gain=0.2, wet=0.1)
 tr.add(thump(0.9, 95, 45, 0.35), S["superstition"]["start"] + 1.2, gain=0.5, wet=0.2)
 for w in ("社会学", "哈佛", "最神秘"):
     tr.add(lib("shutter_vintage"), word(S["three"], w), gain=0.16, pan=-0.2 if w == "社会学" else 0.2, wet=0.15)
 tr.add(shimmer(2.4, 990, seed=3), S["xuan"]["start"] + 1.0, gain=0.05, wet=0.6)
 
 # ---------- 段落：一声钵 ----------
-for key, f in (("look", 196), ("canbiz", 220), ("psych", 174.6), ("who", 196)):
-    at = S[key]["start"] - 0.6
+for at, f in zip(SEC, (196, 220, 174.6, 196)):
     tr.add(lib("whoosh_air"), at - 0.1, gain=0.1, wet=0.3); tr.add(bowl(f, 6.0), at, gain=0.22, wet=0.5)
 
 # ---------- 第一层 ----------
@@ -85,7 +86,7 @@ tr.add(lib("shutter_vintage"), S["durk"]["start"] + 0.3, gain=0.16, wet=0.15)
 tr.add(bell(392, 3.0, decay=1.3), S["quote1"]["start"], gain=0.12, wet=0.6)
 tr.add(tinkles(7.5, n=70, seed=21, fmin=2500, fmax=6500), word(S["family"], "规矩"), gain=0.05, wet=0.7)
 tr.add(lib("light_aura"), S["isgod"]["start"] - 0.2, gain=0.3, wet=0.4)
-tr.add(lib("bell_chime"), word(S["renqing"], "天上"), gain=0.12, wet=0.5)
+tr.add(lib("bell_chime"), word(S["renqing"], "中国人"), gain=0.12, wet=0.5)
 
 # ---------- 第二层 ----------
 tr.add(lib("shutter_vintage"), S["harvard"]["start"] + 0.2, gain=0.16, wet=0.15)
@@ -104,9 +105,9 @@ tr.add(thump(1.0, 85, 40, 0.4), S["lab"]["start"], gain=0.5, wet=0.25)
 tr.add(lib("sparkle_sweep"), S["lab"]["start"] + 0.1, gain=0.14, wet=0.4)
 tr.add(lib("shutter_vintage"), S["malin"]["start"] + 0.2, gain=0.14, wet=0.15)
 calm = lp(noise(6.0), 500) * np.sin(np.linspace(0, np.pi, int(6.0 * SR))) ** 2
-tr.add(calm, word(S["malin"], "内湖") - 0.5, gain=0.18, wet=0.3)
+tr.add(calm, word(S["fish"], "内湖") - 0.5, gain=0.18, wet=0.3)
 rough = whoosh(7.0, 120, 900, q=0.7) + lp(noise(7.0), 900) * 0.8
-tr.add(rough, word(S["malin"], "外海") - 0.3, gain=0.22, wet=0.3)
+tr.add(rough, word(S["fish"], "外海") - 0.3, gain=0.22, wet=0.3)
 tr.add(whoosh(3.5, 150, 700, q=0.8), S["control"]["start"] - 0.2, gain=0.22, wet=0.3)
 
 # ---------- 第三层 ----------

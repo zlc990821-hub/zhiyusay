@@ -1,5 +1,5 @@
 // 第 02 期：我问我妈：你怎么确定，请来的是佛祖？（横屏 1920×1080；2026-11-28 用户觉得 2:3 不好看，改回横屏）
-// 时间全部来自配音时间轴 timeline.json（tools/ep02_tts.py 生成）；换成用户自己的录音时，重新生成时间轴即可，画面跟着走。
+// 时间全部来自时间轴 timeline.json（2026-11-28 起为用户录音，tools/ep02_rec_edit.py 生成）；段落标题卡在换段落的安静里出现。
 import { AbsoluteFill } from "remotion";
 import { useCallback } from "react";
 import TL from "./timeline.json";
@@ -27,20 +27,23 @@ const win = (t: number, a: number, b: number, f = 0.4) => fin(t, a, f) * (1 - fi
 
 // ---------- 句子编号（核对文字） ----------
 const S = {
-  ask: L(0, "我问我妈"), crazy: L(1, "她看了我一眼"), next: L(2, "下个月"), better: L(3, "我妈说"),
-  superstition: L(4, "你一定觉得"), three: L(5, "可这件事"), xuan: L(6, "而且"),
-  look: L(7, "先看这个场面"), table: L(8, "一桌供品"), notworship: L(9, "这哪里像拜神"), guest: L(10, "这分明是在请客"),
-  steps: L(11, "先请"), likeus: L(12, "跟我们求人"), durk: L(13, "一百多年前"), asked: L(14, "他问了一句话"), quote1: L(15, "神和社会"),
-  family: L(16, "一个家族"), isgod: L(17, "那就是神"), guestgod: L(18, "所以中国人拜神"), renqing: L(19, "因为在中国人心里"),
+  ask: L(0, "我问我妈"), reply: L(1, "我妈说：管它"), better: L(2, "她说，上次"), next: L(3, "所以下个月"),
+  superstition: L(4, "听起来"), three: L(5, "可这件事"), xuan: L(6, "而且"),
+  look: L(7, "先看这个场面"), table: L(8, "一桌供品"), notworship: L(9, "这哪里像拜神"), guest: L(10, "倒像是在请客"),
+  steps: L(11, "先请"), likeus: L(12, "跟我们求人"), likeman: L(13, "神，为什么"), durk: L(14, "一百多年前"), quote1: L(15, "神和社会"),
+  family: L(16, "一个家族"), isgod: L(17, "那就是神"), renqing: L(18, "神既然是"), guestgod: L(19, "所以拜神"),
   canbiz: L(20, "可是，请客"), harvard: L(21, "哈佛商学院"), ritual: L(22, "让人上台"), groupA: L(23, "她告诉一组人"), groupB: L(24, "告诉另一组人"),
   same: L(25, "动作，一模一样"), result: L(26, "结果"), believe: L(27, "同样的动作"), lab: L(28, "「信则灵」"),
-  malin: L(29, "难怪人类学家"), control: L(30, "越是控制不了"), biz: L(31, "做生意"),
-  psych: L(32, "可是，「心理作用」"), jung: L(33, "1959"), q: L(34, "记者问他"), a1: L(35, "他停了一下"), a2: L(36, "我知道"),
-  why: L(37, "一个研究了一辈子"), cu: L(38, "荣格认为"), dwell: L(39, "神，就住在那里"),
-  step: L(40, "那如果"), centuries: L(41, "几百年来"), msg: L(42, "每一次"), more: L(43, "发的人越多"), song: L(44, "那唱词"), door: L(45, "而信"),
-  who: L(46, "所以，生意到底"), mutual: L(47, "也许答案是"), feedB: L(48, "人用香火"), feedP: L(49, "菩萨用一颗"),
-  fewer: L(50, "可是，会唱鼓词"), stop: L(51, "如果有一天"), still: L(52, "那些被唱了"), yours: L(53, "你家"),
+  malin: L(29, "其实一百年前"), fish: L(30, "岛上的渔民"), control: L(31, "越是控制不了"), biz: L(32, "做生意"),
+  psych: L(33, "可是，「心理作用」"), jung: L(34, "1959"), q: L(35, "记者问他"), a1: L(36, "他停了一下"), a2: L(37, "我知道"),
+  why: L(38, "一个研究了一辈子"), cu: L(39, "在荣格看来"), dwell: L(40, "神，就住在那里"),
+  step: L(41, "那如果"), centuries: L(42, "几百年来"), msg: L(43, "每一次"), more: L(44, "发的人越多"), song: L(45, "那唱词"), door: L(46, "而信"),
+  back: L(47, "再回到我妈"), who: L(48, "那生意，到底"), mutual: L(49, "也许答案是"), feedB: L(50, "人用香火"), feedP: L(51, "菩萨用一颗"),
+  fewer: L(52, "只是，会唱词"), stop: L(53, "如果有一天"), still: L(54, "那些被唱了"), leave: L(55, "这个问题"), yours: L(56, "也说说看"),
 };
+// 段落：时间来自时间轴里的 section（换段落的那段安静开始时），标题卡在安静里停到下一句开口
+const SEC_ITEMS = (TL.items as any[]).filter((i) => i.type === "section") as { at: number; title: string }[];
+const secAt = (k: number) => SEC_ITEMS[k].at;
 const GAP_DRUM = (TL.items as any[]).find((i) => i.type === "gap" && String(i.hint).includes("原声")).at as number;
 const GAP_ECHO = (TL.items as any[]).find((i) => i.type === "gap" && String(i.hint).includes("余音")).at as number;
 
@@ -50,23 +53,23 @@ const C = (n: string) => `ep02/clips16/${n}.mp4`;
 const BEDS: Bg[] = [
   { src: C("incense_pot"), a: 0, b: S.next.start, dim: 0.3, zoom: [1.0, 1.16] },
   { src: C("guci_temple"), a: S.next.start - 0.3, b: GAP_DRUM + 0.2, dim: 0.5 },
-  { src: C("guci_drum"), a: GAP_DRUM, b: S.xuan.end + 0.6, dim: 0.95 },
-  { src: C("guci_temple"), a: S.look.start - 0.6, b: S.steps.start, dim: 0.62 },
+  { src: C("guci_drum"), a: GAP_DRUM, b: secAt(0) + 0.5, dim: 0.95 },
+  { src: C("guci_temple"), a: secAt(0) - 0.2, b: S.steps.start, dim: 0.62 },
   { src: C("incense_door"), a: S.steps.start - 0.3, b: S.durk.start, dim: 0.55 },
   { src: "ep01/clips/b_oldlib.mp4", a: S.durk.start - 0.3, b: S.family.start, dim: 0.32 },
-  { src: C("incense_pot"), a: S.family.start - 0.3, b: S.guestgod.start, dim: 0.42 },
-  { src: C("beads"), a: S.guestgod.start - 0.3, b: S.canbiz.start - 0.2, dim: 0.6 },
-  { src: C("singer"), a: S.canbiz.start - 0.5, b: S.result.start, dim: 0.42 },
+  { src: C("incense_pot"), a: S.family.start - 0.3, b: S.renqing.start, dim: 0.42 },
+  { src: C("beads"), a: S.renqing.start - 0.3, b: secAt(1) + 0.5, dim: 0.6 },
+  { src: C("singer"), a: secAt(1) - 0.2, b: S.result.start, dim: 0.42 },
   { src: C("heart"), a: S.result.start - 0.3, b: S.malin.start, dim: 0.5 },
   { src: C("storm"), a: S.control.start - 0.3, b: S.biz.start, dim: 0.6 },
-  { src: C("market"), a: S.biz.start - 0.3, b: S.psych.start, dim: 0.62 },
-  { src: C("taperec"), a: S.psych.start - 0.5, b: S.why.start, dim: 0.5, gray: true },
+  { src: C("market"), a: S.biz.start - 0.3, b: secAt(2) + 0.5, dim: 0.62 },
+  { src: C("taperec"), a: secAt(2) - 0.2, b: S.why.start, dim: 0.5, gray: true },
   { src: "ep01/clips/b_milky.mp4", a: S.why.start - 0.3, b: S.step.start, dim: 0.7 },
   { src: C("city_night"), a: S.step.start - 0.3, b: S.msg.start, dim: 0.6 },
   { src: C("lantern_launch"), a: S.msg.start - 0.3, b: S.song.start, dim: 0.62 },
   { src: C("guci_drum"), a: S.song.start - 0.3, b: S.door.start, dim: 0.5, start: 12 },
-  { src: C("buddha"), a: S.door.start - 0.3, b: S.who.start, dim: 0.55 },
-  { src: C("guci_temple"), a: S.who.start - 0.3, b: GAP_ECHO, dim: 0.5, start: 1 },
+  { src: C("buddha"), a: S.door.start - 0.3, b: secAt(3) + 0.5, dim: 0.55 },
+  { src: C("guci_temple"), a: secAt(3) - 0.2, b: GAP_ECHO, dim: 0.5, start: 1 },
   { src: C("guci_drum"), a: GAP_ECHO - 0.2, b: S.still.end + 0.3, dim: 0.85, start: 8, rate: 0.55 },
   { src: "ep01/clips/candle.mp4", a: S.still.start - 0.6, b: TL.duration + 3.2, dim: 0.42, zoom: [1.05, 1.12] },
 ];
@@ -85,9 +88,9 @@ const Beds: React.FC<{ t: number }> = ({ t }) => (
 
 // 内湖 / 外海：上下分屏
 const SeaSplit: React.FC<{ t: number }> = ({ t }) => {
-  const l = S.malin, a = l.start - 0.3, b = S.control.start + 0.2;
+  const a = S.malin.start - 0.3, b = S.control.start + 0.2;
   if (t < a - 0.1 || t > b + 0.1) return null;
-  const tIn = atWord(l, "内湖"), tOut = atWord(l, "外海");
+  const tIn = atWord(S.fish, "内湖"), tOut = atWord(S.fish, "外海");
   const lab = (text: string, sub: string, y: number, on: number, hot: boolean) => (
     <div style={{ position: "absolute", left: y, top: 150, width: 860, opacity: on, transform: `translateY(${(1 - on) * 14}px)` }}>
       <div style={{ fontFamily: DISPLAY, fontSize: 74, color: hot ? "#ffd29a" : GOLD, textShadow: "0 2px 18px rgba(0,0,0,0.9)" }}>{text}</div>
@@ -111,7 +114,7 @@ const SeaSplit: React.FC<{ t: number }> = ({ t }) => {
 
 // ---------- 版式：顶部问题、段落标签、字幕 ----------
 const TitleBar: React.FC<{ t: number }> = ({ t }) => {
-  const o = fin(t, 0.6, 0.8) * (1 - fin(t, S.yours.start - 0.4, 0.5));
+  const o = fin(t, 0.6, 0.8) * (1 - fin(t, S.leave.start - 0.4, 0.5));
   return (
     <>
       <div style={{ position: "absolute", left: 0, top: 0, width: W, height: 260, background: "linear-gradient(rgba(0,0,0,0.62), rgba(0,0,0,0))" }} />
@@ -123,18 +126,21 @@ const TitleBar: React.FC<{ t: number }> = ({ t }) => {
   );
 };
 
+// 标题卡停到这一段第一句开口后 0.2 秒，再缩成左上角小标签
+const firstAfter = (x: number) => LINES.find((l) => l.start > x)!.start;
 const SECTIONS: { at: number; no: string; title: string; end: number }[] = [
-  { at: S.look.start - 0.6, no: "第一层", title: "神，就是我们自己", end: S.canbiz.start - 0.3 },
-  { at: S.canbiz.start - 0.5, no: "第二层", title: "信了，就真的灵", end: S.psych.start - 0.4 },
-  { at: S.psych.start - 0.6, no: "第三层", title: "如果信，真的能聚成什么", end: S.who.start - 0.4 },
-  { at: S.who.start - 0.6, no: "最后", title: "到底是谁帮的", end: GAP_ECHO },
+  { at: secAt(0), no: "第一层", title: "神，就是我们自己", end: secAt(1) },
+  { at: secAt(1), no: "第二层", title: "信了，就真的灵", end: secAt(2) },
+  { at: secAt(2), no: "第三层", title: "如果信，真的能聚成什么", end: secAt(3) },
+  { at: secAt(3), no: "最后", title: "到底是谁帮的", end: GAP_ECHO },
 ];
 const Section: React.FC<{ t: number }> = ({ t }) => (
   <>
     {SECTIONS.map((s, i) => {
       if (t < s.at - 0.1 || t > s.end + 0.2) return null;
-      const big = fin(t, s.at, 0.35) * (1 - fin(t, s.at + 1.7, 0.4));
-      const pin = fin(t, s.at + 1.9, 0.4) * (1 - fin(t, s.end - 0.3, 0.3));
+      const bigEnd = Math.max(s.at + 1.7, firstAfter(s.at) + 0.2);
+      const big = fin(t, s.at, 0.35) * (1 - fin(t, bigEnd, 0.4));
+      const pin = fin(t, bigEnd + 0.2, 0.4) * (1 - fin(t, s.end - 0.3, 0.3));
       return (
         <div key={i}>
           {big > 0.01 ? (
@@ -183,7 +189,7 @@ const chunksOf = (l: Line): Chunk[] => {
   });
 };
 // 画面上已经有大字的句子，不再出字幕
-const NO_SUB = new Set([S.ask, S.crazy, S.quote1, S.a1, S.a2, S.mutual, S.still, S.yours]);
+const NO_SUB = new Set([S.ask, S.reply, S.guest, S.quote1, S.isgod, S.biz, S.a1, S.a2, S.dwell, S.mutual, S.still, S.yours]);
 const CHUNKS: Chunk[] = LINES.filter((l) => !NO_SUB.has(l)).flatMap(chunksOf);
 const Subs: React.FC<{ t: number }> = ({ t }) => {
   const c = CHUNKS.find((x) => t >= x.a - 0.05 && t < x.b + 0.12);
@@ -289,7 +295,7 @@ const drawSteps = (ctx: CanvasRenderingContext2D, t: number) => {
 };
 // 一个家族、一个村子：规矩、人情、盼头汇成一个看不见的存在
 const drawGather = (ctx: CanvasRenderingContext2D, t: number) => {
-  const l = S.family, a = win(t, l.start - 0.2, S.guestgod.start, 0.5);
+  const l = S.family, a = win(t, l.start - 0.2, S.renqing.start, 0.5);
   if (a <= 0) return;
   const p = smooth((t - atWord(l, "加在一起")) / 4.5), god = smooth((t - S.isgod.start) / 0.8);
   const cx = 960, cy = 440;
@@ -432,7 +438,7 @@ const drawSong = (ctx: CanvasRenderingContext2D, t: number) => {
 };
 // 门：两扇门向两边打开，门后是光
 const drawDoor = (ctx: CanvasRenderingContext2D, t: number) => {
-  const a = win(t, S.door.start - 0.2, S.who.start - 0.2, 0.4);
+  const a = win(t, S.door.start - 0.2, secAt(3) + 0.2, 0.4);
   if (a <= 0) return;
   const open = smooth((t - atWord(S.door, "打开")) / 1.6);
   const x0 = 760, y0 = 200, w = 400, h = 660;
@@ -478,7 +484,7 @@ const drawGrain = (ctx: CanvasRenderingContext2D, t: number) => {
 
 export const Ep02: React.FC = () => {
   const ready = useFonts([`"Source Han Serif CN for Display"`, `"Noto Serif SC"`, `"Noto Sans SC"`],
-    "我问我妈你怎么确定请来的是佛祖她看了一眼神经病吧第一二三层最后神就是们自己信了真灵如果能聚成什么到底谁帮请供唱求人办事规矩情盼头画下心随便做撒点盐数到五揉团扔掉这仪式相组跳降来得更好内湖外海风平浪静从不做法难测一整套集体无意识香火定菩萨生意涂尔干布鲁克斯马林诺夫斯基荣格年社会学之父法国哈佛商院心理家波兰人类瑞士采访你相上帝吗不需要知道还在吗灵过的事离心力所以继续探索｜＝「」：？，0123456789–BCF《》");
+    "我问我妈你怎么确定请来的是佛祖她看了一眼神经病吧第一二三层最后神就是们自己信了真灵如果能聚成什么到底谁帮请供唱求人办事规矩情盼头画下心随便做撒点盐数到五揉团扔掉这仪式相组跳降来得更好内湖外海风平浪静从不做法难测一整套集体无意识香火定菩萨生意涂尔干布鲁克斯马林诺夫斯基荣格年社会学之父法国哈佛商院心理家波兰人类瑞士采访你相上帝吗不需要知道还在吗灵过的事离心力所以继续探索｜＝「」：？，0123456789–BCF《》、。且个中为也互些享他件似位住佑作保倒停像先共其养再几出切则制前加动原又发受变口句另只叫可台史同听告呢和品哪四回地场块多大天始子字存它宗实客室对尊少岁岛开当往很怪息想扇才打找把拜据接控提教方族既早时晚月有村条样案桌模次歌步每比民没洲消深渔澳烧然照玄用留百着研科秘究答管纸结给老者而行被见解让记讲许证诉词话说象走起越跟辈迷那都释里门面颗题验鱼鼓；");
   const t = useT(0);
   const draw = useCallback((ctx: CanvasRenderingContext2D, tt: number) => {
     drawBiz(ctx, tt); drawSteps(ctx, tt); drawGather(ctx, tt); drawRitual(ctx, tt); drawHeart(ctx, tt);
@@ -493,26 +499,26 @@ export const Ep02: React.FC = () => {
 
       {/* 开场：黑底，问与答 */}
       <Bubble t={t} a={S.ask.start} b={S.next.start + 0.6} who="我" text="你怎么确定，请来的是佛祖？" side="r" y={300} />
-      <Bubble t={t} a={S.crazy.start + 1.2} b={S.next.start + 0.6} who="我妈" text="你神经病吧。" side="l" y={560} />
+      <Bubble t={t} a={atWord(S.reply, "管它")} b={S.next.start + 0.6} who="我妈" text="管它是不是佛祖，能保佑就行。" side="l" y={560} />
       <Big t={t} a={S.superstition.start + 1.2} b={S.three.start + 0.3} text="迷信？" size={180} stamp />
-      <Dossier t={t} a={atWord(S.three, "社会学")} b={S.xuan.end + 0.4} name="社会学之父" years="研究过" role="" y={320} x={70} w={570} small />
-      <Dossier t={t} a={atWord(S.three, "哈佛")} b={S.xuan.end + 0.4} name="哈佛心理学家" years="做过实验" role="" y={320} x={675} w={570} small />
-      <Dossier t={t} a={atWord(S.three, "最神秘")} b={S.xuan.end + 0.4} name="？？？" years="最神秘的那个人" role="" y={320} x={1280} w={570} small />
+      <Dossier t={t} a={atWord(S.three, "社会学")} b={secAt(0) + 0.2} name="社会学之父" years="研究过" role="" y={320} x={70} w={570} small />
+      <Dossier t={t} a={atWord(S.three, "哈佛")} b={secAt(0) + 0.2} name="哈佛心理学家" years="做过实验" role="" y={320} x={675} w={570} small />
+      <Dossier t={t} a={atWord(S.three, "最神秘")} b={secAt(0) + 0.2} name="？？？" years="最神秘的那个人" role="" y={320} x={1280} w={570} small />
 
       {/* 第一层 */}
-      <Big t={t} a={S.guest.start} b={S.steps.start} text="这分明是在请客" size={104} />
+      <Big t={t} a={S.guest.start} b={S.steps.start} text="倒像是在请客" size={104} />
       <Dossier t={t} a={S.durk.start + 0.3} b={S.quote1.start - 0.1} name="涂尔干" years="1858 – 1917" role="法国，社会学之父" />
-      <Big t={t} a={S.quote1.start - 0.1} b={S.family.start} text={"神和社会\n难道不就是一回事吗？"} size={92} />
-      <Big t={t} a={S.isgod.start} b={S.guestgod.start} text="那就是神" size={110} y={-250} />
-      <Big t={t} a={atWord(S.renqing, "天上")} b={S.canbiz.start - 0.3} text="天上，也讲人情" size={110} />
+      <Big t={t} a={S.quote1.start - 0.1} b={S.family.start} text={"神和社会\n可能就是一回事"} size={92} />
+      <Big t={t} a={S.isgod.start} b={S.renqing.start} text="那就是神" size={110} y={-250} />
+      <Big t={t} a={atWord(S.renqing, "中国人")} b={secAt(1) + 0.1} text="神，也讲人情" size={110} />
 
       {/* 第二层 */}
       <Dossier t={t} a={S.harvard.start + 0.2} b={S.ritual.start} name="布鲁克斯" years="哈佛商学院" role="2016 年的实验" />
       <Big t={t} a={atWord(S.believe, "你信")} b={S.lab.start} text={"你信，它就灵\n你不信，它就不灵"} size={88} />
       <Big t={t} a={S.lab.start} b={S.malin.start - 0.2} text="信则灵" size={190} stamp />
-      <Dossier t={t} a={S.malin.start + 0.2} b={atWord(S.malin, "内湖") - 0.2} name="马林诺夫斯基" years="1884 – 1942" role="波兰裔人类学家" />
+      <Dossier t={t} a={S.malin.start + 0.2} b={S.fish.start + 0.3} name="马林诺夫斯基" years="1884 – 1942" role="波兰裔人类学家" />
       <Big t={t} a={S.control.start} b={S.biz.start} text={"越是控制不了\n越需要信"} size={100} />
-      <Big t={t} a={S.biz.start} b={S.psych.start - 0.2} text="做生意，就是出外海" size={92} />
+      <Big t={t} a={S.biz.start} b={secAt(2) + 0.1} text="做生意，就是出外海" size={92} />
 
       {/* 第三层 */}
       <Big t={t} a={S.psych.start + 0.2} b={S.jung.start} text="「心理作用」？" size={110} />
@@ -525,7 +531,7 @@ export const Ep02: React.FC = () => {
       {/* 最后 */}
       <Big t={t} a={S.mutual.start + 0.2} b={S.mutual.end + 0.5} text="互相" size={200} />
       <Big t={t} a={S.still.start} b={S.still.end + 0.8} text={"那些被唱了几百年的菩萨\n还在吗？"} size={74} />
-      <Big t={t} a={S.yours.start} b={EP02_END - 2.4} text={"你家\n有没有灵过的事？"} size={110} />
+      <Big t={t} a={atWord(S.yours, "你家")} b={EP02_END - 2.4} text={"你家\n有没有灵过的事？"} size={110} />
 
       <TitleBar t={t} />
       <Section t={t} />
