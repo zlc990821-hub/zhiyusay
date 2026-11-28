@@ -13,6 +13,7 @@ from f5_tts.api import F5TTS
 src, ref_wav, ref_text, out_dir = sys.argv[1:5]
 os.makedirs(out_dir, exist_ok=True)
 READ = [("1959 年", "一九五九年"), ("84 岁", "八十四岁"), ("BBC", "B B C")]
+TAIL = "就这样。"   # 模型总把最后一个字截掉半截：每组末尾多念一句垫着，对齐时切掉（见 ep02_clone_align.py）
 
 text = open(src, encoding="utf-8").read().split("\n---\n", 1)[1]
 cues, section = [], "开场"
@@ -50,10 +51,12 @@ for p in plan:
     if "chunk" not in p: continue
     k += 1; p["file"] = f"chunk_{k:02d}.wav"
     path = os.path.join(out_dir, p["file"])
+    p["tail"] = TAIL
     if os.path.exists(path): continue            # 断了可以接着跑
     gen = "".join(x["say"] for x in p["chunk"])
     for a, b in READ: gen = gen.replace(a, b)
     for q in "「」『』“”": gen = gen.replace(q, "")    # 模型会把引号念成怪音（「信则灵」→「一信则灵黑」）
+    gen += TAIL
     wav, sr, _ = tts.infer(ref_file=ref_wav, ref_text=ref_text, gen_text=gen, nfe_step=32, speed=1.0, remove_silence=False, show_info=lambda *a: None)
     sf.write(path, np.asarray(wav, dtype=np.float32), sr)
     print(f"{p['file']} {len(wav)/sr:.1f}s  {gen}", flush=True)

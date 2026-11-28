@@ -3,6 +3,7 @@
   python3 tools/ep02_clone_align.py media_src/ep02/clone public/ep02/voice_clone.wav src/ep02/timeline.json [语速=1.0]
 做法：每组用 faster-whisper 识别出每个字的时间（繁体转简体），和稿子逐字对齐，找出句与句之间的停顿，在停顿处下刀；
 句子之间统一停 0.55 秒（和 AI 配音版一致），空档、段落和画面提示照稿子留。
+生成时每组末尾多念了一句「就这样。」（模型总把最后一个字截掉半截），这里在它前面的停顿处切掉。
 同时写出 对齐报告.txt：每组识别出来和稿子不一样的字。漏字、多字、念错多的组，删掉 chunk_XX.wav 重新生成即可。
 """
 import sys, os, json, wave, difflib, subprocess, tempfile
@@ -59,6 +60,7 @@ for p in plan:
         items.append({"type": "hint", "at": round(t, 3), "hint": p["hint"]}); continue
 
     sents = p["chunk"]
+    allsay = sents + ([{"say": p["tail"]}] if p.get("tail") else [])   # 末尾垫的那句只用来找切点，不进成片
     x = readwav(os.path.join(clone_dir, p["file"]))
     # 1. 识别：每个字的时间
     segs, _ = model.transcribe(resample_poly(x, 2, 3).astype(np.float32), language="zh", word_timestamps=True, beam_size=5,
@@ -72,7 +74,7 @@ for p in plan:
                 ac.append(c); at.append((w.start + k * d, w.start + (k + 1) * d))
     # 2. 稿子的字（按实际念法）
     sc, owner = [], []
-    for j, s in enumerate(sents):
+    for j, s in enumerate(allsay):
         say = s["say"]
         for a, b in READ: say = say.replace(a, b)
         for c in say:
@@ -90,12 +92,13 @@ for p in plan:
             elif nx is None: st[i] = en[i] = en[pv]
             else: f = (i - pv) / (nx - pv); st[i] = en[i] = en[pv] + (st[nx] - en[pv]) * f
     diffs, bad = [], 0                            # 同音字（拼音一样）多半是识别的问题，不算念错
+    tstart = owner.index(len(sents)) if p.get("tail") else len(sc)
     for op, a, b, c, d in sm.get_opcodes():
-        if op == "equal": continue
-        same = lazy_pinyin("".join(sc[a:b])) == lazy_pinyin("".join(ac[c:d]))
+        if op == "equal" or a >= tstart: continue
+        same = lazy_pinyin("".join(sc[a:b])) == lazy_pinyin("".join(ac[c:d])) or ("".join(ac[c:d]).isdigit() and b > a)   # 识别成阿拉伯数字也算对
         bad += 0 if same else max(b - a, d - c)
         diffs.append(f"稿「{''.join(sc[a:b])}」→听「{''.join(ac[c:d])}」" + ("(同音)" if same else ""))
-    report.append(f"{p['file']}  {'⚠ ' if bad >= 2 or (bad and len(sc) < 20) else ''}对上 {len(known)}/{len(sc)}  " + ("；".join(diffs) if diffs else "全对"))
+    report.append(f"{p['file']}  {'⚠ ' if bad >= 2 or (bad and tstart < 20) else ''}对上 {sum(1 for i in known if i < tstart)}/{tstart}  " + ("；".join(diffs) if diffs else "全对"))
 
     # 3. 找每句的起止：能量低于门限算停顿
     r = rms_frames(x); thr = max(np.percentile(r, 10) * 4, r.max() * 0.025)
@@ -105,7 +108,7 @@ for p in plan:
     bounds = []                                   # 每句 (起, 止)，单位：帧
     vi = np.where(voiced)[0]
     a0 = max(0, vi[0] - 5) if len(vi) else 0
-    for j in range(len(sents) - 1):
+    for j in range(len(allsay) - 1):
         lo = int(max(0, en[last(j)] - 0.2) * 100); hi = int(min(len(r) - 1, st[first(j + 1)] * 100 + 20))
         if hi <= lo: hi = lo + 1
         win = ~voiced[lo:hi]
@@ -119,9 +122,10 @@ for p in plan:
         if best[0] == 0:                          # 没有静音：在最安静的那一帧下刀
             m = lo + int(np.argmin(r[lo:hi])); best = (0, m, m)
         bounds.append((a0, best[1] + 6)); a0 = max(best[1] + 6, best[2] - 4)
-    ve = vi[-1] + 12 if len(vi) else len(r)
-    if len(vi) and ve / 100 - en[-1] > 0.8: report[-1] += f"  ⚠ 末尾多出 {ve / 100 - en[-1]:.1f}s 声音"
-    bounds.append((a0, min(len(r), ve)))
+    if not p.get("tail"):
+        ve = vi[-1] + 12 if len(vi) else len(r)
+        if len(vi) and ve / 100 - en[-1] > 0.8: report[-1] += f"  ⚠ 末尾多出 {ve / 100 - en[-1]:.1f}s 声音"
+        bounds.append((a0, min(len(r), ve)))
 
     for j, (fa, fb) in enumerate(bounds):
         seg = fade(x[fa * 240: fb * 240])
