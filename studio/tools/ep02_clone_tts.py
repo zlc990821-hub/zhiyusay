@@ -58,7 +58,7 @@ for p in plan:
     for q in "「」『』“”": gen = gen.replace(q, "")    # 模型会把引号念成怪音（「信则灵」→「一信则灵黑」）
     gen += TAIL
     wav, sr, _ = tts.infer(ref_file=ref_wav, ref_text=ref_text, gen_text=gen, nfe_step=32, speed=1.0, remove_silence=False, show_info=lambda *a: None)
-    sf.write(path, np.asarray(wav, dtype=np.float32), sr)
+    sf.write(path, np.asarray(wav, dtype=np.float32) * 0.5, sr)   # 模型输出会超过 1.0，存 16 位前先降 6dB，免得削顶
     print(f"{p['file']} {len(wav)/sr:.1f}s  {gen}", flush=True)
 json.dump(plan, open(os.path.join(out_dir, "plan.json"), "w", encoding="utf-8"), ensure_ascii=False, indent=1)
 print("ALL DONE", flush=True)

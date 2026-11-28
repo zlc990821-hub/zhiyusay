@@ -9,6 +9,7 @@
 import sys, os, json, wave, difflib, subprocess, tempfile
 import numpy as np
 from scipy.signal import resample_poly
+from scipy.interpolate import CubicSpline
 from faster_whisper import WhisperModel
 from opencc import OpenCC
 from pypinyin import lazy_pinyin
@@ -31,7 +32,12 @@ def readwav(path):
         path = p2
     with wave.open(path) as w:
         assert w.getframerate() == SR and w.getnchannels() == 1 and w.getsampwidth() == 2, path
-        return np.frombuffer(w.readframes(w.getnframes()), np.int16).astype(np.float32) / 32768
+        x = np.frombuffer(w.readframes(w.getnframes()), np.int16).astype(np.float64) / 32768
+    clip = np.abs(x) >= 32700 / 32768             # 第一批生成存盘时削了顶（每处 1–6 个采样）：用三次样条补回峰形
+    if clip.any():
+        good = np.where(~clip)[0]; y = CubicSpline(good, x[good])(np.where(clip)[0])
+        x[clip] = np.sign(x[clip]) * np.clip(np.abs(y), 1.0, 1.15)   # 不低于削顶处，也不让样条冲得太高
+    return (x * 0.5).astype(np.float32)          # 留 6dB 余量，合成时再统一调响度
 
 
 def rms_frames(x, hop=240):                      # 10 毫秒一帧
@@ -136,6 +142,7 @@ silence(1.0)
 
 voice = np.concatenate(pieces)
 voice48 = resample_poly(voice, 2, 1)
+voice48 *= min(1.0, 0.95 / np.abs(voice48).max())   # 升采样后的峰值也不碰顶
 with wave.open(out_wav, "wb") as w:
     w.setnchannels(1); w.setsampwidth(2); w.setframerate(48000)
     w.writeframes((np.clip(voice48, -1, 1) * 32767).astype(np.int16).tobytes())
