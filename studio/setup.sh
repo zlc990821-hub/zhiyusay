@@ -4,7 +4,7 @@ set -e
 cd "$(dirname "$0")"
 npm install --no-audit --no-fund
 pip install -q faster-whisper scipy opencc-python-reimplemented yt-dlp internetarchive you-get gallery-dl "scenedetect[opencv-headless]" ffmpeg-normalize auto-editor opentimelineio pyJianYingDraft
-pip install -q pedalboard
+pip install -q pedalboard pypinyin
 # 人声降噪 DeepFilterNet：放在独立环境里（它会把 numpy 降到 1.x，装进系统 Python 会弄坏 scipy）
 if [ ! -x /root/dfenv/bin/python ]; then
   python3 -m venv /root/dfenv

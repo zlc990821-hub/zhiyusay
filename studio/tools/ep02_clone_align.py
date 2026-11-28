@@ -10,6 +10,7 @@ import numpy as np
 from scipy.signal import resample_poly
 from faster_whisper import WhisperModel
 from opencc import OpenCC
+from pypinyin import lazy_pinyin
 
 clone_dir, out_wav, out_json = sys.argv[1:4]
 TEMPO = float(sys.argv[4]) if len(sys.argv) > 4 else 1.0
@@ -88,8 +89,13 @@ for p in plan:
             elif pv is None: st[i] = en[i] = st[nx]
             elif nx is None: st[i] = en[i] = en[pv]
             else: f = (i - pv) / (nx - pv); st[i] = en[i] = en[pv] + (st[nx] - en[pv]) * f
-    diffs = [f"稿「{''.join(sc[a:b])}」→听「{''.join(ac[c:d])}」" for op, a, b, c, d in sm.get_opcodes() if op != "equal"]
-    report.append(f"{p['file']}  对上 {len(known)}/{len(sc)}  " + ("；".join(diffs) if diffs else "全对"))
+    diffs, bad = [], 0                            # 同音字（拼音一样）多半是识别的问题，不算念错
+    for op, a, b, c, d in sm.get_opcodes():
+        if op == "equal": continue
+        same = lazy_pinyin("".join(sc[a:b])) == lazy_pinyin("".join(ac[c:d]))
+        bad += 0 if same else max(b - a, d - c)
+        diffs.append(f"稿「{''.join(sc[a:b])}」→听「{''.join(ac[c:d])}」" + ("(同音)" if same else ""))
+    report.append(f"{p['file']}  {'⚠ ' if bad >= 2 or (bad and len(sc) < 20) else ''}对上 {len(known)}/{len(sc)}  " + ("；".join(diffs) if diffs else "全对"))
 
     # 3. 找每句的起止：能量低于门限算停顿
     r = rms_frames(x); thr = max(np.percentile(r, 10) * 4, r.max() * 0.025)
