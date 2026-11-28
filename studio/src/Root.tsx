@@ -38,7 +38,7 @@ export const Root: React.FC = () => (
     <Composition id="HandTest" component={HandTest} durationInFrames={1} fps={30} width={1920} height={1080} />
     <Composition id="Ep01Opening" component={Opening} durationInFrames={OPENING_FRAMES} fps={30} width={1920} height={1080} />
     <Composition id="Ep01Glass" component={GlassRoot} durationInFrames={GLASS_FRAMES} fps={30} width={1920} height={1080} />
-    <Composition id="Ep02" component={Ep02} durationInFrames={EP02_FRAMES} fps={30} width={1080} height={1620} />
+    <Composition id="Ep02" component={Ep02} durationInFrames={EP02_FRAMES} fps={30} width={1920} height={1080} />
     <Composition id="Ep01Souls" component={SoulsRoot} durationInFrames={SOULS_FRAMES} fps={30} width={1920} height={1080} />
   </>
 );
