@@ -45,6 +45,7 @@
 - FFmpeg：剪切、拼接、混音、烧字幕、截帧检查。
 - 语音识别：faster-whisper（small 模型），用于把用户录音转成带时间戳的文字来对齐画面、生成字幕、找出重录的句子。注意：`av` 版本不兼容，需用 `wave` 读入 numpy 数组再传给模型。只能识别说了什么，判断不了语气。
 - 渲染后必须截帧检查画面，不能只看「导出成功」。
+- 配音克隆（用户不录音时，2026-11-28 用户同意用自己第 01 期的声音克隆）：F5-TTS（`/root/ttsenv`，Python 3.12，CPU），工具 `studio/tools/ep02_clone_tts.py`＋`ep02_clone_align.py`。已知坑：引号「」会被念成怪音（生成前去掉）；每组最后一个字会被截半截（末尾垫一句再切掉）；输出超过 1.0（存盘前降 6dB）。念错用对齐报告查（语音识别＋拼音比对），不能只听开头。发布时仍需勾选「内容由 AI 生成」。edge-tts 需要 WebSocket，代理不支持，不用。
 - 大视频文件：GitHub 单文件上限 100MB，超过要切分或压缩；源视频不入库。
 - 剪辑工具（setup.sh 会安装）：PySceneDetect（镜头切分）与 `studio/tools/shot_sheet.py`（镜头表）、ffmpeg-normalize（响度）、auto-editor、OpenTimelineIO、pyJianYingDraft（导出剪映草稿）。不要装 MoviePy，它会把 Pillow 降级。
 - 素材抓取工具（setup.sh 会安装）：yt-dlp（YouTube、B 站、互联网档案馆等上千个网站）、internetarchive 的 `ia` 命令（搜索下载普林格档案等公有领域老片，实测可用）、gallery-dl（批量图片）、you-get（国内网站）；Openverse 接口（开放授权图片，无需账号）；维基共享资源 API 查授权。
