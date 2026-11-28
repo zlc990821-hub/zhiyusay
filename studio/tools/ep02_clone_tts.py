@@ -53,6 +53,7 @@ for p in plan:
     if os.path.exists(path): continue            # 断了可以接着跑
     gen = "".join(x["say"] for x in p["chunk"])
     for a, b in READ: gen = gen.replace(a, b)
+    for q in "「」『』“”": gen = gen.replace(q, "")    # 模型会把引号念成怪音（「信则灵」→「一信则灵黑」）
     wav, sr, _ = tts.infer(ref_file=ref_wav, ref_text=ref_text, gen_text=gen, nfe_step=32, speed=1.0, remove_silence=False, show_info=lambda *a: None)
     sf.write(path, np.asarray(wav, dtype=np.float32), sr)
     print(f"{p['file']} {len(wav)/sr:.1f}s  {gen}", flush=True)
