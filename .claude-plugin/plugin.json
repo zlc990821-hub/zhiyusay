@@ -1,0 +1,12 @@
+{
+  "name": "wang-yangming",
+  "version": "0.1.0",
+  "description": "电子王阳明：以阳明心学（知行合一、致良知、事上磨练）为你的决策与做事辨病开方，原文引用均可在内置的王阳明原著语料中核实。",
+  "author": {
+    "name": "zlc990821-hub"
+  },
+  "homepage": "https://github.com/zlc990821-hub/zhiyusay",
+  "repository": "https://github.com/zlc990821-hub/zhiyusay",
+  "license": "CC-BY-SA-4.0 AND MIT",
+  "keywords": ["王阳明", "阳明心学", "传习录", "致良知", "知行合一", "wang-yangming", "neo-confucianism"]
+}

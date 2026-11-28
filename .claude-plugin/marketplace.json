@@ -1,0 +1,17 @@
+{
+  "name": "zhiyusay",
+  "owner": {
+    "name": "zlc990821-hub"
+  },
+  "metadata": {
+    "description": "阳明心学行动指南：电子王阳明技能与王阳明原著语料。",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "wang-yangming",
+      "source": "./",
+      "description": "电子王阳明：阳明心学行动指南，为决策、做事与内容创作辨病开方。"
+    }
+  ]
+}

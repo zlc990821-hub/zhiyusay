@@ -1,0 +1,7 @@
+# 语料重建时的原始下载
+raw/
+# 技能评测工作区
+*-workspace/
+*.skill
+__pycache__/
+.DS_Store
